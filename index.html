@@ -4,63 +4,40 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>마이 티어 메이커 - 홈</title>
-  
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-
   <style>
     body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #121212; color: #e0e0e0; margin: 0; padding: 0; text-align: center; }
-    
-    /* 상단 메뉴바 */
     .top-menu { background: #1f1f1f; display: flex; align-items: center; padding: 10px 30px; box-shadow: 0 2px 10px rgba(0,0,0,0.5); position: fixed; top: 0; width: 100%; box-sizing: border-box; z-index: 2000; }
     .top-menu a { color: #aaa; text-decoration: none; margin: 0 15px; font-weight: bold; font-size: 16px; transition: 0.3s; cursor: pointer; }
     .top-menu a:hover { color: #3498db; }
     .top-menu .active { color: white; border-bottom: 2px solid #3498db; padding-bottom: 5px; }
     .logo-btn { font-size: 20px !important; color: #fff !important; margin-right: 40px !important; }
 
-    /* 콘텐츠 영역 */
     .content-wrapper { padding-top: 100px; padding-bottom: 50px; }
-    
-    /* 상단 버튼 그룹 */
-    .action-buttons { display: flex; justify-content: center; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; }
+    .action-buttons { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
     .btn { padding: 10px 20px; font-size: 15px; font-weight: bold; cursor: pointer; color: white; border: none; border-radius: 8px; transition: 0.2s; }
-    .btn-upload { background: #3498db; } .btn-upload:hover { background: #2980b9; }
-    .btn-add-tier { background: #e67e22; } .btn-add-tier:hover { background: #d35400; }
-    .btn-download { background: #9b59b6; } .btn-download:hover { background: #8e44ad; }
+    .btn-upload { background: #3498db; }
+    .btn-add-tier { background: #e67e22; }
+    .btn-download { background: #9b59b6; }
+    .btn-save-db { background: #2ecc71; } /* 저장 버튼 색상 */
 
-    /* 티어 보드 레이아웃 */
-    .tier-board { display: flex; flex-direction: column; border: 2px solid #000; margin: 0 auto; max-width: 900px; background: #0f0f0f; border-radius: 8px; overflow: hidden; box-shadow: 0 8px 30px rgba(0,0,0,0.7); position: relative; }
+    .tier-board { display: flex; flex-direction: column; border: 2px solid #000; margin: 0 auto; max-width: 900px; background: #0f0f0f; border-radius: 8px; overflow: hidden; box-shadow: 0 8px 30px rgba(0,0,0,0.7); }
     .tier-row { display: flex; border-bottom: 1px solid #000; min-height: 90px; position: relative; }
-    
-    /* 티어 라벨 (클릭 시 글자 수정 가능) */
-    .tier-label { width: 100px; display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 20px; color: #ccc; outline: none; cursor: text; }
-    
-    /* 삭제 버튼 (마우스를 올릴 때만 표시됨) */
-    .delete-tier-btn { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: #e74c3c; color: white; border: none; border-radius: 5px; width: 30px; height: 30px; cursor: pointer; display: none; font-weight: bold; }
-    .delete-tier-btn:hover { background: #c0392b; }
-    .tier-row:hover .delete-tier-btn { display: block; } /* 캡처 시 안 보이게 하기 위한 마우스 오버 효과 */
+    .tier-label { width: 100px; display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 20px; color: white; outline: none; text-shadow: 1px 1px 2px rgba(0,0,0,0.5); }
+    .delete-tier-btn { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: rgba(231, 76, 60, 0.7); color: white; border: none; border-radius: 5px; width: 25px; height: 25px; cursor: pointer; display: none; }
+    .tier-row:hover .delete-tier-btn { display: block; }
 
-    /* 티어 색상 */
-    .s-tier { background: #5c1810; } .a-tier { background: #5c3810; } .b-tier { background: #3d420f; }
-    .c-tier { background: #104a16; } .d-tier { background: #0a5212; } .e-tier { background: #094747; }
-
-    /* 드래그 영역 및 아이템 */
-    .tier-items { display: flex; flex-wrap: wrap; flex-grow: 1; background: #1a1a1a; padding: 5px; gap: 5px; align-content: flex-start; }
-    .item { position: relative; width: 80px; height: 80px; background: #444; border-radius: 6px; overflow: hidden; cursor: grab; display: flex; justify-content: center; align-items: center; box-shadow: 0 0 10px rgba(0,0,0,0.9); border: 1px solid #333; }
-    .item.dragging { opacity: 0.4; }
+    .tier-items { display: flex; flex-wrap: wrap; flex-grow: 1; background: #1a1a1a; padding: 5px; gap: 5px; align-content: flex-start; min-width: 100px; }
+    .item { position: relative; width: 80px; height: 80px; background: #444; border-radius: 6px; overflow: hidden; cursor: grab; display: flex; justify-content: center; align-items: center; border: 1px solid #333; }
     .item img { width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
-    .item-title { position: absolute; bottom: 0; left: 0; width: 100%; background: rgba(0,0,0,0.8); color: white; font-size: 11px; padding: 2px 0; text-align: center; display: none; pointer-events: none; }
+    .item.dragging { opacity: 0.4; }
 
     #item-bank { display: flex; flex-wrap: wrap; margin: 30px auto; max-width: 900px; min-height: 150px; background: #1a1a1a; padding: 15px; border: 2px dashed #444; gap: 5px; border-radius: 8px; }
-    .item.ghost-placeholder { opacity: 0.25; pointer-events: none; border: 2px dashed rgba(255,255,255,0.2); background: transparent; box-shadow: none; }
-    .item.ghost-placeholder img { filter: grayscale(100%); }
-
-    /* 팝업창 */
+    
+    /* 모달 */
     #modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 10000; justify-content: center; align-items: center; }
-    .modal-content { background: #1f1f1f; padding: 25px; border-radius: 12px; width: 320px; text-align: left; border: 1px solid #333; }
-    .modal-content input, .modal-content textarea { width: 100%; box-sizing: border-box; margin: 10px 0; padding: 10px; background: #0f0f0f; color: white; border: 1px solid #444; border-radius: 6px; }
-    .modal-btns { display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px; }
-    .modal-btns button { padding: 8px 16px; border-radius: 6px; border: none; cursor: pointer; font-weight: bold; }
-    .btn-save { background: #2ecc71; color: white; } .btn-cancel { background: #444; color: white; }
+    .modal-content { background: #1f1f1f; padding: 25px; border-radius: 12px; width: 320px; border: 1px solid #333; }
+    .modal-content input { width: 100%; box-sizing: border-box; padding: 10px; background: #0f0f0f; color: white; border: 1px solid #444; border-radius: 6px; }
   </style>
 </head>
 <body>
@@ -79,183 +56,124 @@
     <div class="action-buttons">
       <input type="file" id="image-upload" multiple accept="image/*" style="display: none;">
       <button class="btn btn-upload" onclick="document.getElementById('image-upload').click()">+ 이미지 추가</button>
-      <button class="btn btn-add-tier" onclick="addTier()">➕ 티어 줄 추가</button>
-      <button class="btn btn-download" onclick="downloadImage()">💾 이미지로 저장(다운로드)</button>
+      <button class="btn btn-add-tier" onclick="addTier()">➕ 티어 추가</button>
+      <button class="btn btn-download" onclick="downloadImage()">💾 이미지 저장</button>
+      <button class="btn btn-save-db" onclick="saveToMyList()">✅ 내 목록에 저장</button>
     </div>
     
-    <p style="font-size:14px; color:#aaa; margin-bottom:20px;">
-      (💡 이름 수정: S, A, B 글자를 <b>클릭</b>하면 이름을 바꿀 수 있습니다. / 줄 삭제: 티어 우측에 마우스를 올리면 <b>X 버튼</b>이 나옵니다.)
-    </p>
-
     <div class="tier-board" id="board">
-      <div class="tier-row">
-        <div class="tier-label s-tier" contenteditable="true">S</div>
-        <div class="tier-items" ondrop="drop(event)" ondragover="allowDrop(event)" ondragleave="handleDragLeave(event)"></div>
-        <button class="delete-tier-btn" onclick="deleteTier(this)">X</button>
-      </div>
-      <div class="tier-row">
-        <div class="tier-label a-tier" contenteditable="true">A</div>
-        <div class="tier-items" ondrop="drop(event)" ondragover="allowDrop(event)" ondragleave="handleDragLeave(event)"></div>
-        <button class="delete-tier-btn" onclick="deleteTier(this)">X</button>
-      </div>
-      <div class="tier-row">
-        <div class="tier-label b-tier" contenteditable="true">B</div>
-        <div class="tier-items" ondrop="drop(event)" ondragover="allowDrop(event)" ondragleave="handleDragLeave(event)"></div>
-        <button class="delete-tier-btn" onclick="deleteTier(this)">X</button>
-      </div>
-      <div class="tier-row">
-        <div class="tier-label c-tier" contenteditable="true">C</div>
-        <div class="tier-items" ondrop="drop(event)" ondragover="allowDrop(event)" ondragleave="handleDragLeave(event)"></div>
-        <button class="delete-tier-btn" onclick="deleteTier(this)">X</button>
-      </div>
+      <div class="tier-row"><div class="tier-label" contenteditable="true">S</div><div class="tier-items" ondrop="drop(event)" ondragover="allowDrop(event)"></div><button class="delete-tier-btn" onclick="deleteTier(this)">X</button></div>
+      <div class="tier-row"><div class="tier-label" contenteditable="true">A</div><div class="tier-items" ondrop="drop(event)" ondragover="allowDrop(event)"></div><button class="delete-tier-btn" onclick="deleteTier(this)">X</button></div>
+      <div class="tier-row"><div class="tier-label" contenteditable="true">B</div><div class="tier-items" ondrop="drop(event)" ondragover="allowDrop(event)"></div><button class="delete-tier-btn" onclick="deleteTier(this)">X</button></div>
+      <div class="tier-row"><div class="tier-label" contenteditable="true">C</div><div class="tier-items" ondrop="drop(event)" ondragover="allowDrop(event)"></div><button class="delete-tier-btn" onclick="deleteTier(this)">X</button></div>
     </div>
 
-    <div id="item-bank" ondrop="drop(event)" ondragover="allowDrop(event)" ondragleave="handleDragLeave(event)"></div>
-  </div>
-
-  <div id="modal-overlay">
-    <div class="modal-content">
-      <h3>항목 정보 입력</h3>
-      <input type="text" id="edit-title" placeholder="제목">
-      <textarea id="edit-desc" placeholder="설명"></textarea>
-      <div class="modal-btns">
-        <button class="btn-cancel" onclick="closeModal()">취소</button>
-        <button class="btn-save" onclick="saveModal()">저장</button>
-      </div>
-    </div>
+    <div id="item-bank" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
   </div>
 
   <script>
-    let itemIdCounter = 0; let currentEditItem = null; let ghostItem = null;
-    
-    // 추가되는 티어 색상 목록 (순서대로 순환)
-    const extraColors = ['#1a5276', '#5b2c6f', '#6e2c00', '#117864', '#4d5656'];
-    let colorIndex = 0;
+    let itemIdCounter = 0;
 
-    // --- 티어 추가 및 삭제 기능 ---
+    // --- 1. 무지개 색상 자동 업데이트 함수 ---
+    function updateRowColors() {
+      const rows = document.querySelectorAll('.tier-row');
+      const total = rows.length;
+      rows.forEach((row, index) => {
+        const label = row.querySelector('.tier-label');
+        // HSL 색상 모델 사용: 0(빨강) ~ 270(보라)
+        const hue = (index / (total > 1 ? total - 1 : 1)) * 270;
+        label.style.backgroundColor = `hsl(${hue}, 70%, 40%)`;
+      });
+    }
+
+    // 초기 실행
+    updateRowColors();
+
     function addTier() {
       const board = document.getElementById('board');
       const row = document.createElement('div');
       row.className = 'tier-row';
-      
-      const label = document.createElement('div');
-      label.className = 'tier-label';
-      label.style.background = extraColors[colorIndex % extraColors.length];
-      colorIndex++;
-      label.contentEditable = "true";
-      label.innerText = "NEW";
-      
-      const items = document.createElement('div');
-      items.className = 'tier-items';
-      items.ondrop = drop;
-      items.ondragover = allowDrop;
-      items.ondragleave = handleDragLeave;
-      
-      const delBtn = document.createElement('button');
-      delBtn.className = 'delete-tier-btn';
-      delBtn.innerText = 'X';
-      delBtn.onclick = function() { deleteTier(this); };
-      
-      row.appendChild(label);
-      row.appendChild(items);
-      row.appendChild(delBtn);
+      row.innerHTML = `<div class="tier-label" contenteditable="true">NEW</div>
+                       <div class="tier-items" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+                       <button class="delete-tier-btn" onclick="deleteTier(this)">X</button>`;
       board.appendChild(row);
+      updateRowColors();
     }
 
     function deleteTier(btn) {
-      if(confirm("정말 이 티어 줄을 삭제하시겠습니까? (안에 있던 이미지는 보관함으로 이동됩니다)")) {
+      if(confirm("이 줄을 삭제할까요?")) {
         const row = btn.parentElement;
-        const itemsDiv = row.querySelector('.tier-items');
+        const items = row.querySelector('.tier-items');
         const bank = document.getElementById('item-bank');
-        
-        // 줄 안에 있던 이미지들을 모두 하단 보관함으로 이동
-        while(itemsDiv.firstChild) {
-          bank.appendChild(itemsDiv.firstChild);
-        }
+        while(items.firstChild) bank.appendChild(items.firstChild);
         row.remove();
+        updateRowColors();
       }
     }
 
-    // --- 이미지 다운로드 캡처 기능 ---
-    function downloadImage() {
-      const board = document.getElementById('board');
-      
-      // html2canvas가 board 영역을 그림으로 변환
-      html2canvas(board, {
-        backgroundColor: '#0f0f0f', // 다크 모드 배경색 유지
-        scale: 2 // 고화질 캡처
-      }).then(canvas => {
-        const link = document.createElement('a');
-        link.download = 'my_tier_list.png'; // 저장될 파일 이름
-        link.href = canvas.toDataURL('image/png');
-        link.click();
+    // --- 2. 내 목록에 저장 기능 (LocalStorage) ---
+    function saveToMyList() {
+      const title = prompt("티어표의 이름을 입력해주세요:", "나의 새로운 티어표");
+      if(!title) return;
+
+      const rowsData = [];
+      document.querySelectorAll('.tier-row').forEach(row => {
+        const labelText = row.querySelector('.tier-label').innerText;
+        const color = row.querySelector('.tier-label').style.backgroundColor;
+        const itemImages = [];
+        row.querySelectorAll('.item img').forEach(img => itemImages.push(img.src));
+        rowsData.push({ label: labelText, color: color, items: itemImages });
       });
+
+      const newTierList = {
+        id: Date.now(),
+        title: title,
+        date: new Date().toLocaleDateString(),
+        data: rowsData
+      };
+
+      // 기존 데이터 가져오기
+      const savedLists = JSON.parse(localStorage.getItem('myTierLists') || '[]');
+      savedLists.push(newTierList);
+      localStorage.setItem('myTierLists', JSON.stringify(savedLists));
+
+      alert("성공적으로 저장되었습니다! '내 목록' 메뉴에서 확인하세요.");
     }
 
-    // --- 기존 드래그 앤 드롭 기능 ---
-    function drag(ev) {
-      ev.target.classList.add('dragging');
-      ev.dataTransfer.setData("text", ev.target.id);
-      ghostItem = ev.target.cloneNode(true);
-      ghostItem.id = 'ghost-placeholder';
-      ghostItem.classList.remove('dragging');
-      ghostItem.classList.add('ghost-placeholder');
-    }
-    function allowDrop(ev) {
-      ev.preventDefault();
-      const target = ev.target.closest('.tier-items, #item-bank');
-      if (target && ghostItem) target.appendChild(ghostItem);
-    }
-    function handleDragLeave(ev) {
-      if (ghostItem && ghostItem.parentElement) ghostItem.parentElement.removeChild(ghostItem);
-    }
+    // 드래그 앤 드롭 기초 로직 (이전과 동일)
+    function allowDrop(ev) { ev.preventDefault(); }
+    function drag(ev) { ev.dataTransfer.setData("text", ev.target.id); ev.target.classList.add('dragging'); }
     function drop(ev) {
       ev.preventDefault();
-      if (ghostItem && ghostItem.parentElement) ghostItem.parentElement.removeChild(ghostItem);
-      ghostItem = null;
       const data = ev.dataTransfer.getData("text");
-      const draggedItem = document.getElementById(data);
-      if(draggedItem) draggedItem.classList.remove('dragging');
+      const dragged = document.getElementById(data);
+      dragged.classList.remove('dragging');
       const target = ev.target.closest('.tier-items, #item-bank');
-      if (target && draggedItem) target.appendChild(draggedItem);
+      if (target) target.appendChild(dragged);
     }
 
-    // --- 모달 창 (정보 수정) 기능 ---
-    function openModal(itemDiv) {
-      currentEditItem = itemDiv;
-      document.getElementById('edit-title').value = itemDiv.dataset.title || '';
-      document.getElementById('edit-desc').value = itemDiv.dataset.desc || '';
-      document.getElementById('modal-overlay').style.display = 'flex';
-    }
-    function closeModal() { document.getElementById('modal-overlay').style.display = 'none'; }
-    function saveModal() {
-      if (currentEditItem) {
-        const t = document.getElementById('edit-title').value;
-        const d = document.getElementById('edit-desc').value;
-        currentEditItem.dataset.title = t; currentEditItem.dataset.desc = d;
-        currentEditItem.title = (t ? "["+t+"]\n" : "") + d;
-        let tDiv = currentEditItem.querySelector('.item-title');
-        if (!tDiv) { tDiv = document.createElement('div'); tDiv.className = 'item-title'; currentEditItem.appendChild(tDiv); }
-        tDiv.textContent = t; tDiv.style.display = t ? 'block' : 'none';
-      }
-      closeModal();
-    }
-
-    // --- 파일 업로드 기능 ---
     document.getElementById('image-upload').addEventListener('change', function(e) {
       for (const file of e.target.files) {
-        if (!file.type.startsWith('image/')) continue;
         const reader = new FileReader();
         reader.onload = function(event) {
           const div = document.createElement('div');
           div.className = 'item'; div.draggable = true; div.id = 'item-' + itemIdCounter++;
-          div.ondragstart = drag; div.onclick = function() { openModal(this); };
-          const img = document.createElement('img'); img.src = event.target.result;
-          div.appendChild(img); document.getElementById('item-bank').appendChild(div);
+          div.ondragstart = drag;
+          div.innerHTML = `<img src="${event.target.result}">`;
+          document.getElementById('item-bank').appendChild(div);
         };
         reader.readAsDataURL(file);
       }
     });
+
+    function downloadImage() {
+      html2canvas(document.getElementById('board'), { scale: 2 }).then(canvas => {
+        const link = document.createElement('a');
+        link.download = 'tier_list.png';
+        link.href = canvas.toDataURL();
+        link.click();
+      });
+    }
   </script>
 </body>
 </html>
