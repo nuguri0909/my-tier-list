@@ -1,37 +1,71 @@
-let itemIdCounter = 0;
-// 로그인 & 닉네임 상태 관리
-let currentUser = null; 
-let customNickname = "익명"; 
-let loadedListUid = "new-list"; 
+// Firebase 최신 버전(v10) 모듈 불러오기
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-// 1. 로그인 및 닉네임 설정 기능
+// 회원님의 Firebase 인증 정보
+const firebaseConfig = {
+  apiKey: "AIzaSyAwVjpUANfil947xb0bjKALw2uuGvZYQcs",
+  authDomain: "mytierlist-70989.firebaseapp.com",
+  projectId: "mytierlist-70989",
+  storageBucket: "mytierlist-70989.firebasestorage.app",
+  messagingSenderId: "13881580770",
+  appId: "1:13881580770:web:6f7f9148c4bf5f95add2bb"
+};
+
+// Firebase 초기화
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const provider = new GoogleAuthProvider();
+
+let itemIdCounter = 0;
+window.currentUser = null; 
+window.customNickname = "익명"; 
+
+// 1. 진짜 구글 로그인 기능
 window.login = function() {
-  // 실제 연동 시 Firebase 로그인 코드 작성 영역
-  currentUser = { uid: "user123", email: "test@google.com" };
-  updateAuthUI();
-  alert("임시 구글 로그인이 완료되었습니다!");
+  signInWithPopup(auth, provider).catch(error => {
+    console.error(error);
+    alert("로그인 실패: " + error.message);
+  });
 };
 
 window.logout = function() {
-  currentUser = null;
-  customNickname = "익명";
-  updateAuthUI();
-  alert("로그아웃 되었습니다.");
+  signOut(auth).then(() => {
+    alert("로그아웃 되었습니다.");
+  }).catch(error => alert("로그아웃 실패: " + error.message));
 };
 
 window.setNickname = function() {
-  const nick = prompt("사용하실 닉네임을 입력하세요:", customNickname);
+  const nick = prompt("사용하실 닉네임을 입력하세요:", window.customNickname);
   if(nick && nick.trim() !== "") {
-    customNickname = nick.trim();
-    updateAuthUI();
-    alert(`닉네임이 [${customNickname}]으로 변경되었습니다!`);
+    const newName = nick.trim();
+    // Firebase 계정 프로필에 닉네임 진짜로 업데이트하기
+    updateProfile(auth.currentUser, { displayName: newName }).then(() => {
+      window.customNickname = newName;
+      window.updateAuthUI();
+      alert(`닉네임이 [${window.customNickname}](으)로 변경되었습니다!`);
+    }).catch(error => {
+      alert("닉네임 변경 실패: " + error.message);
+    });
   }
 };
 
+// 로그인 상태 실시간 감지 (새로고침해도 로그인 유지됨)
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    window.currentUser = user;
+    window.customNickname = user.displayName || "익명"; // 설정한 닉네임이 있으면 불러옴
+  } else {
+    window.currentUser = null;
+    window.customNickname = "익명";
+  }
+  window.updateAuthUI();
+});
+
 window.updateAuthUI = function() {
   const nameDisplay = document.getElementById('user-name-display');
-  if(currentUser) {
-    nameDisplay.innerText = customNickname + "님";
+  if(window.currentUser) {
+    nameDisplay.innerText = window.customNickname + "님";
     document.getElementById('btn-login').style.display = 'none';
     document.getElementById('btn-logout').style.display = 'inline-block';
     document.getElementById('btn-nickname').style.display = 'inline-block';
@@ -82,22 +116,18 @@ window.drop = function(ev) {
   if (target) target.appendChild(document.getElementById(data));
 };
 
-// 4. 아이템 추가 (내 컴퓨터 파일 + URL 모두 지원)
+// 4. 아이템 추가
 window.addNewItem = function() {
   const fileInput = document.getElementById('img-file');
   const urlInput = document.getElementById('img-url').value;
   const title = document.getElementById('img-title').value;
 
   if (fileInput.files && fileInput.files[0]) {
-    // 파일을 선택한 경우
     const reader = new FileReader();
-    reader.onload = function(e) {
-      createItemBox(e.target.result, title);
-    };
+    reader.onload = function(e) { createItemBox(e.target.result, title); };
     reader.readAsDataURL(fileInput.files[0]);
-    fileInput.value = ''; // 초기화
+    fileInput.value = ''; 
   } else if (urlInput) {
-    // URL을 입력한 경우
     createItemBox(urlInput, title);
     document.getElementById('img-url').value = '';
   } else {
@@ -115,7 +145,6 @@ function createItemBox(src, title) {
 
 // 초기화
 window.onload = function() {
-  window.updateAuthUI();
   const board = document.getElementById('board');
   ['S','A','B','C','D','E'].forEach(l => {
     board.innerHTML += `<div class="tier-row"><div class="tier-label" contenteditable="true">${l}</div><div class="tier-items" ondrop="window.drop(event)" ondragover="window.allowDrop(event)"></div><button class="delete-tier-btn" onclick="window.deleteTier(this)">X</button></div>`;
