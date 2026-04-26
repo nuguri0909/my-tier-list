@@ -12,7 +12,7 @@
     <div class="nav-left">
       <a href="index.html" class="nav-logo">MyTierList</a>
       <div class="nav-links">
-        <a href="index.html">티어 만들기</a>
+        <a href="maker.html">티어 만들기</a>
         <a href="board.html">티어 게시판</a>
         <a href="mylist.html">내 보관함</a>
       </div>
@@ -52,7 +52,14 @@
           <button class="btn btn-small" onclick="window.addTier()">➕ 티어 줄 추가</button>
         </div>
         <div id="capture-area">
-          <div id="board" class="tier-board"></div>
+          <div id="board" class="tier-board">
+            <div class="tier-row" data-tier="S" ondrop="window.drop(event)" ondragover="window.allowDrop(event)"><div class="tier-label" style="background-color: #ff7f7f;">S</div><div class="tier-items" ondrop="window.drop(event)" ondragover="window.allowDrop(event)"></div></div>
+            <div class="tier-row" data-tier="A" ondrop="window.drop(event)" ondragover="window.allowDrop(event)"><div class="tier-label" style="background-color: #ffbf7f;">A</div><div class="tier-items" ondrop="window.drop(event)" ondragover="window.allowDrop(event)"></div></div>
+            <div class="tier-row" data-tier="B" ondrop="window.drop(event)" ondragover="window.allowDrop(event)"><div class="tier-label" style="background-color: #ffff7f;">B</div><div class="tier-items" ondrop="window.drop(event)" ondragover="window.allowDrop(event)"></div></div>
+            <div class="tier-row" data-tier="C" ondrop="window.drop(event)" ondragover="window.allowDrop(event)"><div class="tier-label" style="background-color: #7fff7f;">C</div><div class="tier-items" ondrop="window.drop(event)" ondragover="window.allowDrop(event)"></div></div>
+            <div class="tier-row" data-tier="D" ondrop="window.drop(event)" ondragover="window.allowDrop(event)"><div class="tier-label" style="background-color: #7fbfff;">D</div><div class="tier-items" ondrop="window.drop(event)" ondragover="window.allowDrop(event)"></div></div>
+            <div class="tier-row" data-tier="E" ondrop="window.drop(event)" ondragover="window.allowDrop(event)"><div class="tier-label" style="background-color: #7f7fff;">E</div><div class="tier-items" ondrop="window.drop(event)" ondragover="window.allowDrop(event)"></div></div>
+          </div>
         </div>
       </div>
 
@@ -126,6 +133,7 @@
   <script type="module" src="script.js"></script>
   <footer class="site-footer">
   <div class="site-footer-links">
+    <a href="mylist.html">내 보관함</a> | 
     <a href="policy.html?type=terms">이용약관</a> | 
     <a href="policy.html?type=privacy">개인정보처리방침</a> | 
     <a href="policy.html?type=youth">청소년 보호정책</a>
