@@ -20,6 +20,8 @@
     .btn-add-tier { background: #e67e22; } .btn-add-tier:hover { background: #d35400; }
     .btn-download { background: #9b59b6; } .btn-download:hover { background: #8e44ad; }
     .btn-save-db { background: #2ecc71; } .btn-save-db:hover { background: #27ae60; }
+    /* 새 파일로 저장 버튼 스타일 추가 */
+    .btn-save-as { background: #f39c12; display: none; } .btn-save-as:hover { background: #d68910; }
 
     .tier-board { display: flex; flex-direction: column; border: 2px solid #000; margin: 0 auto; max-width: 900px; background: #0f0f0f; border-radius: 8px; overflow: hidden; box-shadow: 0 8px 30px rgba(0,0,0,0.7); }
     .tier-row { display: flex; border-bottom: 1px solid #000; min-height: 90px; position: relative; }
@@ -63,8 +65,9 @@
       <input type="file" id="image-upload" multiple accept="image/*" style="display: none;">
       <button class="btn btn-upload" onclick="document.getElementById('image-upload').click()">+ 이미지 추가</button>
       <button class="btn btn-add-tier" onclick="addTier()">➕ 티어 추가</button>
-      <button class="btn btn-download" onclick="downloadImage()">💾 이미지 저장</button>
-      <button class="btn btn-save-db" onclick="saveToMyList()">✅ 목록에 저장/수정</button>
+      <button class="btn btn-download" onclick="downloadImage()">🖼️ 이미지 저장</button>
+      <button class="btn btn-save-db" id="btn-save" onclick="saveData(false)">✅ 목록에 저장</button>
+      <button class="btn btn-save-as" id="btn-save-as" onclick="saveData(true)">📑 다른 이름으로 저장</button>
     </div>
     
     <div class="tier-board" id="board"></div>
@@ -93,7 +96,7 @@
 
     const visualStops = [0, 30, 60, 120, 185, 240, 285];
 
-    // --- IndexedDB 설정 및 함수 모음 ---
+    // --- IndexedDB ---
     const DB_NAME = "TierMakerDB";
     const STORE_NAME = "TierLists";
 
@@ -144,6 +147,11 @@
         
         if (listData) {
           document.getElementById('page-title').innerText = `✏️ 수정 중: ${listData.title}`;
+          
+          // 기존 문서 불러오기 성공 시 UI 변경
+          document.getElementById('btn-save').innerText = '✅ 덮어쓰기 저장';
+          document.getElementById('btn-save-as').style.display = 'inline-block';
+          
           rebuildBoard(listData);
           return;
         }
@@ -228,16 +236,13 @@
       ev.preventDefault();
       const target = ev.target.closest('.tier-items, #item-bank');
       if (target && ghostItem) {
-        if (ghostItem.parentElement !== target) {
-          target.appendChild(ghostItem);
-        }
+        if (ghostItem.parentElement !== target) { target.appendChild(ghostItem); }
       }
     }
 
     function drop(ev) {
       ev.preventDefault();
       const target = ev.target.closest('.tier-items, #item-bank');
-      
       if (ghostItem) { ghostItem.remove(); ghostItem = null; }
       if (target && draggedItem) { target.appendChild(draggedItem); }
       if (draggedItem) { draggedItem.classList.remove('dragging'); draggedItem = null; }
@@ -253,7 +258,6 @@
       const rows = document.querySelectorAll('.tier-row');
       const total = rows.length;
       if (total === 0) return;
-      
       rows.forEach((row, index) => {
         const label = row.querySelector('.tier-label');
         let hue = visualStops[0];
@@ -291,18 +295,23 @@
       }
     }
 
-    // --- IndexedDB를 활용한 저장 기능 ---
-    async function saveToMyList() {
-      let defaultTitle = "나의 새로운 티어표";
-      
-      if(editingListId) {
-        const existingList = await getListFromDB(editingListId);
-        if(existingList) defaultTitle = existingList.title;
+    // --- ⭐ 핵심: 저장 로직 분리 (덮어쓰기 vs 다른 이름으로 저장) ---
+    async function saveData(isSaveAsNew) {
+      let listId = editingListId;
+      let title = "나의 새로운 티어표";
+
+      if (isSaveAsNew || !editingListId) {
+        // 상황 1: 완전 처음 저장하거나, '다른 이름으로 저장'을 눌렀을 때
+        let defaultTitle = isSaveAsNew && editingListId ? (document.getElementById('page-title').innerText.replace('✏️ 수정 중: ', '') + " (복사본)") : "나의 새로운 티어표";
+        title = prompt("티어표의 이름을 입력해주세요:", defaultTitle);
+        if (!title) return; // 취소 누르면 중단
+        listId = Date.now(); // 새로운 고유 ID 발급
+      } else {
+        // 상황 2: 기존 파일을 '덮어쓰기' 할 때 (묻지도 따지지도 않고 바로 저장)
+        title = document.getElementById('page-title').innerText.replace('✏️ 수정 중: ', '');
       }
 
-      const title = prompt("티어표의 이름을 입력해주세요:", defaultTitle);
-      if(!title) return;
-
+      // 화면에 있는 데이터 긁어오기
       const rowsData = [];
       document.querySelectorAll('.tier-row').forEach(row => {
         const labelText = row.querySelector('.tier-label').innerText;
@@ -327,7 +336,6 @@
         });
       });
 
-      const listId = editingListId || Date.now();
       const newListData = {
         id: listId,
         title: title,
@@ -338,12 +346,22 @@
 
       try {
         await saveListToDB(newListData);
-        if(editingListId) {
-          alert("성공적으로 수정되었습니다!");
+        
+        // UI 상태 업데이트
+        editingListId = listId; 
+        document.getElementById('page-title').innerText = `✏️ 수정 중: ${title}`;
+        document.getElementById('btn-save').innerText = '✅ 덮어쓰기 저장';
+        document.getElementById('btn-save-as').style.display = 'inline-block'; // 이제부터는 다른이름 저장 활성화
+
+        if (!isSaveAsNew && editingListId !== listId) {
+            // 처음 저장할 때
+            alert("새로운 티어표가 대용량 DB에 저장되었습니다!");
+        } else if (!isSaveAsNew) {
+            // 덮어쓰기 성공
+            alert("현재 상태가 성공적으로 덮어쓰기(저장) 되었습니다! 💾");
         } else {
-          editingListId = listId;
-          document.getElementById('page-title').innerText = `✏️ 수정 중: ${title}`;
-          alert("새로운 티어표가 대용량 DB에 저장되었습니다!");
+            // 다른 이름으로 저장 성공
+            alert("새로운 복사본으로 저장되었습니다!");
         }
       } catch (err) {
         alert("저장 중 오류가 발생했습니다.");
