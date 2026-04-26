@@ -287,20 +287,41 @@
       if (draggedItem) { draggedItem.classList.remove('dragging'); draggedItem = null; }
     });
 
+// 기준이 되는 6가지 무지개색의 HSL 색상값 (Hue: 색상 각도)
+    // 빨(0), 주(30), 노(60), 초(120), 파(220), 보(270)
+    const rainbowStops = [0, 30, 60, 120, 220, 270];
+
     function updateRowColors() {
-      const rows = document.querySelectorAll('.tier-row'); const total = rows.length; if (total === 0) return;
+      const rows = document.querySelectorAll('.tier-row');
+      const total = rows.length;
+      if (total === 0) return;
+
       rows.forEach((row, index) => {
-        const label = row.querySelector('.tier-label'); let hue = visualStops[0];
-        if (total > 1) {
-          const ratio = index / (total - 1); const sectionProgress = ratio * (visualStops.length - 1);
-          const lowIndex = Math.floor(sectionProgress); const highIndex = Math.ceil(sectionProgress);
-          const interpolation = sectionProgress - lowIndex;
-          hue = visualStops[lowIndex] + (visualStops[highIndex] - visualStops[lowIndex]) * interpolation;
+        const label = row.querySelector('.tier-label');
+        let hue;
+
+        if (total <= 6) {
+          // 1. 기본 6줄 이하일 때: 무지개색 배열에서 순서대로 정확히 하나씩 픽업
+          hue = rainbowStops[index];
+        } else {
+          // 2. 7줄 이상일 때: 양 끝(빨강, 보라)을 고정하고 그 사이를 전체 줄 개수로 쪼개서 분배
+          const ratio = index / (total - 1); // 0.0 ~ 1.0 사이의 진행률
+          const p = ratio * (rainbowStops.length - 1);
+          
+          const lowIdx = Math.floor(p);
+          const highIdx = Math.ceil(p);
+          const interpolation = p - lowIdx; // 두 색상 사이의 미세 비율
+          
+          // 수학적 보간법을 이용해 사이사이의 세분화된 색상값 계산
+          hue = rainbowStops[lowIdx] + (rainbowStops[highIdx] - rainbowStops[lowIdx]) * interpolation;
         }
-        label.style.backgroundColor = `hsl(${hue}, 80%, 45%)`;
+
+        // HSL 색상계를 사용하여 채도(80%)와 명도(60%)를 고정해 톤을 통일감 있게 맞춤
+        label.style.backgroundColor = `hsl(${hue}, 80%, 60%)`;
+        label.style.color = "#333";
+        label.style.textShadow = "none";
       });
     }
-
     window.addTier = function() {
       if (document.body.classList.contains('read-only')) return;
       const board = document.getElementById('board'); const row = document.createElement('div'); row.className = 'tier-row';
