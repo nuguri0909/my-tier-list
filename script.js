@@ -1,6 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-import { getFirestore, collection, addDoc, getDoc, doc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+// ✨ 추가된 기능(좋아요, 댓글 등)을 위해 필요한 Firestore 함수들을 임포트에 추가했습니다.
+import { getFirestore, collection, addDoc, getDoc, doc, serverTimestamp, updateDoc, increment, deleteDoc, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAwVjpUANfil947xb0bjKALw2uuGvZYQcs",
@@ -20,14 +21,13 @@ window.currentUser = null;
 window.customNickname = "익명";
 let itemIdCounter = 0;
 
-// URL에서 불러올 티어표 ID 확인
 const urlParams = new URLSearchParams(window.location.search);
 const loadId = urlParams.get('load');
 const loadMode = urlParams.get('mode'); 
 let originalAuthorId = null;
 
 // ==========================================
-// 1. 로그인 및 인증 UI 업데이트 로직 (복구 완료!)
+// 1. 로그인 및 인증 UI 업데이트 로직
 // ==========================================
 window.login = () => signInWithPopup(auth, provider).catch(err => alert(err.message));
 window.logout = () => signOut(auth).then(() => alert("로그아웃 되었습니다."));
@@ -56,7 +56,7 @@ onAuthStateChanged(auth, (user) => {
 
 window.updateAuthUI = function() {
   const nm = document.getElementById('user-name-display');
-  if(!nm) return; // 다른 페이지에서 에러 안 나게 방지
+  if(!nm) return; 
   
   if(window.currentUser) {
     nm.innerText = window.customNickname + "님";
@@ -72,7 +72,7 @@ window.updateAuthUI = function() {
 };
 
 // ==========================================
-// 2. 무지개 색상 및 티어 줄 관리 (복구 완료!)
+// 2. 무지개 색상 및 티어 줄 관리
 // ==========================================
 const rainbowStops = [0, 30, 60, 120, 220, 270];
 window.updateRowColors = function() {
@@ -105,7 +105,7 @@ window.deleteTier = function(btn) {
 };
 
 // ==========================================
-// 3. 아이템 추가 함수 (복구 완료!)
+// 3. 아이템 추가 함수
 // ==========================================
 window.addNewItem = function() {
   const fileInput = document.getElementById('img-file');
@@ -143,7 +143,7 @@ function createItemBox(src, title, desc="", parentElement=null) {
 }
 
 // ==========================================
-// 4. 드래그 앤 드롭 및 미리보기 기능 (복구 완료!)
+// 4. 드래그 앤 드롭 및 미리보기 기능
 // ==========================================
 window.draggedItemId = null;
 
@@ -244,7 +244,7 @@ window.deleteItem = function() {
 };
 
 // ==========================================
-// 6. DB 저장 및 불러오기
+// 6. DB 저장 및 불러오기 (요청사항 1번 반영)
 // ==========================================
 window.saveBoard = async function() {
   if (!window.currentUser) return alert("로그인해야 저장할 수 있습니다!");
@@ -258,7 +258,7 @@ window.saveBoard = async function() {
       title: item.querySelector('.item-title') ? item.querySelector('.item-title').innerText : "",
       desc: item.dataset.desc || ""
     }));
-    boardData.push({ label, items });
+    boardData.push({ label, items, color: row.querySelector('.tier-label').style.backgroundColor });
   });
 
   const bankItems = Array.from(document.getElementById('item-bank').children).map(item => ({
@@ -267,12 +267,19 @@ window.saveBoard = async function() {
     desc: item.dataset.desc || ""
   }));
 
+  // ✨ 제목 입력창(id="tier-list-title")이 있으면 가져오고, 없으면 기본값 설정
+  const titleInput = document.getElementById('tier-list-title');
+  const boardTitle = titleInput && titleInput.value.trim() !== "" ? titleInput.value.trim() : "나만의 무제 티어표";
+
   const payload = {
-    authorId: window.currentUser.uid, 
+    title: boardTitle, // 1번: 보관함에서 볼 수 있게 제목 추가
+    authorId: window.currentUser.uid, // 1번: 내 보관함 필터링을 위한 UID
     authorName: window.customNickname,
     category: document.getElementById('category-select') ? document.getElementById('category-select').value : "기타",
     tiers: boardData,
     bank: bankItems,
+    likes: 0,    // 4번: 좋아요 초기값 설정
+    dislikes: 0, // 4번: 싫어요 초기값 설정
     createdAt: serverTimestamp()
   };
 
@@ -300,14 +307,14 @@ window.loadBoardData = async function() {
       if(board) board.innerHTML = ''; 
       if(itemBank) itemBank.innerHTML = '';
 
-      if (loadMode === 'v1') {
+      if (loadMode === 'v1' || !loadMode) {
         data.tiers.forEach(tier => {
           const row = document.createElement('div'); row.className = 'tier-row';
           row.innerHTML = `<div class="tier-label" contenteditable="true">${tier.label}</div><div class="tier-items" ondrop="window.drop(event)" ondragover="window.allowDrop(event)"></div><button class="delete-tier-btn" onclick="window.deleteTier(this)">X</button>`;
           board.appendChild(row);
           tier.items.forEach(it => createItemBox(it.src, it.title, it.desc, row.querySelector('.tier-items')));
         });
-        data.bank.forEach(it => createItemBox(it.src, it.title, it.desc, itemBank));
+        if(data.bank) data.bank.forEach(it => createItemBox(it.src, it.title, it.desc, itemBank));
       } else if (loadMode === 'v2') {
         data.tiers.forEach(tier => {
           const row = document.createElement('div'); row.className = 'tier-row';
@@ -315,7 +322,7 @@ window.loadBoardData = async function() {
           board.appendChild(row);
           tier.items.forEach(it => createItemBox(it.src, it.title, it.desc, itemBank));
         });
-        data.bank.forEach(it => createItemBox(it.src, it.title, it.desc, itemBank));
+        if(data.bank) data.bank.forEach(it => createItemBox(it.src, it.title, it.desc, itemBank));
       }
       window.updateRowColors();
     }
@@ -336,5 +343,91 @@ window.onload = function() {
       });
       window.updateRowColors();
     }
+  }
+};
+
+// ==========================================
+// 8. 게시판 뷰어, 좋아요, 댓글 기능 (새로 추가)
+// ==========================================
+
+// 3번 & 4번: 게시판에서 글 클릭 시 티어표와 좋아요 버튼 띄우기
+window.openPostDetail = async function(postId) {
+  const docRef = doc(db, "tierLists", postId);
+  const docSnap = await getDoc(docRef);
+  
+  if (docSnap.exists()) {
+    const data = docSnap.data();
+    
+    // 티어표 렌더링 (게시판 HTML 안에 id="board-viewer" 영역이 있어야 합니다)
+    const viewer = document.getElementById('board-viewer'); 
+    if(viewer) {
+      viewer.innerHTML = ''; 
+      data.tiers.forEach(tier => {
+        let itemsHtml = tier.items.map(it => `<div class="item" style="pointer-events:none;"><img src="${it.src}"></div>`).join('');
+        viewer.innerHTML += `
+          <div class="tier-row" style="min-height: 80px; margin-bottom: 5px;">
+            <div class="tier-label" style="background-color: ${tier.color || '#ccc'}; width: 100px; display:flex; align-items:center; justify-content:center; font-weight:bold;">${tier.label}</div>
+            <div class="tier-items" style="display:flex; flex-wrap:wrap; gap:5px; padding:5px;">${itemsHtml}</div>
+          </div>
+        `;
+      });
+    }
+
+    // 4번: 좋아요/싫어요 버튼 렌더링
+    const voteSection = document.getElementById('vote-section');
+    if(voteSection) {
+      voteSection.innerHTML = `
+        <button class="btn" style="background:#e74c3c;" onclick="window.vote('${postId}', 'like')">👍 좋아요 (${data.likes || 0})</button>
+        <button class="btn" style="background:#7f8c8d;" onclick="window.vote('${postId}', 'dislike')">👎 싫어요 (${data.dislikes || 0})</button>
+      `;
+    }
+
+    // 댓글 목록 불러오기 시작
+    window.loadComments(postId);
+    
+    // 모달창 띄우기 (게시판 HTML에 팝업이 구현되어 있을 경우)
+    const modal = document.getElementById('post-detail-modal');
+    if(modal) modal.style.display = 'flex';
+  }
+};
+
+// 4번: 좋아요/싫어요 처리 로직
+window.vote = async function(postId, type) {
+  if (!window.currentUser) return alert("로그인 후 이용할 수 있습니다.");
+  const docRef = doc(db, "tierLists", postId);
+  if(type === 'like') await updateDoc(docRef, { likes: increment(1) });
+  else await updateDoc(docRef, { dislikes: increment(1) });
+  window.openPostDetail(postId); // 반영 후 화면 새로고침
+};
+
+// 2번: 댓글 삭제 로직 (내가 쓴 댓글만 삭제 버튼이 보이도록)
+window.loadComments = function(postId) {
+  const commentList = document.getElementById('comment-list');
+  if(!commentList) return;
+
+  const q = query(collection(db, `tierLists/${postId}/comments`), orderBy("createdAt", "desc"));
+  onSnapshot(q, (snapshot) => {
+    commentList.innerHTML = '';
+    snapshot.forEach((docSnap) => {
+      const c = docSnap.data();
+      const commentId = docSnap.id;
+      
+      // 내 댓글이면 삭제 버튼 표시
+      const isMine = window.currentUser && c.authorId === window.currentUser.uid;
+      const deleteBtn = isMine ? `<button style="background:transparent; color:#e74c3c; border:none; cursor:pointer;" onclick="window.deleteComment('${postId}', '${commentId}')">삭제</button>` : '';
+
+      commentList.innerHTML += `
+        <div style="background:#222; padding:10px; margin-bottom:5px; border-radius:5px; display:flex; justify-content:space-between;">
+          <div><strong>${c.authorName}:</strong> ${c.text}</div>
+          ${deleteBtn}
+        </div>
+      `;
+    });
+  });
+};
+
+window.deleteComment = async function(postId, commentId) {
+  if(confirm("이 댓글을 삭제할까요?")) {
+    await deleteDoc(doc(db, `tierLists/${postId}/comments`, commentId));
   }
 };
