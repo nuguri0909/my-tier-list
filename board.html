@@ -30,8 +30,7 @@
     <div class="nav-left">
       <a href="index.html" class="nav-logo">MyTierList</a>
       <div class="nav-links">
-        <a href="index.html">티어 만들기</a>
-        <a href="board.html">티어 게시판</a>
+        <a href="maker.html">티어 만들기</a> <a href="board.html">티어 게시판</a>
         <a href="mylist.html">내 보관함</a>
       </div>
     </div>
@@ -85,6 +84,8 @@
         <div id="board-viewer" class="board-viewer"></div>
       </div>
       
+      <div id="vote-section" style="display: flex; gap: 10px; justify-content: center; margin: 20px 0;"></div>
+      
       <div id="comment-list" class="comment-list"></div>
 
       <div id="comment-auth-guard" style="text-align:center; padding:15px; background:#2a2a2a; border-radius:8px; color:#aaa;">
@@ -114,10 +115,10 @@
   </div>
 
   <script type="module">
-    // ⭐ deleteDoc이 추가로 import 되었습니다.
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-    import { getFirestore, collection, getDocs, doc, getDoc, addDoc, deleteDoc, query, orderBy, serverTimestamp, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    // ⭐ 좋아요 기능을 위해 updateDoc, increment 추가
+    import { getFirestore, collection, getDocs, doc, getDoc, addDoc, deleteDoc, query, orderBy, serverTimestamp, onSnapshot, updateDoc, increment } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAwVjpUANfil947xb0bjKALw2uuGvZYQcs",
@@ -133,7 +134,6 @@
     const db = getFirestore(app);
     const provider = new GoogleAuthProvider();
 
-    // 👑 [관리자 이메일 설정] 본인의 구글 로그인 이메일을 넣어주세요. (여러 명일 경우 쉼표로 구분)
     const ADMIN_EMAILS = ["fjrzlsiyoung@gmail.com"]; 
 
     window.currentUser = null;
@@ -164,7 +164,6 @@
         document.getElementById('comment-input-area').style.display = 'none';
       }
       
-      // 유저 상태가 변하면 게시판을 다시 그려서 삭제 버튼 활성화/비활성화 반영
       if(prevUser !== user && allBoardData.length > 0) {
         window.executeSearch();
       }
@@ -180,7 +179,7 @@
         snapshot.forEach(docSnap => {
           allBoardData.push({ id: docSnap.id, ...docSnap.data() });
         });
-        window.executeSearch(); // 최초 로드 시에도 필터 적용하여 렌더링
+        window.executeSearch(); 
       } catch (error) {
         container.innerHTML = `<p style="color:red; text-align:center;">에러 발생: ${error.message}</p>`;
       }
@@ -197,7 +196,6 @@
       dataList.forEach(data => {
         const dateStr = data.createdAt && data.createdAt.toDate ? data.createdAt.toDate().toLocaleDateString() : "최근";
         
-        // 👑 관리자 또는 본인 게시글 삭제 권한 체크
         const isAdmin = window.currentUser && ADMIN_EMAILS.includes(window.currentUser.email);
         const isAuthor = window.currentUser && window.currentUser.uid === data.authorId;
         const canDeletePost = isAuthor || isAdmin;
@@ -213,7 +211,7 @@
             <span style="color:#2ecc71; font-weight:bold;">[${data.category || "기타"}]</span> | 
             작성자: <span style="cursor:pointer; color:#3498db; text-decoration:underline;" onclick="window.searchByAuthor('${data.authorName}')">${data.authorName}</span> 
             | ${dateStr}
-          </div>
+            | ❤️ ${data.likes || 0} </div>
           <div class="card-actions">
             ${deleteBtnHtml}
             <button class="btn btn-save" style="width:100%; margin-bottom:5px;" onclick="window.openCommentModal('${data.id}', '${data.authorName}')">💬 구경 및 댓글 보기</button>
@@ -227,20 +225,16 @@
       });
     }
 
-    // ⭐ 검색 및 카테고리 필터링 기능 통합
     window.executeSearch = () => {
       const catFilter = document.getElementById('filter-category').value;
       const type = document.getElementById('search-type').value;
       const keyword = document.getElementById('search-input').value.toLowerCase().trim();
 
       const filtered = allBoardData.filter(data => {
-        // 카테고리 체크 (all이면 모두 통과)
         const matchCategory = (catFilter === 'all') || (data.category === catFilter);
-        
         const titleCat = (data.title || "") + " " + (data.category || "");
         const author = data.authorName || "";
         
-        // 검색어 체크
         let matchKeyword = true;
         if(keyword) {
           if(type === 'title') matchKeyword = titleCat.toLowerCase().includes(keyword);
@@ -268,15 +262,35 @@
       window.scrollTo(0, 0); 
     };
 
-    // 🗑️ 게시글 삭제 기능
     window.deletePost = async (postId) => {
       if(!confirm("이 게시글을 정말 삭제하시겠습니까?\n(한 번 삭제하면 복구할 수 없습니다.)")) return;
       try {
         await deleteDoc(doc(db, "tierLists", postId));
         alert("게시글이 삭제되었습니다.");
-        loadBoard(); // 목록 새로고침
+        loadBoard(); 
       } catch(e) {
         alert("삭제 실패: " + e.message);
+      }
+    };
+
+    // ⭐ 좋아요 누르기 함수 추가
+    window.likePost = async () => {
+      if(!window.currentUser) return alert("로그인이 필요합니다.");
+      if(!currentPostId) return;
+
+      try {
+        const postRef = doc(db, "tierLists", currentPostId);
+        await updateDoc(postRef, {
+          likes: increment(1)
+        });
+        
+        const countSpan = document.getElementById('like-count-display');
+        if(countSpan) countSpan.innerText = parseInt(countSpan.innerText) + 1;
+        
+        alert("좋아요를 눌렀습니다! ❤️");
+        loadBoard(); // 밖의 게시판 목록에도 반영되도록 새로고침
+      } catch(e) {
+        alert("오류가 발생했습니다: " + e.message);
       }
     };
 
@@ -287,8 +301,11 @@
       
       const viewer = document.getElementById('board-viewer');
       const catDiv = document.getElementById('modal-post-category');
+      const voteSection = document.getElementById('vote-section');
+      
       viewer.innerHTML = '<p style="color:#aaa; text-align:center;">티어표를 불러오는 중...</p>';
       catDiv.innerText = '';
+      voteSection.innerHTML = '';
       
       try {
         const docSnap = await getDoc(doc(db, "tierLists", postId));
@@ -296,6 +313,9 @@
           const data = docSnap.data();
           viewer.innerHTML = ''; 
           catDiv.innerText = `🏷️ 카테고리: ${data.category || '지정되지 않음'}`;
+          
+          // ⭐ 모달에 좋아요 버튼 생성
+          voteSection.innerHTML = `<button class="btn btn-save" onclick="window.likePost()" style="font-size: 1.1rem; padding: 10px 20px; background: #e74c3c;">❤️ 좋아요 (<span id="like-count-display">${data.likes || 0}</span>)</button>`;
           
           if(data.tiers && data.tiers.length > 0) {
             data.tiers.forEach(tier => {
@@ -372,13 +392,11 @@
       document.getElementById('ro-item-modal').style.display = 'flex';
     };
 
-    // ⭐ 댓글 생성 및 삭제 버튼 추가
     function createCommentHTML(data, isReply) {
       const div = document.createElement('div');
       div.className = isReply ? 'comment-item reply-item' : 'comment-item';
       const dateStr = data.createdAt ? data.createdAt.toDate().toLocaleString() : "방금 전";
       
-      // 권한 체크: 관리자이거나 내 댓글이면 삭제 가능
       const isAdmin = window.currentUser && ADMIN_EMAILS.includes(window.currentUser.email);
       const isAuthor = window.currentUser && window.currentUser.uid === data.authorId;
       const canDelete = isAuthor || isAdmin;
@@ -403,12 +421,10 @@
       return div;
     }
 
-    // 🗑️ 댓글 삭제 기능
     window.deleteComment = async (commentId) => {
       if(!confirm("정말 이 댓글을 삭제하시겠습니까?")) return;
       try {
         await deleteDoc(doc(db, "tierLists", currentPostId, "comments", commentId));
-        // 삭제 성공 시 실시간 리스너(onSnapshot)가 자동으로 화면을 갱신해 줍니다.
       } catch(e) {
         alert("댓글 삭제 실패: " + e.message);
       }
