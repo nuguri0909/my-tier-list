@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MyTierList - 나만의 티어표 만들기</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <div class="nav-left">
+      <a href="index.html" class="nav-logo">MyTierList</a>
+      <div class="nav-links">
+        <a href="maker.html">티어 만들기</a>
+        <a href="board.html">티어 게시판</a>
+      </div>
+    </div>
+    <div class="user-menu">
+      <span id="user-name-display" class="user-name"></span>
+    </div>
+  </nav>
+
+  <div class="container">
+    
+    <div class="hero-section">
+      <h1 class="hero-title">당신의 취향을 <span>티어리스트</span>로 증명하세요</h1>
+      <p class="hero-subtitle">게임, 음식, 영화 무엇이든 좋습니다. 세상의 모든 것을 평가해 보세요.</p>
+      <button class="btn hero-btn" onclick="location.href='maker.html'">새 티어 만들기 🚀</button>
+    </div>
+
+    <h2 class="home-section-title">🔥 주간 인기 티어리스트</h2>
+    <div id="popular-grid" class="tier-card-grid">
+      </div>
+
+    <h2 class="home-section-title">⚡ 방금 막 올라온 티어리스트</h2>
+    <div id="recent-grid" class="tier-card-grid">
+      </div>
+
+  </div>
+
+  <footer class="site-footer">
+    <div class="site-footer-links">
+      <a href="policy.html?type=terms">이용약관</a> | 
+      <a href="policy.html?type=privacy">개인정보처리방침</a> | 
+      <a href="policy.html?type=youth">청소년 보호정책</a>
+    </div>
+    <div class="site-footer-info">
+      <div>@2026 MyTierList.net</div>
+      <div style="margin-top: 5px;">문의: asy0009@naver.com</div>
+    </div>
+  </footer>
+
+  <script type="module" src="home.js"></script>
+</body>
+</html>
