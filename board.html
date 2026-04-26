@@ -30,7 +30,8 @@
     <div class="nav-left">
       <a href="index.html" class="nav-logo">MyTierList</a>
       <div class="nav-links">
-        <a href="maker.html">티어 만들기</a> <a href="board.html">티어 게시판</a>
+        <a href="maker.html">티어 만들기</a>
+        <a href="board.html">티어 게시판</a>
         <a href="mylist.html">내 보관함</a>
       </div>
     </div>
@@ -101,7 +102,6 @@
   <div id="ro-item-modal" class="modal-overlay" style="display:none; z-index: 3000;">
     <div class="modal-content">
       <button class="btn-close" onclick="document.getElementById('ro-item-modal').style.display='none'">X</button>
-      
       <div class="modal-body">
         <div class="modal-left">
           <img id="ro-modal-img" src="">
@@ -117,8 +117,8 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-    // ⭐ 좋아요 기능을 위해 updateDoc, increment 추가
-    import { getFirestore, collection, getDocs, doc, getDoc, addDoc, deleteDoc, query, orderBy, serverTimestamp, onSnapshot, updateDoc, increment } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    // ⭐ arrayUnion 추가됨
+    import { getFirestore, collection, getDocs, doc, getDoc, addDoc, deleteDoc, query, orderBy, serverTimestamp, onSnapshot, updateDoc, increment, arrayUnion } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAwVjpUANfil947xb0bjKALw2uuGvZYQcs",
@@ -140,6 +140,7 @@
     let currentPostId = null; 
     let commentsUnsubscribe = null; 
     let allBoardData = [];
+    window.hasOpenedModalFromUrl = false; // 중복 실행 방지 변수
 
     window.login = () => signInWithPopup(auth, provider).catch(err => alert(err.message));
     window.logout = () => signOut(auth).then(() => alert("로그아웃 되었습니다."));
@@ -163,10 +164,7 @@
         document.getElementById('comment-auth-guard').style.display = 'block';
         document.getElementById('comment-input-area').style.display = 'none';
       }
-      
-      if(prevUser !== user && allBoardData.length > 0) {
-        window.executeSearch();
-      }
+      if(prevUser !== user && allBoardData.length > 0) window.executeSearch();
     });
 
     async function loadBoard() {
@@ -180,6 +178,18 @@
           allBoardData.push({ id: docSnap.id, ...docSnap.data() });
         });
         window.executeSearch(); 
+
+        // ⭐ 링크로 접속했을 때, 해당 티어표 바로 열어주기 로직
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlPostId = urlParams.get('id');
+        if(urlPostId && !window.hasOpenedModalFromUrl) {
+          window.hasOpenedModalFromUrl = true; 
+          const targetPost = allBoardData.find(p => p.id === urlPostId);
+          if(targetPost) {
+            window.openCommentModal(targetPost.id, targetPost.authorName);
+          }
+        }
+
       } catch (error) {
         container.innerHTML = `<p style="color:red; text-align:center;">에러 발생: ${error.message}</p>`;
       }
@@ -195,13 +205,10 @@
 
       dataList.forEach(data => {
         const dateStr = data.createdAt && data.createdAt.toDate ? data.createdAt.toDate().toLocaleDateString() : "최근";
-        
         const isAdmin = window.currentUser && ADMIN_EMAILS.includes(window.currentUser.email);
         const isAuthor = window.currentUser && window.currentUser.uid === data.authorId;
         const canDeletePost = isAuthor || isAdmin;
-        
-        const deleteBtnHtml = canDeletePost ? 
-          `<button class="btn" style="background:#e74c3c; width:100%; margin-bottom:5px;" onclick="window.deletePost('${data.id}')">🗑️ 이 게시글 삭제하기</button>` : '';
+        const deleteBtnHtml = canDeletePost ? `<button class="btn" style="background:#e74c3c; width:100%; margin-bottom:5px;" onclick="window.deletePost('${data.id}')">🗑️ 이 게시글 삭제하기</button>` : '';
 
         const card = document.createElement('div');
         card.className = 'tier-card';
@@ -211,13 +218,14 @@
             <span style="color:#2ecc71; font-weight:bold;">[${data.category || "기타"}]</span> | 
             작성자: <span style="cursor:pointer; color:#3498db; text-decoration:underline;" onclick="window.searchByAuthor('${data.authorName}')">${data.authorName}</span> 
             | ${dateStr}
-            | ❤️ ${data.likes || 0} </div>
+            <br>❤️ ${data.likes || 0} &nbsp; 👁️ ${data.views || 0}
+          </div>
           <div class="card-actions">
             ${deleteBtnHtml}
             <button class="btn btn-save" style="width:100%; margin-bottom:5px;" onclick="window.openCommentModal('${data.id}', '${data.authorName}')">💬 구경 및 댓글 보기</button>
             <div style="display:flex; gap:5px;">
-              <button class="btn btn-small" style="flex:1;" onclick="location.href='index.html?load=${data.id}&mode=v1'">🔄 V1 (티어 유지)</button>
-              <button class="btn btn-small" style="flex:1;" onclick="location.href='index.html?load=${data.id}&mode=v2'">📥 V2 (대기열로)</button>
+              <button class="btn btn-small" style="flex:1;" onclick="location.href='maker.html?load=${data.id}&mode=v1'">🔄 V1 (티어 유지)</button>
+              <button class="btn btn-small" style="flex:1;" onclick="location.href='maker.html?load=${data.id}&mode=v2'">📥 V2 (대기열로)</button>
             </div>
           </div>
         `;
@@ -234,14 +242,12 @@
         const matchCategory = (catFilter === 'all') || (data.category === catFilter);
         const titleCat = (data.title || "") + " " + (data.category || "");
         const author = data.authorName || "";
-        
         let matchKeyword = true;
         if(keyword) {
           if(type === 'title') matchKeyword = titleCat.toLowerCase().includes(keyword);
           else if(type === 'author') matchKeyword = author.toLowerCase().includes(keyword);
           else matchKeyword = titleCat.toLowerCase().includes(keyword) || author.toLowerCase().includes(keyword);
         }
-        
         return matchCategory && matchKeyword;
       });
       renderBoard(filtered);
@@ -268,27 +274,39 @@
         await deleteDoc(doc(db, "tierLists", postId));
         alert("게시글이 삭제되었습니다.");
         loadBoard(); 
-      } catch(e) {
-        alert("삭제 실패: " + e.message);
-      }
+      } catch(e) { alert("삭제 실패: " + e.message); }
     };
 
-    // ⭐ 좋아요 누르기 함수 추가
+    // ⭐ 중복 좋아요 방지 로직 적용
     window.likePost = async () => {
       if(!window.currentUser) return alert("로그인이 필요합니다.");
       if(!currentPostId) return;
 
       try {
         const postRef = doc(db, "tierLists", currentPostId);
-        await updateDoc(postRef, {
-          likes: increment(1)
-        });
+        const postSnap = await getDoc(postRef);
         
-        const countSpan = document.getElementById('like-count-display');
-        if(countSpan) countSpan.innerText = parseInt(countSpan.innerText) + 1;
-        
-        alert("좋아요를 눌렀습니다! ❤️");
-        loadBoard(); // 밖의 게시판 목록에도 반영되도록 새로고침
+        if (postSnap.exists()) {
+          const data = postSnap.data();
+          const likedUsers = data.likedUsers || []; // 좋아요 누른 유저 배열
+          
+          // 이미 누른 유저인지 확인
+          if (likedUsers.includes(window.currentUser.uid)) {
+            return alert("이미 좋아요를 누르셨습니다! ❤️");
+          }
+
+          // 좋아요 수 증가 및 누른 유저 기록
+          await updateDoc(postRef, {
+            likes: increment(1),
+            likedUsers: arrayUnion(window.currentUser.uid)
+          });
+          
+          const countSpan = document.getElementById('like-count-display');
+          if(countSpan) countSpan.innerText = parseInt(countSpan.innerText) + 1;
+          
+          alert("좋아요를 눌렀습니다! ❤️");
+          loadBoard(); 
+        }
       } catch(e) {
         alert("오류가 발생했습니다: " + e.message);
       }
@@ -308,13 +326,18 @@
       voteSection.innerHTML = '';
       
       try {
-        const docSnap = await getDoc(doc(db, "tierLists", postId));
+        const postRef = doc(db, "tierLists", postId);
+        
+        // ⭐ 게시글을 열었을 때 자동으로 조회수 1 증가
+        await updateDoc(postRef, { views: increment(1) });
+        loadBoard(); // 바깥 목록에 조회수 반영되도록 리로드
+
+        const docSnap = await getDoc(postRef);
         if(docSnap.exists()) {
           const data = docSnap.data();
           viewer.innerHTML = ''; 
           catDiv.innerText = `🏷️ 카테고리: ${data.category || '지정되지 않음'}`;
           
-          // ⭐ 모달에 좋아요 버튼 생성
           voteSection.innerHTML = `<button class="btn btn-save" onclick="window.likePost()" style="font-size: 1.1rem; padding: 10px 20px; background: #e74c3c;">❤️ 좋아요 (<span id="like-count-display">${data.likes || 0}</span>)</button>`;
           
           if(data.tiers && data.tiers.length > 0) {
@@ -337,13 +360,9 @@
                 </div>
               `;
             });
-          } else {
-            viewer.innerHTML = '<p style="color:#aaa; text-align:center;">등록된 티어 항목이 없습니다.</p>';
-          }
+          } else { viewer.innerHTML = '<p style="color:#aaa; text-align:center;">등록된 티어 항목이 없습니다.</p>'; }
         }
-      } catch(e) {
-        viewer.innerHTML = '<p style="color:red; text-align:center;">티어표를 불러오지 못했습니다.</p>';
-      }
+      } catch(e) { viewer.innerHTML = '<p style="color:red; text-align:center;">티어표를 불러오지 못했습니다.</p>'; }
       
       const listContainer = document.getElementById('comment-list');
       listContainer.innerHTML = '<p style="text-align:center; color:#888;">댓글을 불러오는 중...</p>';
@@ -365,9 +384,7 @@
           commentsMap.set(data.id, data);
           if(data.parentId) {
             if(commentsMap.has(data.parentId)) commentsMap.get(data.parentId).replies.push(data);
-          } else {
-            topLevelComments.push(data);
-          }
+          } else { topLevelComments.push(data); }
         });
         topLevelComments.forEach(comment => {
           listContainer.appendChild(createCommentHTML(comment, false));
@@ -380,6 +397,8 @@
     window.closeCommentModal = () => {
       document.getElementById('comment-modal').style.display = 'none';
       currentPostId = null;
+      // 닫을 때 URL 파라미터를 깔끔하게 제거해줍니다
+      window.history.replaceState({}, document.title, window.location.pathname);
       if(commentsUnsubscribe) { commentsUnsubscribe(); commentsUnsubscribe = null; }
     };
 
@@ -396,7 +415,6 @@
       const div = document.createElement('div');
       div.className = isReply ? 'comment-item reply-item' : 'comment-item';
       const dateStr = data.createdAt ? data.createdAt.toDate().toLocaleString() : "방금 전";
-      
       const isAdmin = window.currentUser && ADMIN_EMAILS.includes(window.currentUser.email);
       const isAuthor = window.currentUser && window.currentUser.uid === data.authorId;
       const canDelete = isAuthor || isAdmin;
@@ -408,7 +426,6 @@
         </div>
         <div class="comment-text">${data.text}</div>
       `;
-      
       if (!isReply && window.currentUser) {
         html += `<button class="btn-reply-open" onclick="window.showReplyInput('${data.id}')">↳ 답글 달기</button>
           <div id="reply-box-${data.id}" class="reply-input-box" style="display:none;">
@@ -423,11 +440,8 @@
 
     window.deleteComment = async (commentId) => {
       if(!confirm("정말 이 댓글을 삭제하시겠습니까?")) return;
-      try {
-        await deleteDoc(doc(db, "tierLists", currentPostId, "comments", commentId));
-      } catch(e) {
-        alert("댓글 삭제 실패: " + e.message);
-      }
+      try { await deleteDoc(doc(db, "tierLists", currentPostId, "comments", commentId)); } 
+      catch(e) { alert("댓글 삭제 실패: " + e.message); }
     };
 
     window.showReplyInput = (commentId) => {
@@ -459,15 +473,15 @@
     window.onload = () => loadBoard();
   </script>
   <footer class="site-footer">
-  <div class="site-footer-links">
-    <a href="policy.html?type=terms">이용약관</a> | 
-    <a href="policy.html?type=privacy">개인정보처리방침</a> | 
-    <a href="policy.html?type=youth">청소년 보호정책</a>
-  </div>
-  <div class="site-footer-info">
-    <div>@2026 MyTierList.net</div>
-    <div style="margin-top: 5px;">문의: asy0009@naver.com</div>
-  </div>
-</footer>
+    <div class="site-footer-links">
+      <a href="policy.html?type=terms">이용약관</a> | 
+      <a href="policy.html?type=privacy">개인정보처리방침</a> | 
+      <a href="policy.html?type=youth">청소년 보호정책</a>
+    </div>
+    <div class="site-footer-info">
+      <div>@2026 MyTierList.net</div>
+      <div style="margin-top: 5px;">문의: asy0009@naver.com</div>
+    </div>
+  </footer>
 </body>
 </html>
