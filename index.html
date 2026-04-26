@@ -73,24 +73,34 @@
     </div>
   </div>
 
-  <div id="item-modal" class="modal-overlay" style="display:none;">
-    <div class="modal-content">
-      <h3>📝 아이템 상세 설정 <button class="btn-close" onclick="window.closeModal()">&times;</button></h3>
-      <div class="modal-body">
-        <div class="modal-left">
-          <img id="modal-img-preview" src="">
-          <input type="text" id="modal-title" class="control-input" placeholder="아이템 제목">
-          <button class="btn btn-delete" onclick="window.deleteItem()">🗑️ 완전 삭제</button>
-        </div>
-        <div class="modal-right">
-          <textarea id="modal-desc" class="control-input" placeholder="설명을 입력하세요..."></textarea>
-          <div style="text-align: right; margin-top: 10px;">
-            <button class="btn btn-save" onclick="window.saveItemInfo()">저장</button>
-          </div>
+<div id="item-modal" class="modal-overlay">
+  <div class="modal-content">
+    
+    <button class="btn-close" onclick="window.closeModal()">X</button>
+    
+    <div class="modal-header">
+      <h2 style="margin: 0; color: #fff;">아이템 상세 설정</h2>
+    </div>
+    
+    <div class="modal-body">
+      <div class="modal-left">
+        <img id="modal-img-preview" src="">
+      </div>
+      <div class="modal-right">
+        <label style="font-weight:bold; color:#aaa; font-size:0.9rem;">아이템 이름</label>
+        <input type="text" id="modal-title" class="control-input" placeholder="항목 이름 (예: 아이언맨)" style="font-size: 1.2rem;">
+        
+        <label style="font-weight:bold; color:#aaa; font-size:0.9rem; margin-top:5px;">상세 설명</label>
+        <textarea id="modal-desc" class="control-input" placeholder="이 항목에 대한 자세한 설명이나 평가를 적어보세요!"></textarea>
+        
+        <div style="display:flex; gap:10px; margin-top:10px;">
+          <button class="btn btn-save" style="flex:1; padding:12px; font-size:1.1rem;" onclick="window.saveItemInfo()">저장하기</button>
+          <button class="btn" style="background:#e74c3c; padding:12px; font-size:1.1rem;" onclick="window.deleteItem()">삭제</button>
         </div>
       </div>
     </div>
   </div>
+</div>
 
   <script type="module" src="script.js"></script>
 </body>
