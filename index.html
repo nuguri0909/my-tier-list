@@ -1,59 +1,127 @@
 <!DOCTYPE html>
-<html>
+<html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <title>나만의 티어 메이커</title>
+  <title>커스텀 티어 메이커</title>
   <style>
-    body { font-family: 'Malgun Gothic', sans-serif; background: #121212; color: white; text-align: center; }
-    .tier-row { display: flex; align-items: center; border-bottom: 1px solid #444; min-height: 100px; }
-    .tier-label { width: 100px; font-weight: bold; font-size: 24px; padding: 20px; color: black; }
-    .s-tier { background: #ff7f7f; }
-    .a-tier { background: #ffbf7f; }
-    .b-tier { background: #ffff7f; }
-    .tier-items { display: flex; flex-wrap: wrap; flex-grow: 1; padding: 10px; min-height: 100px; background: #1e1e1e; }
-    .item { width: 80px; height: 80px; background: #ffffff; color: #000; display: flex; justify-content: center; align-items: center; margin: 5px; cursor: grab; font-weight: bold; border-radius: 8px; }
-    #item-bank { display: flex; flex-wrap: wrap; padding: 20px; min-height: 150px; background: #2a2a2a; margin-top: 20px; border-radius: 10px; }
+    body { font-family: 'Malgun Gothic', sans-serif; background: #1a1a1a; color: white; margin: 0; padding: 20px; text-align: center; }
+    .tier-board { display: flex; flex-direction: column; border: 1px solid #000; margin: 0 auto; max-width: 900px; background: #0f0f0f; }
+    .tier-row { display: flex; border-bottom: 1px solid #000; min-height: 90px; }
+    .tier-label { width: 100px; display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 20px; color: #ccc; }
+    
+    /* 보여주신 이미지와 유사한 색상 적용 */
+    .s-tier { background: #5c1810; }
+    .a-tier { background: #5c3810; }
+    .b-tier { background: #3d420f; }
+    .c-tier { background: #104a16; }
+    .d-tier { background: #0a5212; }
+    .e-tier { background: #094747; }
+
+    .tier-items { display: flex; flex-wrap: wrap; flex-grow: 1; background: #1a1a1a; padding: 5px; gap: 5px; align-content: flex-start; }
+    .controls { width: 60px; background: #0f0f0f; display: flex; flex-direction: column; justify-content: center; align-items: center; font-size: 18px; cursor: pointer; color: #fff; line-height: 1.5; }
+
+    /* 업로드된 이미지 스타일 */
+    .item { width: 80px; height: 80px; background: #444; border-radius: 4px; overflow: hidden; cursor: grab; display: flex; justify-content: center; align-items: center; }
+    .item img { width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
+
+    #item-bank { display: flex; flex-wrap: wrap; margin: 20px auto; max-width: 900px; min-height: 150px; background: #222; padding: 10px; border: 1px dashed #555; gap: 5px; align-content: flex-start; }
+    .upload-btn { margin: 10px; padding: 12px 24px; font-size: 16px; font-weight: bold; cursor: pointer; background: #3498db; color: white; border: none; border-radius: 5px; }
+    .upload-btn:hover { background: #2980b9; }
   </style>
 </head>
 <body>
-  <h1>🏆 나만의 티어 메이커</h1>
-  <p>아래 박스들을 마우스로 드래그해서 등급을 매겨보세요!</p>
+  <h2>✨ 나만의 이미지 티어 메이커</h2>
   
-  <div id="tier-board">
+  <input type="file" id="image-upload" multiple accept="image/*" style="display: none;">
+  <button class="upload-btn" onclick="document.getElementById('image-upload').click()">+ 내 컴퓨터에서 이미지 추가하기</button>
+  <p style="font-size:14px; color:#aaa;">(💡 꿀팁: 추가된 이미지를 <b>더블 클릭</b>하면 설명을 넣을 수 있습니다!)</p>
+
+  <div class="tier-board" id="board">
     <div class="tier-row">
       <div class="tier-label s-tier">S</div>
       <div class="tier-items" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+      <div class="controls">⚙️<br>↕️</div>
     </div>
     <div class="tier-row">
       <div class="tier-label a-tier">A</div>
       <div class="tier-items" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+      <div class="controls">⚙️<br>↕️</div>
     </div>
     <div class="tier-row">
       <div class="tier-label b-tier">B</div>
       <div class="tier-items" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+      <div class="controls">⚙️<br>↕️</div>
+    </div>
+    <div class="tier-row">
+      <div class="tier-label c-tier">C</div>
+      <div class="tier-items" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+      <div class="controls">⚙️<br>↕️</div>
+    </div>
+    <div class="tier-row">
+      <div class="tier-label d-tier">D</div>
+      <div class="tier-items" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+      <div class="controls">⚙️<br>↕️</div>
+    </div>
+    <div class="tier-row">
+      <div class="tier-label e-tier">E</div>
+      <div class="tier-items" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+      <div class="controls">⚙️<br>↕️</div>
     </div>
   </div>
 
-  <h3>⬇️ 평가할 항목들 ⬇️</h3>
   <div id="item-bank" ondrop="drop(event)" ondragover="allowDrop(event)">
-    <div class="item" draggable="true" ondragstart="drag(event)" id="item1">라면</div>
-    <div class="item" draggable="true" ondragstart="drag(event)" id="item2">치킨</div>
-    <div class="item" draggable="true" ondragstart="drag(event)" id="item3">피자</div>
-    <div class="item" draggable="true" ondragstart="drag(event)" id="item4">초밥</div>
-  </div>
+    </div>
 
   <script>
+    let itemIdCounter = 0;
+
+    // 드래그 앤 드롭 기능
     function allowDrop(ev) { ev.preventDefault(); }
     function drag(ev) { ev.dataTransfer.setData("text", ev.target.id); }
     function drop(ev) {
       ev.preventDefault();
-      var data = ev.dataTransfer.getData("text");
-      var target = ev.target;
-      // 항목이 다른 항목 안으로 들어가지 않도록 보호
-      if(target.classList.contains('tier-items') || target.id === 'item-bank') {
+      const data = ev.dataTransfer.getData("text");
+      const target = ev.target.closest('.tier-items, #item-bank');
+      if (target && document.getElementById(data)) {
         target.appendChild(document.getElementById(data));
       }
     }
+
+    // 이미지 업로드 기능
+    document.getElementById('image-upload').addEventListener('change', function(e) {
+      const files = e.target.files;
+      const bank = document.getElementById('item-bank');
+
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        if (!file.type.startsWith('image/')){ continue; }
+
+        const reader = new FileReader();
+        reader.onload = function(event) {
+          const div = document.createElement('div');
+          div.className = 'item';
+          div.draggable = true;
+          div.id = 'item-' + itemIdCounter++;
+          div.ondragstart = drag;
+          
+          // 더블 클릭 시 설명 추가 (툴팁)
+          div.ondblclick = function() {
+            const desc = prompt("이 항목에 대한 설명을 입력하세요:");
+            if(desc) {
+              this.title = desc;
+              alert("설명이 추가되었습니다! 이미지에 마우스를 올려보세요.");
+            }
+          };
+
+          const img = document.createElement('img');
+          img.src = event.target.result;
+          div.appendChild(img);
+          bank.appendChild(div);
+        };
+        reader.readAsDataURL(file);
+      }
+      this.value = ''; // 같은 파일 다시 업로드 가능하게 초기화
+    });
   </script>
 </body>
 </html>
