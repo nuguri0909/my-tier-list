@@ -2,10 +2,19 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <title>나만의 티어 메이커</title>
+  <title>티어 메이커 - 만들기</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <nav class="navbar">
+    <a href="index.html" class="nav-logo">TierMaker</a>
+    <div class="nav-links">
+      <a href="index.html">티어 만들기</a>
+      <a href="board.html">티어 게시판</a>
+      <a href="mylist.html">내 보관함</a>
+    </div>
+  </nav>
+
   <div class="header">
     <h1>🏆 나만의 티어 메이커</h1>
     <div class="controls">
@@ -16,29 +25,22 @@
         <option value="게임">게임</option>
         <option value="소설/만화">소설/만화</option>
       </select>
-      
-      <button class="btn" onclick="window.addTier()">➕ 티어 줄 추가</button>
-      <button class="btn btn-save" onclick="window.saveBoard()">💾 내 티어표 저장</button>
-      <button class="btn" onclick="location.href='board.html'">게시판 가기 ➔</button>
-      
-      <button class="btn" id="btn-import-bank" style="background:#e74c3c; display:none;" onclick="window.importToBank()">📥 아이템만 대기열로 가져오기</button>
+      <button class="btn" onclick="window.addTier()">➕ 줄 추가</button>
+      <button class="btn btn-save" onclick="window.saveBoard()">💾 저장하기</button>
+      <button class="btn" id="btn-import-bank" style="background:#e74c3c; display:none;" onclick="window.importToBank()">📥 대기열로 가져오기</button>
     </div>
   </div>
 
   <div class="container">
     <div id="board" class="board"></div>
-    
     <div class="sidebar">
       <h3>아이템 대기열</h3>
-      <p style="font-size: 12px; color: #888; margin-bottom: 10px;">이미지를 드래그해서 티어에 올리세요.</p>
-      <div id="item-bank" class="item-bank" ondrop="window.drop(event)" ondragover="window.allowDrop(event)">
-        </div>
-      
+      <div id="item-bank" class="item-bank" ondrop="window.drop(event)" ondragover="window.allowDrop(event)"></div>
       <div class="add-item-box">
         <h4>새 이미지 추가</h4>
-        <input type="text" id="img-url" class="control-input" placeholder="이미지 주소(URL) 입력">
-        <input type="text" id="img-title" class="control-input" placeholder="이름 (선택)">
-        <button class="btn btn-save" style="width: 100%; margin-top: 5px;" onclick="window.addNewItem()">추가하기</button>
+        <input type="text" id="img-url" class="control-input" placeholder="이미지 URL" style="width:100%; margin-bottom:5px;">
+        <input type="text" id="img-title" class="control-input" placeholder="이름(선택)" style="width:100%; margin-bottom:5px;">
+        <button class="btn btn-save" style="width:100%;" onclick="window.addNewItem()">추가하기</button>
       </div>
     </div>
   </div>
