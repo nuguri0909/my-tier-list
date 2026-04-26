@@ -1,52 +1,323 @@
+/* ==========================================
+   글꼴 설정 (6번 요청: 세련된 Pretendard 폰트 적용)
+   ========================================== */
 @import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css");
 
-/* 6번: 전체 폰트 및 모달 설명창 폰트 개선 */
-body { margin: 0; padding: 0; font-family: 'Pretendard', sans-serif; background-color: #121212; color: #ffffff; }
-.container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+* {
+  box-sizing: border-box;
+}
 
-/* 네비게이션 바 */
-.navbar { display: flex; justify-content: space-between; align-items: center; background: #1f1f1f; padding: 15px 30px; border-bottom: 1px solid #333; }
+body { 
+  margin: 0; 
+  padding: 0; 
+  font-family: 'Pretendard', sans-serif; 
+  background-color: #121212; 
+  color: #ffffff; 
+}
+
+.container { 
+  max-width: 1200px; 
+  margin: 0 auto; 
+  padding: 20px; 
+}
+
+/* ==========================================
+   네비게이션 바 및 상단 컨트롤
+   ========================================== */
+.navbar { 
+  display: flex; 
+  justify-content: space-between; 
+  align-items: center; 
+  background: #1a1a1a; 
+  padding: 15px 30px; 
+  border-bottom: 1px solid #333; 
+}
 .nav-left { display: flex; align-items: center; gap: 30px; }
 .nav-logo { font-size: 1.5rem; font-weight: bold; color: #3498db; text-decoration: none; }
-.nav-links a { color: #fff; text-decoration: none; margin-right: 15px; font-weight: 500; }
-.user-menu { display: flex; align-items: center; gap: 15px; }
+.nav-links a { color: #ccc; text-decoration: none; font-weight: 500; transition: color 0.2s; }
+.nav-links a:hover { color: #fff; }
+.user-menu { display: flex; align-items: center; gap: 10px; }
+.user-name { font-size: 0.9rem; color: #aaa; }
 
-/* 공통 버튼 & 인풋 */
-.btn { background: #3498db; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+.top-controls {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  align-items: center;
+}
+
+/* ==========================================
+   공통 버튼 및 인풋
+   ========================================== */
+.btn { 
+  background: #3498db; 
+  color: white; 
+  border: none; 
+  padding: 8px 16px; 
+  border-radius: 6px; 
+  cursor: pointer; 
+  font-weight: 600; 
+  font-family: 'Pretendard', sans-serif;
+  transition: opacity 0.2s;
+}
+.btn:hover { opacity: 0.8; }
 .btn-save { background: #2ecc71; }
-.control-input { padding: 10px; background: #2a2a2a; border: 1px solid #444; color: white; border-radius: 6px; font-family: 'Pretendard', sans-serif; }
+.btn-small { padding: 5px 10px; font-size: 0.85rem; }
 
-/* 레이아웃 & 티어 보드 */
-.layout-wrapper { display: flex; gap: 30px; align-items: flex-start; }
-.layout-left { flex: 1; }
-.layout-right { width: 350px; flex-shrink: 0; display: flex; flex-direction: column; gap: 20px; position: sticky; top: 20px; }
+.control-input { 
+  padding: 10px; 
+  background: #222; 
+  border: 1px solid #444; 
+  color: white; 
+  border-radius: 6px; 
+  font-family: 'Pretendard', sans-serif; 
+}
+.control-input:focus { outline: none; border-color: #3498db; }
 
-.tier-board { display: flex; flex-direction: column; gap: 5px; margin-bottom: 20px; }
-.tier-row { display: flex; flex-direction: row; min-height: 90px; background-color: #1f1f1f; border: 1px solid #333; border-radius: 8px; overflow: hidden; }
-.tier-label { width: 120px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: bold; color: #121212; }
-.tier-items { flex: 1; display: flex; flex-wrap: wrap; gap: 8px; padding: 5px 10px; min-height: 90px; }
+/* ==========================================
+   메인 레이아웃 (티어표 영역 & 아이템 대기열)
+   ========================================== */
+.layout-wrapper { 
+  display: flex; 
+  gap: 20px; 
+  align-items: flex-start; 
+}
+.layout-left { flex: 1; min-width: 0; }
+.layout-right { width: 300px; flex-shrink: 0; display: flex; flex-direction: column; gap: 20px; }
 
-/* 5번: 이미지 잘림 방지 (Letterboxing) */
-.item { position: relative; width: 80px; height: 80px; border-radius: 8px; overflow: hidden; cursor: grab; background: #000; /* 남는 공간 검은색 */ }
-.item img { width: 100%; height: 100%; object-fit: contain; /* 이미지가 잘리지 않고 꽉 차게 들어감 */ pointer-events: none; }
-.item-title { position: absolute; bottom: 0; left: 0; width: 100%; background: rgba(0,0,0,0.7); color: white; font-size: 0.75rem; text-align: center; padding: 3px 0; }
+/* 티어표 보드 */
+.tier-board { 
+  display: flex; 
+  flex-direction: column; 
+  gap: 4px; 
+  background: #000; 
+  padding: 4px; 
+  border-radius: 8px;
+}
+.tier-row { 
+  display: flex; 
+  flex-direction: row; 
+  min-height: 90px; 
+  background-color: #1a1a1a; 
+  position: relative;
+}
+.tier-label { 
+  width: 100px; 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  font-size: 1.5rem; 
+  font-weight: 800; 
+  color: #111; 
+  text-shadow: 1px 1px 0px rgba(255,255,255,0.3);
+  text-align: center;
+  word-break: break-all;
+}
+.tier-items { 
+  flex: 1; 
+  display: flex; 
+  flex-wrap: wrap; 
+  gap: 6px; 
+  padding: 6px; 
+  min-height: 90px; 
+  align-content: flex-start;
+}
+.delete-tier-btn {
+  position: absolute;
+  right: -30px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: #666;
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+.delete-tier-btn:hover { color: #e74c3c; }
 
-.item-bank { display: flex; flex-wrap: wrap; gap: 10px; min-height: 300px; border: 2px dashed #444; border-radius: 8px; padding: 15px; background: #1a1a1a; }
-.input-section { background: #1f1f1f; padding: 20px; border-radius: 10px; }
+/* ==========================================
+   아이템 이미지 박스 (5번 요청 반영: 비율 유지/검은 배경)
+   ========================================== */
+.item { 
+  position: relative; 
+  width: 80px; 
+  height: 80px; 
+  background-color: #000; /* 남는 공간을 검은색으로 채움 */
+  border-radius: 4px; 
+  overflow: hidden; 
+  cursor: grab; 
+  border: 1px solid #333;
+}
+.item img { 
+  width: 100%; 
+  height: 100%; 
+  object-fit: contain; /* 가로/세로 비율을 유지하며 잘리는 부분 없이 전체 표시 */
+  pointer-events: none; 
+}
+.item-title { 
+  position: absolute; 
+  bottom: 0; 
+  left: 0; 
+  width: 100%; 
+  background: rgba(0,0,0,0.75); 
+  color: white; 
+  font-size: 0.7rem; 
+  text-align: center; 
+  padding: 3px 0; 
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.item-placeholder { border: 2px dashed #666; opacity: 0.5; background: transparent; }
 
-/* 모달 및 글씨체 개선 */
-.modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: flex; justify-content: center; align-items: center; z-index: 2000; }
-.modal-content { background: #1f1f1f; padding: 30px; border-radius: 12px; width: 90vw; height: 90vh; max-width: 1200px; display: flex; flex-direction: column; }
-.modal-body { display: flex; gap: 20px; flex: 1; }
-.modal-left { width: 350px; display: flex; flex-direction: column; gap: 15px; }
-.modal-left img { width: 100%; height: 350px; object-fit: contain; background: #000; border-radius: 8px; }
-#modal-desc { flex: 1; resize: none; padding: 20px; font-size: 1.1rem; line-height: 1.7; border-radius: 8px; background: #151515; color: #fff; font-family: 'Pretendard', sans-serif; }
+/* 우측 아이템 대기열 및 입력창 */
+.item-bank { 
+  display: flex; 
+  flex-wrap: wrap; 
+  gap: 6px; 
+  min-height: 200px; 
+  border: 2px dashed #444; 
+  border-radius: 8px; 
+  padding: 10px; 
+  background: #151515; 
+  align-content: flex-start;
+}
+.input-section { 
+  background: #1a1a1a; 
+  padding: 15px; 
+  border-radius: 8px; 
+  border: 1px solid #333;
+}
+.input-group { display: flex; flex-direction: column; gap: 10px; }
 
-/* 3번, 4번: 게시판 상세 보기 및 좋아요, 댓글 UI */
-.board-viewer { display: flex; flex-direction: column; gap: 5px; margin-bottom: 20px; background: #111; padding: 10px; border-radius: 8px; }
-.vote-section { display: flex; gap: 10px; justify-content: center; margin: 20px 0; border-bottom: 1px solid #333; padding-bottom: 20px; }
-.btn-like { background: #e74c3c; }
-.btn-dislike { background: #7f8c8d; }
-.comment-item { display: flex; justify-content: space-between; align-items: center; background: #222; padding: 12px; border-radius: 6px; margin-bottom: 8px; }
-.comment-text { flex: 1; }
-.btn-delete-comment { background: transparent; border: none; color: #e74c3c; cursor: pointer; font-weight: bold; }
+/* ==========================================
+   모달 (팝업창) 디자인
+   ========================================== */
+.modal-overlay { 
+  position: fixed; 
+  top: 0; 
+  left: 0; 
+  width: 100%; 
+  height: 100%; 
+  background: rgba(0,0,0,0.85); 
+  display: none; 
+  justify-content: center; 
+  align-items: center; 
+  z-index: 2000; 
+}
+.modal-content { 
+  background: #1f1f1f; 
+  padding: 25px; 
+  border-radius: 12px; 
+  width: 90vw; 
+  max-width: 700px; 
+  display: flex; 
+  flex-direction: column; 
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #333;
+  padding-bottom: 10px;
+}
+.modal-body { 
+  display: flex; 
+  gap: 20px; 
+}
+.modal-left { 
+  width: 200px; 
+  display: flex; 
+  flex-direction: column; 
+  gap: 15px; 
+}
+.modal-left img { 
+  width: 100%; 
+  height: 200px; 
+  object-fit: contain; 
+  background: #000; 
+  border-radius: 8px; 
+  border: 1px solid #444;
+}
+.modal-right {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* 6번 요청 반영: 설명창 예쁜 폰트 적용 및 디자인 개선 */
+#modal-desc { 
+  flex: 1; 
+  resize: none; 
+  padding: 15px; 
+  font-family: 'Pretendard', sans-serif; 
+  font-size: 1.05rem; 
+  line-height: 1.6; 
+  background: #121212; 
+  color: #eee; 
+  border: 1px solid #444; 
+  border-radius: 8px;
+  min-height: 150px;
+}
+
+/* ==========================================
+   게시판 상세 보기 UI (좋아요, 댓글 등)
+   ========================================== */
+.post-detail-modal .modal-content {
+  max-width: 900px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+.board-viewer { 
+  display: flex; 
+  flex-direction: column; 
+  gap: 5px; 
+  margin-bottom: 20px; 
+  background: #000; 
+  padding: 5px; 
+  border-radius: 8px; 
+}
+.vote-section { 
+  display: flex; 
+  gap: 15px; 
+  justify-content: center; 
+  margin: 20px 0; 
+  padding-bottom: 20px; 
+  border-bottom: 1px solid #333; 
+}
+.comment-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.comment-form {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+.comment-form input {
+  flex: 1;
+}
+.comment-item { 
+  display: flex; 
+  justify-content: space-between; 
+  align-items: center; 
+  background: #222; 
+  padding: 12px 15px; 
+  border-radius: 6px; 
+  margin-bottom: 8px; 
+}
+.btn-delete-comment { 
+  background: transparent; 
+  border: none; 
+  color: #e74c3c; 
+  cursor: pointer; 
+  font-weight: bold; 
+  font-family: 'Pretendard', sans-serif;
+}
+.btn-delete-comment:hover {
+  text-decoration: underline;
+}
