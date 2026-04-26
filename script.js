@@ -26,7 +26,7 @@ const loadMode = urlParams.get('mode');
 let originalAuthorId = null;
 
 // ==========================================
-// 1. 로그인/인증 및 내 보관함 로드 (1번 에러 완벽 해결!)
+// 1. 로그인/인증 및 내 보관함 로드
 // ==========================================
 window.login = () => signInWithPopup(auth, provider).catch(err => alert(err.message));
 window.logout = () => signOut(auth).then(() => alert("로그아웃 되었습니다."));
@@ -52,7 +52,6 @@ onAuthStateChanged(auth, (user) => {
   }
   window.updateAuthUI();
   
-  // 내 보관함 화면에 있을 경우 바로 데이터를 불러옴
   if(document.getElementById('my-list-container')) {
     window.loadMyList();
   }
@@ -75,7 +74,7 @@ window.updateAuthUI = function() {
 };
 
 // ==========================================
-// 2. 티어 보드 기본 로직 (무지개 색상, 줄 추가/삭제)
+// 2. 티어 보드 기본 로직
 // ==========================================
 const rainbowStops = [0, 30, 60, 120, 220, 270];
 window.updateRowColors = function() {
@@ -232,20 +231,26 @@ window.deleteItem = function() {
 };
 
 // ==========================================
-// 5. DB 저장 및 메인 티어표 불러오기
+// 5. DB 저장 및 메인 티어표 불러오기 (⭐ 썸네일 추가)
 // ==========================================
 window.saveBoard = async function() {
   if (!window.currentUser) return alert("로그인해야 저장할 수 있습니다!");
 
   const tierRows = document.querySelectorAll('.tier-row');
   const boardData = [];
+  let thumbnailImg = ""; // ⭐ 홈 화면을 위한 대표 썸네일 이미지
+
   tierRows.forEach(row => {
     const label = row.querySelector('.tier-label').innerText;
-    const items = Array.from(row.querySelector('.tier-items').children).map(item => ({
-      src: item.querySelector('img').src,
-      title: item.querySelector('.item-title') ? item.querySelector('.item-title').innerText : "",
-      desc: item.dataset.desc || ""
-    }));
+    const items = Array.from(row.querySelector('.tier-items').children).map(item => {
+      const imgSrc = item.querySelector('img').src;
+      if(!thumbnailImg) thumbnailImg = imgSrc; // 첫 번째 이미지를 썸네일로 찜!
+      return {
+        src: imgSrc,
+        title: item.querySelector('.item-title') ? item.querySelector('.item-title').innerText : "",
+        desc: item.dataset.desc || ""
+      };
+    });
     boardData.push({ label, items, color: row.querySelector('.tier-label').style.backgroundColor });
   });
 
@@ -260,24 +265,26 @@ window.saveBoard = async function() {
 
   const payload = {
     title: boardTitle,
-    authorId: window.currentUser.uid, // ⭐ 내 보관함을 위해 필수 저장
+    authorId: window.currentUser.uid,
     authorName: window.customNickname,
     category: document.getElementById('category-select') ? document.getElementById('category-select').value : "기타",
     tiers: boardData,
     bank: bankItems,
     likes: 0,
     dislikes: 0,
+    views: 0, // ⭐ 홈 화면 정렬을 위한 초기 조회수
+    thumbnailUrl: thumbnailImg, // ⭐ 홈 화면에 띄울 썸네일
     createdAt: serverTimestamp()
   };
 
   try {
     document.querySelector('.btn-save').innerText = "저장 중...";
-    await addDoc(collection(db, "tierLists"), payload);
+    await addDoc(collection(db, "tierLists"), payload); // 컬렉션 이름은 "tierLists"
     alert("성공적으로 저장되었습니다! 내 보관함으로 이동합니다.");
     window.location.href = "mylist.html"; 
   } catch (e) {
     alert("저장 실패: " + e.message);
-    document.querySelector('.btn-save').innerText = "💾 저장하기";
+    document.querySelector('.btn-save').innerText = "💾 서버에 저장";
   }
 };
 
@@ -297,7 +304,7 @@ window.loadBoardData = async function() {
       const modeToLoad = loadMode || 'v1';
       data.tiers.forEach(tier => {
         const row = document.createElement('div'); row.className = 'tier-row';
-        row.innerHTML = `<div class="tier-label" contenteditable="true">${tier.label}</div><div class="tier-items" ondrop="window.drop(event)" ondragover="window.allowDrop(event)"></div><button class="delete-tier-btn" onclick="window.deleteTier(this)">X</button>`;
+        row.innerHTML = `<div class="tier-label" style="background-color: ${tier.color || '#ccc'}" contenteditable="true">${tier.label}</div><div class="tier-items" ondrop="window.drop(event)" ondragover="window.allowDrop(event)"></div><button class="delete-tier-btn" onclick="window.deleteTier(this)">X</button>`;
         board.appendChild(row);
         if(modeToLoad === 'v1') {
            tier.items.forEach(it => createItemBox(it.src, it.title, it.desc, row.querySelector('.tier-items')));
@@ -316,13 +323,8 @@ window.onload = function() {
   if (loadId) {
     window.loadBoardData(); 
   } else {
-    const board = document.getElementById('board');
-    if(board && window.location.pathname.includes('index.html')) {
-      ['S','A','B','C','D','E'].forEach(l => {
-        board.innerHTML += `<div class="tier-row"><div class="tier-label" contenteditable="true">${l}</div><div class="tier-items" ondrop="window.drop(event)" ondragover="window.allowDrop(event)"></div><button class="delete-tier-btn" onclick="window.deleteTier(this)">X</button></div>`;
-      });
-      window.updateRowColors();
-    }
+    // HTML에 하드코딩된 S~E 칸들의 색상만 입혀줍니다.
+    window.updateRowColors();
   }
 };
 
@@ -336,7 +338,7 @@ window.openPostDetail = async function(postId) {
   if (docSnap.exists()) {
     const data = docSnap.data();
     
-    // ⭐ 4번 해결: 게시판 상세모달에 티어표 시각화
+    // 게시판 상세모달에 티어표 시각화
     const viewer = document.getElementById('board-viewer'); 
     if(viewer) {
       viewer.innerHTML = `<h3>${data.title || "무제 티어표"}</h3>`; 
@@ -408,7 +410,7 @@ window.deleteComment = async function(postId, commentId) {
 };
 
 // ==========================================
-// 7. 내 보관함 로드 함수 (1번 에러 완벽 해결!)
+// 7. 내 보관함 로드 함수 (⭐ index.html -> maker.html 경로 수정 완료)
 // ==========================================
 window.loadMyList = async function() {
   const listContainer = document.getElementById('my-list-container');
@@ -434,7 +436,7 @@ window.loadMyList = async function() {
             <span style="font-size:0.8rem; color:#888;">👍 ${data.likes || 0} | 👎 ${data.dislikes || 0}</span>
           </div>
           <div style="display:flex; gap:10px;">
-            <button class="btn" onclick="location.href='index.html?load=${docSnap.id}'">수정하기</button>
+            <button class="btn" onclick="location.href='maker.html?load=${docSnap.id}'">수정하기</button>
             <button class="btn" style="background:#888;" onclick="window.openPostDetail('${docSnap.id}')">게시판 뷰로 보기</button>
           </div>
         </div>
