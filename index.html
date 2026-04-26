@@ -2,18 +2,47 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>마이 티어 메이커 - 홈</title>
   <style>
-    /* 기존 스타일과 동일 (메뉴 부분만 변경) */
     body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #121212; color: #e0e0e0; margin: 0; padding: 0; text-align: center; }
+    
+    /* 상단 메뉴바 */
     .top-menu { background: #1f1f1f; display: flex; align-items: center; padding: 10px 30px; box-shadow: 0 2px 10px rgba(0,0,0,0.5); position: fixed; top: 0; width: 100%; box-sizing: border-box; z-index: 2000; }
-    .top-menu a { color: #aaa; text-decoration: none; margin: 0 15px; font-weight: bold; font-size: 16px; transition: 0.3s; }
+    .top-menu a { color: #aaa; text-decoration: none; margin: 0 15px; font-weight: bold; font-size: 16px; transition: 0.3s; cursor: pointer; }
     .top-menu a:hover { color: #3498db; }
     .top-menu .active { color: white; border-bottom: 2px solid #3498db; padding-bottom: 5px; }
     .logo-btn { font-size: 20px !important; color: #fff !important; margin-right: 40px !important; }
+
+    /* 콘텐츠 영역 */
+    .content-wrapper { padding-top: 100px; padding-bottom: 50px; }
+    .tier-board { display: flex; flex-direction: column; border: 2px solid #000; margin: 0 auto; max-width: 900px; background: #0f0f0f; border-radius: 8px; overflow: hidden; box-shadow: 0 8px 30px rgba(0,0,0,0.7); }
+    .tier-row { display: flex; border-bottom: 1px solid #000; min-height: 90px; }
+    .tier-label { width: 100px; display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 20px; color: #ccc; }
     
-    .content-wrapper { padding-top: 80px; }
-    /* 티어 보드 등 기존 스타일 생략 (기존 코드의 .tier-board, .item 등 그대로 유지하시면 됩니다) */
+    /* 티어 색상 */
+    .s-tier { background: #5c1810; } .a-tier { background: #5c3810; } .b-tier { background: #3d420f; }
+    .c-tier { background: #104a16; } .d-tier { background: #0a5212; } .e-tier { background: #094747; }
+
+    .tier-items { display: flex; flex-wrap: wrap; flex-grow: 1; background: #1a1a1a; padding: 5px; gap: 5px; align-content: flex-start; }
+    .item { position: relative; width: 80px; height: 80px; background: #444; border-radius: 6px; overflow: hidden; cursor: grab; display: flex; justify-content: center; align-items: center; box-shadow: 0 0 10px rgba(0,0,0,0.9); border: 1px solid #333; }
+    .item.dragging { opacity: 0.4; }
+    .item img { width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
+    .item-title { position: absolute; bottom: 0; left: 0; width: 100%; background: rgba(0,0,0,0.8); color: white; font-size: 11px; padding: 2px 0; text-align: center; display: none; }
+
+    #item-bank { display: flex; flex-wrap: wrap; margin: 30px auto; max-width: 900px; min-height: 150px; background: #1a1a1a; padding: 15px; border: 2px dashed #444; gap: 5px; border-radius: 8px; }
+    .upload-btn { margin: 10px; padding: 12px 28px; font-size: 16px; font-weight: bold; cursor: pointer; background: #3498db; color: white; border: none; border-radius: 8px; transition: 0.3s; }
+    
+    /* 미리보기 고스트 */
+    .item.ghost-placeholder { opacity: 0.25; pointer-events: none; border: 2px dashed rgba(255,255,255,0.2); background: transparent; }
+
+    /* 팝업창 */
+    #modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 10000; justify-content: center; align-items: center; }
+    .modal-content { background: #1f1f1f; padding: 25px; border-radius: 12px; width: 320px; text-align: left; border: 1px solid #333; }
+    .modal-content input, .modal-content textarea { width: 100%; box-sizing: border-box; margin: 10px 0; padding: 10px; background: #0f0f0f; color: white; border: 1px solid #444; border-radius: 6px; }
+    .modal-btns { display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px; }
+    .modal-btns button { padding: 8px 16px; border-radius: 6px; border: none; cursor: pointer; font-weight: bold; }
+    .btn-save { background: #2ecc71; color: white; } .btn-cancel { background: #444; color: white; }
   </style>
 </head>
 <body>
@@ -27,9 +56,94 @@
   </nav>
 
   <div class="content-wrapper">
-    <h2>🏆 티어 만들기 화면입니다</h2>
-    <p>여기에 이전에 만들었던 티어 드래그 앤 드롭 코드가 들어갑니다.</p>
+    <h2>🏆 나만의 티어 메이커</h2>
+    <input type="file" id="image-upload" multiple accept="image/*" style="display: none;">
+    <button class="upload-btn" onclick="document.getElementById('image-upload').click()">+ 이미지 추가하기</button>
+    
+    <div class="tier-board" id="board">
+      <div class="tier-row"><div class="tier-label s-tier">S</div><div class="tier-items" ondrop="drop(event)" ondragover="allowDrop(event)" ondragleave="handleDragLeave(event)"></div></div>
+      <div class="tier-row"><div class="tier-label a-tier">A</div><div class="tier-items" ondrop="drop(event)" ondragover="allowDrop(event)" ondragleave="handleDragLeave(event)"></div></div>
+      <div class="tier-row"><div class="tier-label b-tier">B</div><div class="tier-items" ondrop="drop(event)" ondragover="allowDrop(event)" ondragleave="handleDragLeave(event)"></div></div>
+      <div class="tier-row"><div class="tier-label c-tier">C</div><div class="tier-items" ondrop="drop(event)" ondragover="allowDrop(event)" ondragleave="handleDragLeave(event)"></div></div>
+      <div class="tier-row"><div class="tier-label d-tier">D</div><div class="tier-items" ondrop="drop(event)" ondragover="allowDrop(event)" ondragleave="handleDragLeave(event)"></div></div>
     </div>
 
+    <div id="item-bank" ondrop="drop(event)" ondragover="allowDrop(event)" ondragleave="handleDragLeave(event)"></div>
+  </div>
+
+  <div id="modal-overlay">
+    <div class="modal-content">
+      <h3>항목 정보 입력</h3>
+      <input type="text" id="edit-title" placeholder="제목">
+      <textarea id="edit-desc" placeholder="설명"></textarea>
+      <div class="modal-btns">
+        <button class="btn-cancel" onclick="closeModal()">취소</button>
+        <button class="btn-save" onclick="saveModal()">저장</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let itemIdCounter = 0; let currentEditItem = null; let ghostItem = null;
+    function drag(ev) {
+      ev.target.classList.add('dragging');
+      ev.dataTransfer.setData("text", ev.target.id);
+      ghostItem = ev.target.cloneNode(true);
+      ghostItem.id = 'ghost-placeholder';
+      ghostItem.classList.remove('dragging');
+      ghostItem.classList.add('ghost-placeholder');
+    }
+    function allowDrop(ev) {
+      ev.preventDefault();
+      const target = ev.target.closest('.tier-items, #item-bank');
+      if (target && ghostItem) target.appendChild(ghostItem);
+    }
+    function handleDragLeave(ev) {
+      if (ghostItem && ghostItem.parentElement) ghostItem.parentElement.removeChild(ghostItem);
+    }
+    function drop(ev) {
+      ev.preventDefault();
+      if (ghostItem && ghostItem.parentElement) ghostItem.parentElement.removeChild(ghostItem);
+      ghostItem = null;
+      const data = ev.dataTransfer.getData("text");
+      const draggedItem = document.getElementById(data);
+      if(draggedItem) draggedItem.classList.remove('dragging');
+      const target = ev.target.closest('.tier-items, #item-bank');
+      if (target && draggedItem) target.appendChild(draggedItem);
+    }
+    function openModal(itemDiv) {
+      currentEditItem = itemDiv;
+      document.getElementById('edit-title').value = itemDiv.dataset.title || '';
+      document.getElementById('edit-desc').value = itemDiv.dataset.desc || '';
+      document.getElementById('modal-overlay').style.display = 'flex';
+    }
+    function closeModal() { document.getElementById('modal-overlay').style.display = 'none'; }
+    function saveModal() {
+      if (currentEditItem) {
+        const t = document.getElementById('edit-title').value;
+        const d = document.getElementById('edit-desc').value;
+        currentEditItem.dataset.title = t; currentEditItem.dataset.desc = d;
+        currentEditItem.title = (t ? "["+t+"]\n" : "") + d;
+        let tDiv = currentEditItem.querySelector('.item-title');
+        if (!tDiv) { tDiv = document.createElement('div'); tDiv.className = 'item-title'; currentEditItem.appendChild(tDiv); }
+        tDiv.textContent = t; tDiv.style.display = t ? 'block' : 'none';
+      }
+      closeModal();
+    }
+    document.getElementById('image-upload').addEventListener('change', function(e) {
+      for (const file of e.target.files) {
+        if (!file.type.startsWith('image/')) continue;
+        const reader = new FileReader();
+        reader.onload = function(event) {
+          const div = document.createElement('div');
+          div.className = 'item'; div.draggable = true; div.id = 'item-' + itemIdCounter++;
+          div.ondragstart = drag; div.onclick = function() { openModal(this); };
+          const img = document.createElement('img'); img.src = event.target.result;
+          div.appendChild(img); document.getElementById('item-bank').appendChild(div);
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+  </script>
 </body>
 </html>
