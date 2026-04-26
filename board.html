@@ -2,153 +2,210 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <title>게시판 - 마이 티어 메이커</title>
+  <title>게시판 - 나만의 티어 메이커</title>
+  <link rel="stylesheet" href="style.css">
   <style>
-    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #121212; color: #e0e0e0; margin: 0; padding: 0; }
-    .top-menu { background: #1f1f1f; display: flex; align-items: center; padding: 10px 30px; box-shadow: 0 2px 10px rgba(0,0,0,0.5); position: fixed; top: 0; width: 100%; box-sizing: border-box; z-index: 2000; }
-    .top-menu a { color: #aaa; text-decoration: none; margin: 0 15px; font-weight: bold; font-size: 16px; transition: 0.3s; }
-    .top-menu .active { color: white; border-bottom: 2px solid #3498db; padding-bottom: 5px; }
-    .logo-btn { font-size: 20px !important; color: #fff !important; margin-right: 40px !important; }
-    #login-btn { color: #f39c12; cursor: pointer; }
+    /* -------------------------------------
+       게시판 전용 추가 디자인
+       ------------------------------------- */
+    .filter-bar {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin: 20px auto;
+      max-width: 1200px;
+      padding: 0 20px;
+      flex-wrap: wrap;
+    }
+    .search-input {
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid #444;
+      background: #1a1a1a;
+      color: white;
+      width: 300px;
+      font-size: 1rem;
+    }
     
-    .content-wrapper { padding: 80px 40px; max-width: 1000px; margin: 0 auto; }
-    .header-section { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 20px; }
-    .header-section h2 { margin: 0; color: #3498db; }
-    .header-section p { margin: 0; color: #888; font-size: 14px; }
+    /* 💡 가로 2열 배치 핵심 기술 (CSS Grid) */
+    .list-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr; /* 가로 공간을 1:1로 정확히 반반 나눔 */
+      gap: 20px;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
     
-    .grid-container { display: flex; gap: 20px; flex-wrap: wrap; }
+    /* 티어 카드 디자인 */
+    .tier-card {
+      background: #1f1f1f;
+      border-radius: 12px;
+      padding: 25px;
+      border: 1px solid #333;
+      transition: transform 0.2s, border-color 0.2s;
+      cursor: pointer;
+    }
+    .tier-card:hover {
+      transform: translateY(-5px); /* 마우스 올리면 살짝 위로 떠오름 */
+      border-color: #3498db;
+    }
+    .card-title {
+      font-size: 1.5rem;
+      margin: 0 0 10px 0;
+      color: #fff;
+    }
+    .card-meta {
+      font-size: 0.95rem;
+      color: #aaa;
+      margin-bottom: 20px;
+    }
+    .card-info {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.95rem;
+      color: #888;
+      border-top: 1px solid #333;
+      padding-top: 15px;
+    }
     
-    .card { background: #1f1f1f; border-radius: 12px; width: 220px; padding: 15px; border: 1px solid #333; position: relative; display: flex; flex-direction: column; transition: transform 0.2s; }
-    .card:hover { transform: translateY(-5px); box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
-    
-    .card-img { width: 100%; height: 120px; background: #111; border-radius: 8px; margin-bottom: 10px; display: flex; flex-wrap: wrap; justify-content: center; align-items: center; overflow: hidden; border: 1px solid #222; }
-    .card-img img { width: 50%; height: 50%; object-fit: cover; } 
-    
-    .card h4 { margin: 10px 0 5px 0; font-size: 18px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .card p { font-size: 13px; color: #888; margin: 3px 0; }
-    
-    .btn-group { display: flex; gap: 8px; margin-top: 15px; }
-    .btn-action { flex: 1; padding: 8px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; color: white; transition: 0.2s; text-align: center; text-decoration: none; }
-    .btn-view { background: #9b59b6; } .btn-view:hover { background: #8e44ad; }
-    
-    .info-msg { text-align: center; width: 100%; margin-top: 50px; color: #aaa; font-size: 18px; }
+    /* 제작자 이름 클릭 시 스타일 */
+    .author-link {
+      color: #3498db;
+      font-weight: bold;
+      text-decoration: none;
+    }
+    .author-link:hover {
+      text-decoration: underline;
+    }
+
+    /* 특정 제작자 모아보기 상태 안내창 */
+    .profile-notice {
+      text-align: center;
+      background: rgba(52, 152, 219, 0.1);
+      border: 1px solid #3498db;
+      color: #3498db;
+      padding: 15px;
+      border-radius: 8px;
+      max-width: 1160px;
+      margin: 0 auto 20px auto;
+      display: none; /* 기본적으로는 숨김 */
+    }
   </style>
 </head>
 <body>
 
-  <nav class="top-menu">
-    <a href="index.html" class="logo-btn">🏠 My Tier List</a>
-    <a href="index.html">티어 만들기</a>
-    <a href="mylist.html">내 목록</a>
-    <a href="board.html" class="active">게시판</a>
-    <a href="#" id="login-btn" style="margin-left:auto;">🚀 구글 로그인</a>
-  </nav>
-
-  <div class="content-wrapper">
-    <div class="header-section">
-      <div>
-        <h2>🌍 모두의 갤러리</h2>
-        <p>다른 사람들이 만든 재미있는 티어표를 구경해보세요!</p>
-      </div>
-    </div>
-    
-    <div class="grid-container" id="board-container">
-      <div class="info-msg">데이터를 불러오는 중입니다...</div>
+  <div class="header">
+    <h1>📋 티어표 게시판</h1>
+    <div class="controls">
+      <button class="btn" onclick="location.href='index.html'">⬅️ 티어 만들기 돌아가기</button>
     </div>
   </div>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
-    import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
-    import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
+  <div class="filter-bar">
+    <input type="text" id="search-bar" class="search-input" placeholder="티어표 제목 또는 제작자 검색..." onkeyup="if(event.key==='Enter') filterLists()">
+    <select id="category-filter" class="search-input" style="width: 150px;">
+      <option value="all">전체 카테고리</option>
+      <option value="영화">영화</option>
+      <option value="애니메이션">애니메이션</option>
+      <option value="게임">게임</option>
+      <option value="소설/만화">소설/만화</option>
+      <option value="기타">기타</option>
+    </select>
+    <button class="btn btn-save" onclick="filterLists()">🔍 검색</button>
+  </div>
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyAwVjpUANfil947xb0bjKALw2uuGvZYQcs",
-      authDomain: "mytierlist-70989.firebaseapp.com",
-      projectId: "mytierlist-70989",
-      storageBucket: "mytierlist-70989.firebasestorage.app",
-      messagingSenderId: "13881580770",
-      appId: "1:13881580770:web:6f7f9148c4bf5f95add2bb"
-    };
+  <div id="profile-notice" class="profile-notice">
+    <h2><span id="profile-name"></span>님의 티어표 모아보기 중입니다.</h2>
+    <button class="btn" onclick="location.href='board.html'" style="margin-top: 10px;">전체 보기로 돌아가기</button>
+  </div>
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
+  <div class="list-container" id="board-list">
+    </div>
 
-    let currentUser = null;
+  <script>
+    // 💡 테스트용 임시 데이터 (나중에 Firebase DB 연결 시 이 부분을 대체하세요!)
+    const mockDatabase = [
+      { id: "doc1", title: "2024년 최고의 RPG 게임", category: "게임", authorName: "겜돌이", views: 1024 },
+      { id: "doc2", title: "마블 영화 티어리스트", category: "영화", authorName: "영화광", views: 563 },
+      { id: "doc3", title: "이번 분기 신작 애니 순위", category: "애니메이션", authorName: "애니장인", views: 241 },
+      { id: "doc4", title: "고전 명작 소설 추천", category: "소설/만화", authorName: "글쟁이", views: 98 },
+      { id: "doc5", title: "롤 챔피언 티어표 (14시즌)", category: "게임", authorName: "겜돌이", views: 3200 },
+      { id: "doc6", title: "가장 좋아하는 과자 순위", category: "기타", authorName: "과자킬러", views: 15 }
+    ];
 
-    // --- 로그인 기능 ---
-    const loginBtn = document.getElementById('login-btn');
-    loginBtn.addEventListener('click', () => {
-      if (currentUser) {
-        signOut(auth).then(() => { alert("로그아웃 되었습니다."); location.reload(); });
-      } else {
-        const provider = new GoogleAuthProvider();
-        signInWithPopup(auth, provider).catch(err => console.error("로그인 에러:", err));
-      }
-    });
-
-    onAuthStateChanged(auth, (user) => {
-      currentUser = user;
-      if (user) {
-        loginBtn.innerText = `👋 ${user.displayName} (로그아웃)`;
-        loginBtn.style.color = "#2ecc71";
-      } else {
-        loginBtn.innerText = "🚀 구글 로그인";
-        loginBtn.style.color = "#f39c12";
-      }
-    });
-
-    // --- 모두의 데이터 불러오기 ---
-    window.onload = async function() {
-      const container = document.getElementById('board-container');
+    // 화면에 티어표 카드들을 그려주는 함수
+    function renderLists(lists) {
+      const container = document.getElementById('board-list');
+      container.innerHTML = ''; // 기존 내용을 깨끗이 지움
       
-      try {
-        // 🔥 핵심: where(조건문) 없이 TierLists의 모든 데이터를 가져옵니다!
-        const querySnapshot = await getDocs(collection(db, "TierLists"));
+      if (lists.length === 0) {
+        container.innerHTML = '<h3 style="text-align:center; color:#888; grid-column: span 2; padding: 50px;">검색 결과가 없습니다 텅~</h3>';
+        return;
+      }
+
+      lists.forEach(list => {
+        const card = document.createElement('div');
+        card.className = 'tier-card';
         
-        const allLists = [];
-        querySnapshot.forEach((doc) => allLists.push(doc.data()));
+        // 카드 안에 들어갈 내용 HTML 조합
+        card.innerHTML = `
+          <h3 class="card-title">${list.title}</h3>
+          <div class="card-meta">📁 카테고리: ${list.category}</div>
+          <div class="card-info">
+            <span>제작자: <a class="author-link" href="board.html?user=${encodeURIComponent(list.authorName)}">@${list.authorName}</a></span>
+            <span>👁️ ${list.views.toLocaleString()}회 조회</span>
+          </div>
+        `;
 
-        if(allLists.length === 0) {
-          container.innerHTML = "<div class='info-msg'>아직 아무도 티어표를 만들지 않았어요. 첫 번째 주인공이 되어보세요!</div>";
-          return;
-        }
+        // 카드 전체(빈 공간)를 클릭했을 때 해당 티어표로 이동하는 기능
+        card.onclick = (e) => {
+          // 클릭한 곳이 a태그(제작자 이름)가 아닐 때만 상세 페이지로 이동
+          if(!e.target.classList.contains('author-link')) {
+            // 실제 서비스에서는 아래 주석을 풀어서 사용하세요!
+            // location.href = `index.html?id=${list.id}`;
+            alert(`[${list.title}] 티어표를 열어봅니다!\n(나중에 index.html?id=${list.id} 로 연결됩니다)`);
+          }
+        };
 
-        container.innerHTML = "";
+        container.appendChild(card);
+      });
+    }
+
+    // 검색창과 카테고리 옵션에 맞게 데이터 걸러내기
+    function filterLists() {
+      const searchTerm = document.getElementById('search-bar').value.toLowerCase();
+      const categoryTerm = document.getElementById('category-filter').value;
+      
+      const filteredData = mockDatabase.filter(list => {
+        // 제목이나 제작자 이름에 검색어가 포함되어 있는지 확인
+        const matchSearch = list.title.toLowerCase().includes(searchTerm) || list.authorName.toLowerCase().includes(searchTerm);
+        // 카테고리가 일치하는지 확인 (전체 보기면 무조건 통과)
+        const matchCategory = categoryTerm === 'all' || list.category === categoryTerm;
         
-        // 정렬: 최신순 정렬
-        allLists.sort((a, b) => parseInt(b.id) - parseInt(a.id)).forEach(list => {
-          let previewHTML = '';
-          let imgCount = 0;
-          
-          for (let row of list.data) {
-            for (let item of row.items) {
-              if (imgCount < 4) { previewHTML += `<img src="${item.src}" alt="preview">`; imgCount++; }
-            }
-          }
-          if (imgCount < 4 && list.bank) {
-            for (let item of list.bank) {
-              if (imgCount < 4) { previewHTML += `<img src="${item.src}" alt="preview">`; imgCount++; }
-            }
-          }
-          if (imgCount === 0) previewHTML = '<div style="color:#666; font-size:14px; font-weight:bold;">이미지 없음</div>';
+        return matchSearch && matchCategory;
+      });
+      
+      renderLists(filteredData);
+    }
 
-          const card = document.createElement('div');
-          card.className = 'card';
-          card.innerHTML = `
-            <div class="card-img">${previewHTML}</div>
-            <h4>${list.title}</h4>
-            <p>📅 ${list.date}</p>
-            <div class="btn-group">
-              <a href="index.html?id=${list.id}" class="btn-action btn-view">👀 구경하기</a>
-            </div>
-          `;
-          container.appendChild(card);
-        });
-      } catch (err) {
-        console.error(err);
-        container.innerHTML = "<div class='info-msg' style='color:#e74c3c;'>데이터를 불러오는 데 실패했습니다.</div>";
+    // 화면이 처음 켜질 때 실행되는 마법 (프로필 모아보기 감지)
+    window.onload = function() {
+      // 주소창(URL)에 ?user=홍길동 같은 글자가 숨어있는지 찾아냅니다.
+      const urlParams = new URLSearchParams(window.location.search);
+      const userProfile = urlParams.get('user');
+
+      if (userProfile) {
+        // 특정 제작자의 모아보기 상태라면!
+        document.getElementById('profile-notice').style.display = 'block';
+        document.getElementById('profile-name').innerText = userProfile;
+        
+        // 그 사람이 만든 글만 걸러서 화면에 그려줍니다.
+        const userLists = mockDatabase.filter(list => list.authorName === userProfile);
+        renderLists(userLists);
+      } else {
+        // 평범하게 들어왔다면 모든 글을 다 보여줍니다.
+        renderLists(mockDatabase);
       }
     };
   </script>
