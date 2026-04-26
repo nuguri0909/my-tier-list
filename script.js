@@ -1,30 +1,62 @@
 let itemIdCounter = 0;
-let currentUser = { uid: "user123", displayName: "익명" }; 
-let loadedListUid = "user123"; 
+// 로그인 & 닉네임 상태 관리
+let currentUser = null; 
+let customNickname = "익명"; 
+let loadedListUid = "new-list"; 
 
-const rainbowStops = [0, 30, 60, 120, 220, 270]; // 빨,주,노,초,파,보
+// 1. 로그인 및 닉네임 설정 기능
+window.login = function() {
+  // 실제 연동 시 Firebase 로그인 코드 작성 영역
+  currentUser = { uid: "user123", email: "test@google.com" };
+  updateAuthUI();
+  alert("임시 구글 로그인이 완료되었습니다!");
+};
 
+window.logout = function() {
+  currentUser = null;
+  customNickname = "익명";
+  updateAuthUI();
+  alert("로그아웃 되었습니다.");
+};
+
+window.setNickname = function() {
+  const nick = prompt("사용하실 닉네임을 입력하세요:", customNickname);
+  if(nick && nick.trim() !== "") {
+    customNickname = nick.trim();
+    updateAuthUI();
+    alert(`닉네임이 [${customNickname}]으로 변경되었습니다!`);
+  }
+};
+
+window.updateAuthUI = function() {
+  const nameDisplay = document.getElementById('user-name-display');
+  if(currentUser) {
+    nameDisplay.innerText = customNickname + "님";
+    document.getElementById('btn-login').style.display = 'none';
+    document.getElementById('btn-logout').style.display = 'inline-block';
+    document.getElementById('btn-nickname').style.display = 'inline-block';
+  } else {
+    nameDisplay.innerText = "로그인해주세요";
+    document.getElementById('btn-login').style.display = 'inline-block';
+    document.getElementById('btn-logout').style.display = 'none';
+    document.getElementById('btn-nickname').style.display = 'none';
+  }
+};
+
+// 2. 무지개 색상 로직
+const rainbowStops = [0, 30, 60, 120, 220, 270];
 window.updateRowColors = function() {
   const rows = document.querySelectorAll('.tier-row');
   const total = rows.length;
   if (total === 0) return;
-
   rows.forEach((row, index) => {
-    const label = row.querySelector('.tier-label');
-    let hue;
-    if (total <= 6) {
-      hue = rainbowStops[index] !== undefined ? rainbowStops[index] : 270;
-    } else {
-      const ratio = index / (total - 1);
-      const p = ratio * (rainbowStops.length - 1);
-      const lowIdx = Math.floor(p);
-      const highIdx = Math.ceil(p);
-      hue = rainbowStops[lowIdx] + (rainbowStops[highIdx] - rainbowStops[lowIdx]) * (p - lowIdx);
-    }
-    label.style.backgroundColor = `hsl(${hue}, 85%, 60%)`;
+    let hue = (total <= 6 && rainbowStops[index] !== undefined) ? rainbowStops[index] 
+      : (total <= 6 ? 270 : rainbowStops[Math.floor((index / (total - 1)) * 5)] + (rainbowStops[Math.ceil((index / (total - 1)) * 5)] - rainbowStops[Math.floor((index / (total - 1)) * 5)]) * ((index / (total - 1)) * 5 - Math.floor((index / (total - 1)) * 5)));
+    row.querySelector('.tier-label').style.backgroundColor = `hsl(${hue}, 85%, 60%)`;
   });
 };
 
+// 3. 줄 관리 및 드래그 앤 드롭
 window.addTier = function() {
   const board = document.getElementById('board');
   const div = document.createElement('div');
@@ -36,8 +68,7 @@ window.addTier = function() {
 
 window.deleteTier = function(btn) {
   const row = btn.parentElement;
-  const items = row.querySelector('.tier-items');
-  while (items.firstChild) document.getElementById('item-bank').appendChild(items.firstChild);
+  while (row.querySelector('.tier-items').firstChild) document.getElementById('item-bank').appendChild(row.querySelector('.tier-items').firstChild);
   row.remove();
   window.updateRowColors();
 };
@@ -51,26 +82,40 @@ window.drop = function(ev) {
   if (target) target.appendChild(document.getElementById(data));
 };
 
+// 4. 아이템 추가 (내 컴퓨터 파일 + URL 모두 지원)
 window.addNewItem = function() {
-  const url = document.getElementById('img-url').value;
+  const fileInput = document.getElementById('img-file');
+  const urlInput = document.getElementById('img-url').value;
   const title = document.getElementById('img-title').value;
-  if(!url) return alert("URL을 입력하세요");
+
+  if (fileInput.files && fileInput.files[0]) {
+    // 파일을 선택한 경우
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      createItemBox(e.target.result, title);
+    };
+    reader.readAsDataURL(fileInput.files[0]);
+    fileInput.value = ''; // 초기화
+  } else if (urlInput) {
+    // URL을 입력한 경우
+    createItemBox(urlInput, title);
+    document.getElementById('img-url').value = '';
+  } else {
+    alert("이미지 파일을 선택하거나 URL을 입력해주세요!");
+  }
+  document.getElementById('img-title').value = '';
+};
+
+function createItemBox(src, title) {
   const item = document.createElement('div');
   item.className = 'item'; item.id = 'item-' + (itemIdCounter++); item.draggable = true; item.ondragstart = window.drag;
-  item.innerHTML = `<img src="${url}">${title ? `<div class="item-title">${title}</div>` : ''}`;
+  item.innerHTML = `<img src="${src}">${title ? `<div class="item-title">${title}</div>` : ''}`;
   document.getElementById('item-bank').appendChild(item);
-  document.getElementById('img-url').value = ''; document.getElementById('img-title').value = '';
-};
+}
 
-window.importToBank = function() {
-  if(!confirm("모든 아이템을 대기열로 옮겨 새로 배치하시겠습니까?")) return;
-  document.querySelectorAll('.tier-items .item').forEach(item => document.getElementById('item-bank').appendChild(item));
-  loadedListUid = currentUser.uid;
-  document.getElementById('btn-import-bank').style.display = 'none';
-  document.querySelector('.btn-save').style.display = 'inline-block';
-};
-
+// 초기화
 window.onload = function() {
+  window.updateAuthUI();
   const board = document.getElementById('board');
   ['S','A','B','C','D','E'].forEach(l => {
     board.innerHTML += `<div class="tier-row"><div class="tier-label" contenteditable="true">${l}</div><div class="tier-items" ondrop="window.drop(event)" ondragover="window.allowDrop(event)"></div><button class="delete-tier-btn" onclick="window.deleteTier(this)">X</button></div>`;
