@@ -5,11 +5,13 @@
   <title>커스텀 티어 메이커</title>
   <style>
     body { font-family: 'Malgun Gothic', sans-serif; background: #1a1a1a; color: white; margin: 0; padding: 20px; text-align: center; }
+    
+    /* 티어 보드 레이아웃 */
     .tier-board { display: flex; flex-direction: column; border: 1px solid #000; margin: 0 auto; max-width: 900px; background: #0f0f0f; }
     .tier-row { display: flex; border-bottom: 1px solid #000; min-height: 90px; }
     .tier-label { width: 100px; display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 20px; color: #ccc; }
     
-    /* 보여주신 이미지와 유사한 색상 적용 */
+    /* 티어 색상 */
     .s-tier { background: #5c1810; }
     .a-tier { background: #5c3810; }
     .b-tier { background: #3d420f; }
@@ -17,16 +19,31 @@
     .d-tier { background: #0a5212; }
     .e-tier { background: #094747; }
 
+    /* 드래그 영역 및 아이템 */
     .tier-items { display: flex; flex-wrap: wrap; flex-grow: 1; background: #1a1a1a; padding: 5px; gap: 5px; align-content: flex-start; }
-    .controls { width: 60px; background: #0f0f0f; display: flex; flex-direction: column; justify-content: center; align-items: center; font-size: 18px; cursor: pointer; color: #fff; line-height: 1.5; }
-
-    /* 업로드된 이미지 스타일 */
-    .item { width: 80px; height: 80px; background: #444; border-radius: 4px; overflow: hidden; cursor: grab; display: flex; justify-content: center; align-items: center; }
+    
+    .item { position: relative; width: 80px; height: 80px; background: #444; border-radius: 4px; overflow: hidden; cursor: grab; display: flex; justify-content: center; align-items: center; }
     .item img { width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
+    
+    /* 이미지 하단에 표시될 제목 이름표 */
+    .item-title { position: absolute; bottom: 0; left: 0; width: 100%; background: rgba(0,0,0,0.7); color: white; font-size: 12px; padding: 2px 0; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; pointer-events: none; display: none; }
 
-    #item-bank { display: flex; flex-wrap: wrap; margin: 20px auto; max-width: 900px; min-height: 150px; background: #222; padding: 10px; border: 1px dashed #555; gap: 5px; align-content: flex-start; }
-    .upload-btn { margin: 10px; padding: 12px 24px; font-size: 16px; font-weight: bold; cursor: pointer; background: #3498db; color: white; border: none; border-radius: 5px; }
+    /* 하단 보관함 및 업로드 버튼 */
+    #item-bank { display: flex; flex-wrap: wrap; margin: 20px auto; max-width: 900px; min-height: 150px; background: #222; padding: 10px; border: 1px dashed #555; gap: 5px; align-content: flex-start; border-radius: 8px; }
+    .upload-btn { margin: 10px; padding: 12px 24px; font-size: 16px; font-weight: bold; cursor: pointer; background: #3498db; color: white; border: none; border-radius: 5px; transition: 0.2s; }
     .upload-btn:hover { background: #2980b9; }
+
+    /* 팝업창 (모달) 스타일 */
+    #modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center; }
+    .modal-content { background: #333; padding: 20px; border-radius: 8px; width: 300px; text-align: left; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+    .modal-content h3 { margin-top: 0; color: #fff; border-bottom: 1px solid #555; padding-bottom: 10px; }
+    .modal-content label { font-size: 14px; color: #ccc; }
+    .modal-content input, .modal-content textarea { width: 100%; box-sizing: border-box; margin: 5px 0 15px; padding: 8px; border-radius: 4px; border: 1px solid #555; background: #222; color: white; }
+    .modal-content textarea { resize: none; height: 80px; }
+    .modal-btns { display: flex; justify-content: flex-end; gap: 10px; }
+    .modal-btns button { padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+    .btn-cancel { background: #666; color: white; }
+    .btn-save { background: #4CAF50; color: white; }
   </style>
 </head>
 <body>
@@ -34,46 +51,57 @@
   
   <input type="file" id="image-upload" multiple accept="image/*" style="display: none;">
   <button class="upload-btn" onclick="document.getElementById('image-upload').click()">+ 내 컴퓨터에서 이미지 추가하기</button>
-  <p style="font-size:14px; color:#aaa;">(💡 꿀팁: 추가된 이미지를 <b>더블 클릭</b>하면 설명을 넣을 수 있습니다!)</p>
+  <p style="font-size:14px; color:#aaa;">(💡 꿀팁: 추가된 이미지를 <b>클릭</b>하면 제목과 설명을 넣을 수 있습니다!)</p>
 
   <div class="tier-board" id="board">
     <div class="tier-row">
       <div class="tier-label s-tier">S</div>
       <div class="tier-items" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
-      <div class="controls">⚙️<br>↕️</div>
     </div>
     <div class="tier-row">
       <div class="tier-label a-tier">A</div>
       <div class="tier-items" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
-      <div class="controls">⚙️<br>↕️</div>
     </div>
     <div class="tier-row">
       <div class="tier-label b-tier">B</div>
       <div class="tier-items" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
-      <div class="controls">⚙️<br>↕️</div>
     </div>
     <div class="tier-row">
       <div class="tier-label c-tier">C</div>
       <div class="tier-items" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
-      <div class="controls">⚙️<br>↕️</div>
     </div>
     <div class="tier-row">
       <div class="tier-label d-tier">D</div>
       <div class="tier-items" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
-      <div class="controls">⚙️<br>↕️</div>
     </div>
     <div class="tier-row">
       <div class="tier-label e-tier">E</div>
       <div class="tier-items" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
-      <div class="controls">⚙️<br>↕️</div>
     </div>
   </div>
 
   <div id="item-bank" ondrop="drop(event)" ondragover="allowDrop(event)">
     </div>
 
+  <div id="modal-overlay">
+    <div class="modal-content">
+      <h3>항목 정보 입력</h3>
+      <label>제목</label>
+      <input type="text" id="edit-title" placeholder="예: 신라면">
+      
+      <label>설명</label>
+      <textarea id="edit-desc" placeholder="예: 매콤하고 깔끔한 맛이 일품!"></textarea>
+      
+      <div class="modal-btns">
+        <button class="btn-cancel" onclick="closeModal()">취소</button>
+        <button class="btn-save" onclick="saveModal()">저장</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     let itemIdCounter = 0;
+    let currentEditItem = null;
 
     // 드래그 앤 드롭 기능
     function allowDrop(ev) { ev.preventDefault(); }
@@ -85,6 +113,48 @@
       if (target && document.getElementById(data)) {
         target.appendChild(document.getElementById(data));
       }
+    }
+
+    // 모달(팝업창) 제어 기능
+    function openModal(itemDiv) {
+      currentEditItem = itemDiv;
+      // 기존에 입력된 데이터가 있으면 불러오기
+      document.getElementById('edit-title').value = itemDiv.dataset.title || '';
+      document.getElementById('edit-desc').value = itemDiv.dataset.desc || '';
+      document.getElementById('modal-overlay').style.display = 'flex';
+    }
+
+    function closeModal() {
+      document.getElementById('modal-overlay').style.display = 'none';
+      currentEditItem = null;
+    }
+
+    function saveModal() {
+      if (currentEditItem) {
+        const titleVal = document.getElementById('edit-title').value;
+        const descVal = document.getElementById('edit-desc').value;
+        
+        // 데이터 저장
+        currentEditItem.dataset.title = titleVal;
+        currentEditItem.dataset.desc = descVal;
+
+        // 마우스를 올렸을 때 뜨는 툴팁(말풍선) 설정
+        let tooltipText = "";
+        if(titleVal) tooltipText += "[" + titleVal + "]\n";
+        if(descVal) tooltipText += descVal;
+        currentEditItem.title = tooltipText;
+
+        // 이미지 하단에 제목 이름표 표시
+        let titleDiv = currentEditItem.querySelector('.item-title');
+        if (!titleDiv) {
+          titleDiv = document.createElement('div');
+          titleDiv.className = 'item-title';
+          currentEditItem.appendChild(titleDiv);
+        }
+        titleDiv.textContent = titleVal;
+        titleDiv.style.display = titleVal ? 'block' : 'none';
+      }
+      closeModal();
     }
 
     // 이미지 업로드 기능
@@ -104,13 +174,9 @@
           div.id = 'item-' + itemIdCounter++;
           div.ondragstart = drag;
           
-          // 더블 클릭 시 설명 추가 (툴팁)
-          div.ondblclick = function() {
-            const desc = prompt("이 항목에 대한 설명을 입력하세요:");
-            if(desc) {
-              this.title = desc;
-              alert("설명이 추가되었습니다! 이미지에 마우스를 올려보세요.");
-            }
+          // 클릭 시 정보 수정 창 띄우기
+          div.onclick = function() {
+            openModal(this);
           };
 
           const img = document.createElement('img');
