@@ -5,9 +5,13 @@
   <title>내 보관함 - 나만의 티어 메이커</title>
   <link rel="stylesheet" href="style.css">
   <style>
+    .grid-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; padding: 20px; max-width: 1200px; margin: 0 auto; }
+    .my-tier-card { background: #1f1f1f; border: 1px solid #444; border-radius: 10px; padding: 20px; position: relative; transition: 0.2s; }
+    .my-tier-card:hover { transform: translateY(-5px); box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
     .delete-btn { position: absolute; top: 15px; right: 15px; background: #e74c3c; color: white; border: none; border-radius: 6px; padding: 5px 10px; cursor: pointer; font-size: 12px; font-weight: bold; }
-    .card-title { font-size: 1.3rem; margin: 0 0 10px 0; color: #fff; width: 80%; }
-    .card-meta { font-size: 0.9rem; color: #aaa; margin-bottom: 15px; }
+    .delete-btn:hover { background: #c0392b; }
+    .card-title { font-size: 1.3rem; margin: 0 0 10px 0; color: #fff; width: 80%; word-break: keep-all; }
+    .card-meta { font-size: 0.9rem; color: #aaa; margin-bottom: 20px; }
   </style>
 </head>
 <body>
@@ -28,15 +32,19 @@
     </div>
   </nav>
 
-  <div class="header">
+  <div class="header" style="text-align: center; padding: 30px 20px;">
     <h1>🗂️ 내 보관함</h1>
+    <p style="color:#aaa;">내가 저장한 티어표 목록입니다. 언제든 다시 수정할 수 있어요!</p>
   </div>
 
-  <div class="grid-container" id="my-list"></div>
+  <div class="grid-container" id="my-list">
+    </div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    // ⭐ 1번 해결: Firestore 관련 함수 완벽 추가
+    import { getFirestore, collection, query, where, getDocs, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAwVjpUANfil947xb0bjKALw2uuGvZYQcs",
@@ -49,11 +57,11 @@
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
+    const db = getFirestore(app); // DB 연결 완료!
     const provider = new GoogleAuthProvider();
 
     window.currentUser = null; 
     window.customNickname = "익명";
-    let myDb = []; 
 
     window.login = () => signInWithPopup(auth, provider).catch(error => alert("로그인 실패: " + error.message));
     window.logout = () => signOut(auth).then(() => alert("로그아웃 되었습니다."));
@@ -77,7 +85,7 @@
         window.customNickname = "익명";
       }
       window.updateAuthUI();
-      window.renderMyLists(); 
+      window.renderMyLists(); // 로그인 상태가 바뀌면 보관함 다시 그리기
     });
 
     window.updateAuthUI = () => {
@@ -95,23 +103,64 @@
       }
     };
 
-    window.renderMyLists = () => {
+    // ⭐ 1번 해결 핵심: 내 티어표 데이터를 DB에서 불러오기
+    window.renderMyLists = async () => {
       const container = document.getElementById('my-list');
-      container.innerHTML = '';
       
       if (!window.currentUser) {
-        container.innerHTML = '<div style="grid-column: span 2; text-align: center; padding: 50px; color: #888;">로그인 후 내 보관함을 확인할 수 있습니다.</div>';
+        container.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; padding: 50px; color: #888; background:#1a1a1a; border-radius:10px;">로그인 후 내 보관함을 확인할 수 있습니다.</div>';
         return;
       }
-      if (myDb.length === 0) {
-        container.innerHTML = '<div style="grid-column: span 2; text-align: center; padding: 50px; color: #888;">저장된 티어표가 없습니다. 첫 티어표를 만들어 보세요!</div>';
-        return;
+
+      container.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; color: #aaa;">데이터를 불러오는 중입니다...</div>';
+
+      try {
+        // authorId가 내 uid와 같은 문서만 쿼리!
+        const q = query(collection(db, "tierLists"), where("authorId", "==", window.currentUser.uid));
+        const snapshot = await getDocs(q);
+
+        container.innerHTML = '';
+        
+        if (snapshot.empty) {
+          container.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; padding: 50px; color: #888; background:#1a1a1a; border-radius:10px;">저장된 티어표가 없습니다. 첫 티어표를 만들어 보세요!</div>';
+          return;
+        }
+
+        snapshot.forEach(docSnap => {
+          const data = docSnap.data();
+          const dateStr = data.createdAt ? data.createdAt.toDate().toLocaleDateString() : "최근";
+
+          const card = document.createElement('div');
+          card.className = 'my-tier-card';
+          
+          card.innerHTML = `
+            <h3 class="card-title">${data.title || data.category + " 티어표"}</h3>
+            <div class="card-meta">저장일: ${dateStr}</div>
+            <button class="delete-btn" onclick="window.deleteMyList('${docSnap.id}')">삭제</button>
+            <div style="display:flex; gap:10px;">
+              <button class="btn" style="flex:1;" onclick="location.href='index.html?load=${docSnap.id}'">이어서 수정하기</button>
+            </div>
+          `;
+          container.appendChild(card);
+        });
+      } catch(e) {
+        container.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; color: red;">데이터를 불러오는데 실패했습니다: ${e.message}</div>`;
       }
     };
 
-    window.onload = () => {
-      window.renderMyLists();
+    // 내가 만든 티어표 삭제 로직
+    window.deleteMyList = async (docId) => {
+      if(confirm("정말 이 티어표를 삭제하시겠습니까? (복구할 수 없습니다)")) {
+        try {
+          await deleteDoc(doc(db, "tierLists", docId));
+          alert("성공적으로 삭제되었습니다.");
+          window.renderMyLists(); // 삭제 후 목록 새로고침
+        } catch(e) {
+          alert("삭제 실패: " + e.message);
+        }
+      }
     };
+
   </script>
 </body>
 </html>
