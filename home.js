@@ -1,22 +1,22 @@
 // home.js
 
-// Firebase SDK 불러오기
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getFirestore, collection, getDocs, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import { getFirestore, collection, addDoc, getDoc, doc, serverTimestamp, updateDoc, increment, deleteDoc, query, orderBy, where, onSnapshot, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-// ⭐ 여기에 본인의 Firebase 설정값을 넣으세요! (board.js나 auth.js에 있는 것과 동일함)
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT_ID.appspot.com",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyAwVjpUANfil947xb0bjKALw2uuGvZYQcs",
+  authDomain: "mytierlist-70989.firebaseapp.com",
+  projectId: "mytierlist-70989",
+  storageBucket: "mytierlist-70989.firebasestorage.app",
+  messagingSenderId: "13881580770",
+  appId: "1:13881580770:web:6f7f9148c4bf5f95add2bb"
 };
 
-// Firebase 초기화
 const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
 const db = getFirestore(app);
+const provider = new GoogleAuthProvider();
 
 // 시간 변환 함수 (예: "방금 전", "3시간 전")
 function timeAgo(timestamp) {
