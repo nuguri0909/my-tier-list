@@ -19,11 +19,12 @@
     .btn-upload { background: #3498db; }
     .btn-add-tier { background: #e67e22; }
     .btn-download { background: #9b59b6; }
-    .btn-save-db { background: #2ecc71; } /* 저장 버튼 색상 */
+    .btn-save-db { background: #2ecc71; }
 
     .tier-board { display: flex; flex-direction: column; border: 2px solid #000; margin: 0 auto; max-width: 900px; background: #0f0f0f; border-radius: 8px; overflow: hidden; box-shadow: 0 8px 30px rgba(0,0,0,0.7); }
     .tier-row { display: flex; border-bottom: 1px solid #000; min-height: 90px; position: relative; }
-    .tier-label { width: 100px; display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 20px; color: white; outline: none; text-shadow: 1px 1px 2px rgba(0,0,0,0.5); }
+    .tier-row:last-child { border-bottom: none; }
+    .tier-label { width: 100px; display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 20px; color: white; outline: none; text-shadow: 1px 1px 2px rgba(0,0,0,0.5); padding: 10px; box-sizing: border-box; word-break: break-all; }
     .delete-tier-btn { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: rgba(231, 76, 60, 0.7); color: white; border: none; border-radius: 5px; width: 25px; height: 25px; cursor: pointer; display: none; }
     .tier-row:hover .delete-tier-btn { display: block; }
 
@@ -33,11 +34,6 @@
     .item.dragging { opacity: 0.4; }
 
     #item-bank { display: flex; flex-wrap: wrap; margin: 30px auto; max-width: 900px; min-height: 150px; background: #1a1a1a; padding: 15px; border: 2px dashed #444; gap: 5px; border-radius: 8px; }
-    
-    /* 모달 */
-    #modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 10000; justify-content: center; align-items: center; }
-    .modal-content { background: #1f1f1f; padding: 25px; border-radius: 12px; width: 320px; border: 1px solid #333; }
-    .modal-content input { width: 100%; box-sizing: border-box; padding: 10px; background: #0f0f0f; color: white; border: 1px solid #444; border-radius: 6px; }
   </style>
 </head>
 <body>
@@ -66,6 +62,7 @@
       <div class="tier-row"><div class="tier-label" contenteditable="true">A</div><div class="tier-items" ondrop="drop(event)" ondragover="allowDrop(event)"></div><button class="delete-tier-btn" onclick="deleteTier(this)">X</button></div>
       <div class="tier-row"><div class="tier-label" contenteditable="true">B</div><div class="tier-items" ondrop="drop(event)" ondragover="allowDrop(event)"></div><button class="delete-tier-btn" onclick="deleteTier(this)">X</button></div>
       <div class="tier-row"><div class="tier-label" contenteditable="true">C</div><div class="tier-items" ondrop="drop(event)" ondragover="allowDrop(event)"></div><button class="delete-tier-btn" onclick="deleteTier(this)">X</button></div>
+      <div class="tier-row"><div class="tier-label" contenteditable="true">D</div><div class="tier-items" ondrop="drop(event)" ondragover="allowDrop(event)"></div><button class="delete-tier-btn" onclick="deleteTier(this)">X</button></div>
     </div>
 
     <div id="item-bank" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
@@ -74,15 +71,43 @@
   <script>
     let itemIdCounter = 0;
 
-    // --- 1. 무지개 색상 자동 업데이트 함수 ---
+    // --- [핵심] 시각적으로 골고루 무지개 색상을 생성하는 알고리즘 ---
     function updateRowColors() {
       const rows = document.querySelectorAll('.tier-row');
       const total = rows.length;
+      if (total === 0) return;
+
+      // 시각적 stop 기준점 정의 (HSL Hue 값)
+      // 빨강(0) -> 주황(30) -> 노랑(60) -> 초록(120) -> 파랑(220) -> 보라(280)
+      const visualStops = [0, 30, 60, 120, 220, 280];
+      
       rows.forEach((row, index) => {
         const label = row.querySelector('.tier-label');
-        // HSL 색상 모델 사용: 0(빨강) ~ 270(보라)
-        const hue = (index / (total > 1 ? total - 1 : 1)) * 270;
-        label.style.backgroundColor = `hsl(${hue}, 70%, 40%)`;
+        
+        let hue;
+        if (total === 1) {
+          hue = visualStops[0]; // 줄이 하나면 빨간색
+        } else {
+          // 전체 구간(0~1) 중에서 현재 줄의 위치 비율 (0.0 ~ 1.0)
+          const ratio = index / (total - 1);
+          
+          // 이 비율이 visualStops 배열의 어느 구간에 속하는지 계산
+          const sectionProgress = ratio * (visualStops.length - 1);
+          const lowIndex = Math.floor(sectionProgress);
+          const highIndex = Math.ceil(sectionProgress);
+          
+          // 두 기준점 사이의 정밀한 위치 (interpolation)
+          const interpolation = sectionProgress - lowIndex;
+          
+          // 최종 Hue 값 계산
+          const lowHue = visualStops[lowIndex];
+          const highHue = visualStops[highIndex];
+          
+          hue = lowHue + (highHue - lowHue) * interpolation;
+        }
+
+        // 완성된 색상 적용
+        label.style.backgroundColor = `hsl(${hue}, 80%, 45%)`;
       });
     }
 
@@ -97,21 +122,21 @@
                        <div class="tier-items" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
                        <button class="delete-tier-btn" onclick="deleteTier(this)">X</button>`;
       board.appendChild(row);
-      updateRowColors();
+      updateRowColors(); // 줄이 추가될 때마다 색상 전체 재계산
     }
 
     function deleteTier(btn) {
-      if(confirm("이 줄을 삭제할까요?")) {
+      if(confirm("이 줄을 삭제할까요? (안에 있던 아이템은 보관함으로 이동)")) {
         const row = btn.parentElement;
         const items = row.querySelector('.tier-items');
         const bank = document.getElementById('item-bank');
         while(items.firstChild) bank.appendChild(items.firstChild);
         row.remove();
-        updateRowColors();
+        updateRowColors(); // 줄이 삭제될 때마다 색상 전체 재계산
       }
     }
 
-    // --- 2. 내 목록에 저장 기능 (LocalStorage) ---
+    // --- 내 목록에 저장 기능 (LocalStorage) ---
     function saveToMyList() {
       const title = prompt("티어표의 이름을 입력해주세요:", "나의 새로운 티어표");
       if(!title) return;
@@ -132,7 +157,6 @@
         data: rowsData
       };
 
-      // 기존 데이터 가져오기
       const savedLists = JSON.parse(localStorage.getItem('myTierLists') || '[]');
       savedLists.push(newTierList);
       localStorage.setItem('myTierLists', JSON.stringify(savedLists));
@@ -140,20 +164,23 @@
       alert("성공적으로 저장되었습니다! '내 목록' 메뉴에서 확인하세요.");
     }
 
-    // 드래그 앤 드롭 기초 로직 (이전과 동일)
+    // 드래그 앤 드롭 기초 로직
     function allowDrop(ev) { ev.preventDefault(); }
     function drag(ev) { ev.dataTransfer.setData("text", ev.target.id); ev.target.classList.add('dragging'); }
     function drop(ev) {
       ev.preventDefault();
       const data = ev.dataTransfer.getData("text");
       const dragged = document.getElementById(data);
+      if(!dragged) return; // 고스트 드래그 방지
       dragged.classList.remove('dragging');
       const target = ev.target.closest('.tier-items, #item-bank');
       if (target) target.appendChild(dragged);
     }
 
+    // 이미지 업로드 로직
     document.getElementById('image-upload').addEventListener('change', function(e) {
       for (const file of e.target.files) {
+        if (!file.type.startsWith('image/')) continue;
         const reader = new FileReader();
         reader.onload = function(event) {
           const div = document.createElement('div');
@@ -164,15 +191,23 @@
         };
         reader.readAsDataURL(file);
       }
+      this.value = ''; // 같은 파일 다시 업로드 가능하도록 초기화
     });
 
+    // PNG 다운로드 기능
     function downloadImage() {
-      html2canvas(document.getElementById('board'), { scale: 2 }).then(canvas => {
-        const link = document.createElement('a');
-        link.download = 'tier_list.png';
-        link.href = canvas.toDataURL();
-        link.click();
-      });
+      if(confirm("현재 티어표를 이미지로 저장하시겠습니까? (삭제 버튼은 캡처되지 않습니다)")) {
+        html2canvas(document.getElementById('board'), { 
+          scale: 2,
+          backgroundColor: '#0f0f0f',
+          logging: false
+        }).then(canvas => {
+          const link = document.createElement('a');
+          link.download = 'tier_list.png';
+          link.href = canvas.toDataURL();
+          link.click();
+        });
+      }
     }
   </script>
 </body>
