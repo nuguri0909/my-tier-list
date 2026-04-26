@@ -35,7 +35,7 @@ body {
 .nav-left { display: flex; align-items: center; gap: 30px; }
 .nav-logo { font-size: 1.5rem; font-weight: bold; color: #3498db; text-decoration: none; }
 
-/* ⭐ 2번 해결: gap을 40px로 늘려서 메뉴 사이를 시원하게 띄움 */
+/* gap을 40px로 늘려서 메뉴 사이를 시원하게 띄움 */
 .nav-links { display: flex; gap: 40px; }
 .nav-links a { color: #ccc; text-decoration: none; font-weight: 500; transition: color 0.2s; }
 .nav-links a:hover { color: #fff; }
@@ -68,6 +68,15 @@ body {
 .btn-save { background: #2ecc71; }
 .btn-small { padding: 5px 10px; font-size: 0.85rem; }
 
+/* ⭐ 신규 추가: 모달 등 우측 상단 공통 X 버튼 */
+.btn-close {
+  position: absolute; top: 15px; right: 20px;
+  background: transparent; border: none; color: #aaa;
+  font-size: 1.8rem; cursor: pointer; font-family: 'Pretendard', sans-serif;
+  line-height: 1; padding: 0; z-index: 10;
+}
+.btn-close:hover { color: #e74c3c; }
+
 .control-input { 
   padding: 10px; 
   background: #222; 
@@ -98,14 +107,14 @@ body {
   border-radius: 8px;
 }
 
-/* ⭐ 3번 해결: X 버튼이 박스 안에 들어가도록 공간 확보(padding-right) 및 위치 조정 */
+/* X 버튼이 박스 안에 들어가도록 공간 확보(padding-right) 및 위치 조정 */
 .tier-row { 
   display: flex; 
   flex-direction: row; 
-  min-height: 90px; 
+  min-height: 106px; /* 아이템이 커짐에 따라 row 최소 높이 살짝 증가 */
   background-color: #1a1a1a; 
   position: relative;
-  padding-right: 40px; /* X버튼이 들어갈 우측 여백 */
+  padding-right: 40px; 
 }
 .tier-label { 
   width: 100px; 
@@ -125,12 +134,12 @@ body {
   flex-wrap: wrap; 
   gap: 6px; 
   padding: 6px; 
-  min-height: 90px; 
+  min-height: 106px; 
   align-content: flex-start;
 }
 .delete-tier-btn {
   position: absolute;
-  right: 10px; /* 바깥이 아닌 안쪽(10px)으로 쏙 들어오게 수정 */
+  right: 10px; 
   top: 50%;
   transform: translateY(-50%);
   background: none;
@@ -143,13 +152,14 @@ body {
 .delete-tier-btn:hover { color: #e74c3c; }
 
 /* ==========================================
-   아이템 썸네일 (5번: 잘림 방지 및 정사각형 유지)
+   아이템 썸네일 (잘림 방지 및 정사각형 유지)
    ========================================== */
+/* ⭐ 아이템 크기 1.2배 상향 (기존 80px -> 96px) */
 .item { 
   position: relative; 
-  width: 80px; 
-  height: 80px; 
-  background-color: #000; /* 빈 공간 검은색 처리 */
+  width: 96px; 
+  height: 96px; 
+  background-color: #000; 
   border-radius: 4px; 
   overflow: hidden; 
   cursor: grab; 
@@ -158,7 +168,7 @@ body {
 .item img { 
   width: 100%; 
   height: 100%; 
-  object-fit: contain; /* 이미지가 찌그러지거나 잘리지 않고 원본 비율 유지 */
+  object-fit: contain; 
   pointer-events: none; 
 }
 .item-title { 
@@ -212,12 +222,15 @@ body {
   align-items: center; 
   z-index: 2000; 
 }
+
+/* ⭐ 모달 크기 기존대비 1.5배 상향 (700px -> 1050px) */
 .modal-content { 
+  position: relative; /* 우측 상단 X버튼 기준점 역할 */
   background: #1f1f1f; 
   padding: 25px; 
   border-radius: 12px; 
   width: 90vw; 
-  max-width: 700px; 
+  max-width: 1050px; 
   display: flex; 
   flex-direction: column; 
   box-shadow: 0 10px 30px rgba(0,0,0,0.5);
@@ -229,12 +242,15 @@ body {
   margin-bottom: 20px;
   border-bottom: 1px solid #333;
   padding-bottom: 10px;
+  padding-right: 30px; /* X버튼과 겹치지 않도록 여백 추가 */
 }
-.modal-body { display: flex; gap: 20px; }
-.modal-left { width: 200px; display: flex; flex-direction: column; gap: 15px; }
+.modal-body { display: flex; gap: 30px; } /* 내부 간격도 살짝 넓힘 */
+
+/* ⭐ 모달 왼쪽 이미지 영역 크기 상향 (200px -> 300px) */
+.modal-left { width: 300px; display: flex; flex-direction: column; gap: 15px; }
 .modal-left img { 
   width: 100%; 
-  height: 200px; 
+  height: 300px; 
   object-fit: contain; 
   background: #000; 
   border-radius: 8px; 
@@ -242,8 +258,8 @@ body {
 }
 .modal-right { flex: 1; display: flex; flex-direction: column; gap: 10px; }
 
-/* ⭐ 6번 해결: 아이템 설명창 폰트 예쁘게 통일 */
-#modal-desc { 
+/* 아이템 설명창 폰트 예쁘게 통일 및 높이 1.5배 상향 (150px -> 250px) */
+#modal-desc, .modal-desc-view { 
   flex: 1; 
   resize: none; 
   padding: 15px; 
@@ -254,13 +270,13 @@ body {
   color: #eee; 
   border: 1px solid #444; 
   border-radius: 8px;
-  min-height: 150px;
+  min-height: 250px; 
 }
 
 /* ==========================================
    게시판 및 보관함 전용 추가 디자인
    ========================================== */
-.post-detail-modal .modal-content { max-width: 900px; max-height: 90vh; overflow-y: auto; }
+.post-detail-modal .modal-content { max-width: 1100px; max-height: 90vh; overflow-y: auto; }
 .board-viewer { display: flex; flex-direction: column; gap: 5px; margin-bottom: 20px; background: #000; padding: 5px; border-radius: 8px; }
 .vote-section { display: flex; gap: 15px; justify-content: center; margin: 20px 0; padding-bottom: 20px; border-bottom: 1px solid #333; }
 .comment-section { display: flex; flex-direction: column; gap: 10px; }
