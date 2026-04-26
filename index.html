@@ -31,13 +31,12 @@
 
     .tier-items { display: flex; flex-wrap: wrap; flex-grow: 1; background: #1a1a1a; padding: 5px; gap: 5px; align-content: flex-start; min-width: 100px; }
     .item { position: relative; width: 80px; height: 80px; background: #444; border-radius: 6px; overflow: hidden; cursor: grab; display: flex; justify-content: center; align-items: center; box-shadow: 0 0 10px rgba(0,0,0,0.9); border: 1px solid #333; }
-    .item.dragging { opacity: 0.1; } /* 원래 아이템은 드래그 중 거의 안 보이게 */
+    .item.dragging { opacity: 0.1; }
     .item img { width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
     .item-title { position: absolute; bottom: 0; left: 0; width: 100%; background: rgba(0,0,0,0.8); color: white; font-size: 11px; padding: 2px 0; text-align: center; display: none; pointer-events: none; }
 
     #item-bank { display: flex; flex-wrap: wrap; margin: 30px auto; max-width: 900px; min-height: 150px; background: #1a1a1a; padding: 15px; border: 2px dashed #444; gap: 5px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
     
-    /* 모달 */
     #modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 10000; justify-content: center; align-items: center; }
     .modal-content { background: #1f1f1f; padding: 25px; border-radius: 12px; width: 320px; text-align: left; border: 1px solid #333; }
     .modal-content input, .modal-content textarea { width: 100%; box-sizing: border-box; margin: 10px 0; padding: 10px; background: #0f0f0f; color: white; border: 1px solid #444; border-radius: 6px; font-size: 14px; }
@@ -68,8 +67,7 @@
       <button class="btn btn-save-db" onclick="saveToMyList()">✅ 목록에 저장/수정</button>
     </div>
     
-    <div class="tier-board" id="board">
-      </div>
+    <div class="tier-board" id="board"></div>
 
     <div id="item-bank" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
   </div>
@@ -90,20 +88,59 @@
     let itemIdCounter = 0; 
     let currentEditItem = null;
     let draggedItem = null;
-    let ghostItem = null; // 미리보기용 반투명 아이템
-    let editingListId = null; // 수정 중인 목록 ID 확인용
+    let ghostItem = null;
+    let editingListId = null;
 
-    const visualStops = [0, 30, 60, 120, 185, 240, 285]; // 빨주노초하늘파보
+    const visualStops = [0, 30, 60, 120, 185, 240, 285];
 
-    // --- 페이지 로드 시 데이터 불러오기 (수정 모드) ---
-    window.onload = function() {
+    // --- IndexedDB 설정 및 함수 모음 ---
+    const DB_NAME = "TierMakerDB";
+    const STORE_NAME = "TierLists";
+
+    function initDB() {
+      return new Promise((resolve, reject) => {
+        const request = indexedDB.open(DB_NAME, 1);
+        request.onupgradeneeded = (e) => {
+          const db = e.target.result;
+          if (!db.objectStoreNames.contains(STORE_NAME)) {
+            db.createObjectStore(STORE_NAME, { keyPath: "id" });
+          }
+        };
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+    }
+
+    async function getListFromDB(id) {
+      const db = await initDB();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE_NAME, "readonly");
+        const store = tx.objectStore(STORE_NAME);
+        const request = store.get(id);
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+    }
+
+    async function saveListToDB(listData) {
+      const db = await initDB();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE_NAME, "readwrite");
+        const store = tx.objectStore(STORE_NAME);
+        const request = store.put(listData);
+        request.onsuccess = () => resolve();
+        request.onerror = () => reject(request.error);
+      });
+    }
+
+    // --- 페이지 로드 ---
+    window.onload = async function() {
       const urlParams = new URLSearchParams(window.location.search);
       const id = urlParams.get('id');
       
       if (id) {
         editingListId = parseInt(id);
-        const savedLists = JSON.parse(localStorage.getItem('myTierLists') || '[]');
-        const listData = savedLists.find(l => l.id === editingListId);
+        const listData = await getListFromDB(editingListId);
         
         if (listData) {
           document.getElementById('page-title').innerText = `✏️ 수정 중: ${listData.title}`;
@@ -111,7 +148,6 @@
           return;
         }
       }
-      // ID가 없거나 새 글쓰기면 기본 보드 생성
       createDefaultBoard();
     };
 
@@ -126,12 +162,10 @@
       updateRowColors();
     }
 
-    // 저장된 데이터로 보드와 아이템 복구하기
     function rebuildBoard(listData) {
       const board = document.getElementById('board');
       board.innerHTML = '';
       
-      // 티어 줄 복구
       listData.data.forEach(row => {
         const rowDiv = document.createElement('div');
         rowDiv.className = 'tier-row';
@@ -146,7 +180,6 @@
         board.appendChild(rowDiv);
       });
 
-      // 보관함(item-bank) 복구
       const bank = document.getElementById('item-bank');
       bank.innerHTML = '';
       if(listData.bank) {
@@ -157,7 +190,6 @@
       updateRowColors();
     }
 
-    // 아이템 생성 헬퍼 함수
     function createItemElement(data) {
       const div = document.createElement('div');
       div.className = 'item'; div.draggable = true; div.id = 'item-' + itemIdCounter++;
@@ -178,26 +210,24 @@
       return div;
     }
 
-    // --- 드래그 앤 드롭 및 미리보기(고스트) 기능 ---
+    // --- 드래그 앤 드롭 및 미리보기 ---
     function drag(ev) {
       draggedItem = ev.target;
       ev.dataTransfer.setData("text", ev.target.id);
       draggedItem.classList.add('dragging');
 
-      // 드래그하는 아이템을 복사해서 반투명한 미리보기용(고스트)으로 만듦
       ghostItem = draggedItem.cloneNode(true);
       ghostItem.id = 'ghost-placeholder';
       ghostItem.classList.remove('dragging');
       ghostItem.style.opacity = '0.4';
       ghostItem.style.border = '2px dashed #fff';
-      ghostItem.style.pointerEvents = 'none'; // 마우스 방해 금지
+      ghostItem.style.pointerEvents = 'none';
     }
 
     function allowDrop(ev) {
       ev.preventDefault();
       const target = ev.target.closest('.tier-items, #item-bank');
       if (target && ghostItem) {
-        // 커서가 위치한 대상에 미리보기 아이템 띄우기
         if (ghostItem.parentElement !== target) {
           target.appendChild(ghostItem);
         }
@@ -208,23 +238,17 @@
       ev.preventDefault();
       const target = ev.target.closest('.tier-items, #item-bank');
       
-      if (ghostItem) { ghostItem.remove(); ghostItem = null; } // 고스트 제거
-      
-      if (target && draggedItem) {
-        target.appendChild(draggedItem); // 진짜 아이템 안착
-      }
-      
+      if (ghostItem) { ghostItem.remove(); ghostItem = null; }
+      if (target && draggedItem) { target.appendChild(draggedItem); }
       if (draggedItem) { draggedItem.classList.remove('dragging'); draggedItem = null; }
     }
 
-    // 마우스를 화면 밖으로 놓쳤을 때 고스트 청소
     document.addEventListener('dragend', function() {
       if (ghostItem) { ghostItem.remove(); ghostItem = null; }
       if (draggedItem) { draggedItem.classList.remove('dragging'); draggedItem = null; }
     });
 
-
-    // --- 색상 및 UI 업데이트 로직 ---
+    // --- UI 업데이트 ---
     function updateRowColors() {
       const rows = document.querySelectorAll('.tier-row');
       const total = rows.length;
@@ -267,20 +291,18 @@
       }
     }
 
-    // --- 내 목록에 저장/수정 기능 ---
-    function saveToMyList() {
-      // 기존에 수정하던 리스트면 이름을 그대로 추천, 아니면 새 이름 추천
+    // --- IndexedDB를 활용한 저장 기능 ---
+    async function saveToMyList() {
       let defaultTitle = "나의 새로운 티어표";
-      let savedLists = JSON.parse(localStorage.getItem('myTierLists') || '[]');
+      
       if(editingListId) {
-        const existing = savedLists.find(l => l.id === editingListId);
-        if(existing) defaultTitle = existing.title;
+        const existingList = await getListFromDB(editingListId);
+        if(existingList) defaultTitle = existingList.title;
       }
 
       const title = prompt("티어표의 이름을 입력해주세요:", defaultTitle);
       if(!title) return;
 
-      // 보드에 있는 티어 데이터 추출
       const rowsData = [];
       document.querySelectorAll('.tier-row').forEach(row => {
         const labelText = row.querySelector('.tier-label').innerText;
@@ -296,7 +318,6 @@
         rowsData.push({ label: labelText, color: color, items: items });
       });
 
-      // 하단 보관함 데이터 추출
       const bankData = [];
       document.querySelectorAll('#item-bank .item').forEach(itemDiv => {
         bankData.push({
@@ -306,26 +327,30 @@
         });
       });
 
-      if(editingListId) {
-        // 기존 목록 업데이트
-        const index = savedLists.findIndex(l => l.id === editingListId);
-        if(index > -1) {
-          savedLists[index] = { ...savedLists[index], title: title, date: new Date().toLocaleDateString(), data: rowsData, bank: bankData };
-        }
-        alert("성공적으로 수정되었습니다!");
-      } else {
-        // 새 목록 생성
-        const newTierList = { id: Date.now(), title: title, date: new Date().toLocaleDateString(), data: rowsData, bank: bankData };
-        savedLists.push(newTierList);
-        editingListId = newTierList.id; // 이제부터는 수정 모드로 전환
-        document.getElementById('page-title').innerText = `✏️ 수정 중: ${title}`;
-        alert("새로운 티어표가 내 목록에 저장되었습니다!");
-      }
+      const listId = editingListId || Date.now();
+      const newListData = {
+        id: listId,
+        title: title,
+        date: new Date().toLocaleDateString(),
+        data: rowsData,
+        bank: bankData
+      };
 
-      localStorage.setItem('myTierLists', JSON.stringify(savedLists));
+      try {
+        await saveListToDB(newListData);
+        if(editingListId) {
+          alert("성공적으로 수정되었습니다!");
+        } else {
+          editingListId = listId;
+          document.getElementById('page-title').innerText = `✏️ 수정 중: ${title}`;
+          alert("새로운 티어표가 대용량 DB에 저장되었습니다!");
+        }
+      } catch (err) {
+        alert("저장 중 오류가 발생했습니다.");
+        console.error(err);
+      }
     }
 
-    // 파일 업로드 기능
     document.getElementById('image-upload').addEventListener('change', function(e) {
       for (const file of e.target.files) {
         if (!file.type.startsWith('image/')) continue;
@@ -338,7 +363,6 @@
       this.value = ''; 
     });
 
-    // 모달(정보 입력창) 처리
     function openModal(itemDiv) {
       currentEditItem = itemDiv;
       document.getElementById('edit-title').value = itemDiv.dataset.title || '';
@@ -359,7 +383,6 @@
       closeModal();
     }
 
-    // PNG 다운로드
     function downloadImage() {
       if(confirm("현재 티어표를 이미지로 저장하시겠습니까?")) {
         html2canvas(document.getElementById('board'), { scale: 2, backgroundColor: '#0f0f0f', logging: false }).then(canvas => {
