@@ -1,7 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-// ✨ 추가된 기능(좋아요, 댓글 등)을 위해 필요한 Firestore 함수들을 임포트에 추가했습니다.
-import { getFirestore, collection, addDoc, getDoc, doc, serverTimestamp, updateDoc, increment, deleteDoc, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc, getDoc, doc, serverTimestamp, updateDoc, increment, deleteDoc, query, orderBy, where, onSnapshot, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAwVjpUANfil947xb0bjKALw2uuGvZYQcs",
@@ -27,7 +26,7 @@ const loadMode = urlParams.get('mode');
 let originalAuthorId = null;
 
 // ==========================================
-// 1. 로그인 및 인증 UI 업데이트 로직
+// 1. 로그인/인증 및 내 보관함 로드 (1번 에러 완벽 해결!)
 // ==========================================
 window.login = () => signInWithPopup(auth, provider).catch(err => alert(err.message));
 window.logout = () => signOut(auth).then(() => alert("로그아웃 되었습니다."));
@@ -52,12 +51,16 @@ onAuthStateChanged(auth, (user) => {
     window.customNickname = "익명"; 
   }
   window.updateAuthUI();
+  
+  // 내 보관함 화면에 있을 경우 바로 데이터를 불러옴
+  if(document.getElementById('my-list-container')) {
+    window.loadMyList();
+  }
 });
 
 window.updateAuthUI = function() {
   const nm = document.getElementById('user-name-display');
   if(!nm) return; 
-  
   if(window.currentUser) {
     nm.innerText = window.customNickname + "님";
     if(document.getElementById('btn-login')) document.getElementById('btn-login').style.display = 'none';
@@ -72,7 +75,7 @@ window.updateAuthUI = function() {
 };
 
 // ==========================================
-// 2. 무지개 색상 및 티어 줄 관리
+// 2. 티어 보드 기본 로직 (무지개 색상, 줄 추가/삭제)
 // ==========================================
 const rainbowStops = [0, 30, 60, 120, 220, 270];
 window.updateRowColors = function() {
@@ -105,7 +108,7 @@ window.deleteTier = function(btn) {
 };
 
 // ==========================================
-// 3. 아이템 추가 함수
+// 3. 아이템 생성, 드래그 & 드롭
 // ==========================================
 window.addNewItem = function() {
   const fileInput = document.getElementById('img-file');
@@ -142,23 +145,17 @@ function createItemBox(src, title, desc="", parentElement=null) {
   parentElement.appendChild(item);
 }
 
-// ==========================================
-// 4. 드래그 앤 드롭 및 미리보기 기능
-// ==========================================
 window.draggedItemId = null;
-
 window.drag = (ev) => {
   ev.dataTransfer.setData("text", ev.target.id);
   window.draggedItemId = ev.target.id;
   setTimeout(() => ev.target.style.opacity = '0.5', 0);
 };
-
 window.dragEnd = (ev) => {
   ev.target.style.opacity = '1'; 
   const placeholder = document.getElementById('drag-placeholder');
   if (placeholder) placeholder.remove();
 };
-
 window.allowDrop = (ev) => {
   ev.preventDefault();
   const target = ev.target.classList.contains('tier-items') || ev.target.id === 'item-bank' ? ev.target : ev.target.closest('.tier-items, #item-bank');
@@ -178,12 +175,10 @@ window.allowDrop = (ev) => {
     }
   }
 };
-
 window.drop = (ev) => {
   ev.preventDefault();
   const data = ev.dataTransfer.getData("text");
   const target = ev.target.classList.contains('tier-items') || ev.target.id === 'item-bank' ? ev.target : ev.target.closest('.tier-items, #item-bank');
-  
   const placeholder = document.getElementById('drag-placeholder');
   if(placeholder) placeholder.remove(); 
 
@@ -195,32 +190,26 @@ window.drop = (ev) => {
 };
 
 // ==========================================
-// 5. 모달(팝업) 제어 로직
+// 4. 모달 창 (아이템 상세 설명)
 // ==========================================
 window.currentItemForModal = null;
-
 window.openItemModal = function(itemId) {
   window.currentItemForModal = itemId;
   const item = document.getElementById(itemId);
   document.getElementById('modal-img-preview').src = item.querySelector('img').src;
-  
   const titleDiv = item.querySelector('.item-title');
   document.getElementById('modal-title').value = titleDiv ? titleDiv.innerText : '';
   document.getElementById('modal-desc').value = item.dataset.desc || '';
-  
   document.getElementById('item-modal').style.display = 'flex';
 };
-
 window.closeModal = () => { 
   document.getElementById('item-modal').style.display = 'none'; 
   window.currentItemForModal = null;
 };
-
 window.saveItemInfo = function() {
   if(!window.currentItemForModal) return;
   const item = document.getElementById(window.currentItemForModal);
   item.dataset.desc = document.getElementById('modal-desc').value;
-  
   const newTitle = document.getElementById('modal-title').value.trim();
   let titleDiv = item.querySelector('.item-title');
   if (newTitle) {
@@ -235,7 +224,6 @@ window.saveItemInfo = function() {
   }
   window.closeModal();
 };
-
 window.deleteItem = function() { 
   if(window.currentItemForModal) {
     document.getElementById(window.currentItemForModal).remove(); 
@@ -244,7 +232,7 @@ window.deleteItem = function() {
 };
 
 // ==========================================
-// 6. DB 저장 및 불러오기 (요청사항 1번 반영)
+// 5. DB 저장 및 메인 티어표 불러오기
 // ==========================================
 window.saveBoard = async function() {
   if (!window.currentUser) return alert("로그인해야 저장할 수 있습니다!");
@@ -267,19 +255,18 @@ window.saveBoard = async function() {
     desc: item.dataset.desc || ""
   }));
 
-  // ✨ 제목 입력창(id="tier-list-title")이 있으면 가져오고, 없으면 기본값 설정
   const titleInput = document.getElementById('tier-list-title');
   const boardTitle = titleInput && titleInput.value.trim() !== "" ? titleInput.value.trim() : "나만의 무제 티어표";
 
   const payload = {
-    title: boardTitle, // 1번: 보관함에서 볼 수 있게 제목 추가
-    authorId: window.currentUser.uid, // 1번: 내 보관함 필터링을 위한 UID
+    title: boardTitle,
+    authorId: window.currentUser.uid, // ⭐ 내 보관함을 위해 필수 저장
     authorName: window.customNickname,
     category: document.getElementById('category-select') ? document.getElementById('category-select').value : "기타",
     tiers: boardData,
     bank: bankItems,
-    likes: 0,    // 4번: 좋아요 초기값 설정
-    dislikes: 0, // 4번: 싫어요 초기값 설정
+    likes: 0,
+    dislikes: 0,
     createdAt: serverTimestamp()
   };
 
@@ -307,37 +294,30 @@ window.loadBoardData = async function() {
       if(board) board.innerHTML = ''; 
       if(itemBank) itemBank.innerHTML = '';
 
-      if (loadMode === 'v1' || !loadMode) {
-        data.tiers.forEach(tier => {
-          const row = document.createElement('div'); row.className = 'tier-row';
-          row.innerHTML = `<div class="tier-label" contenteditable="true">${tier.label}</div><div class="tier-items" ondrop="window.drop(event)" ondragover="window.allowDrop(event)"></div><button class="delete-tier-btn" onclick="window.deleteTier(this)">X</button>`;
-          board.appendChild(row);
-          tier.items.forEach(it => createItemBox(it.src, it.title, it.desc, row.querySelector('.tier-items')));
-        });
-        if(data.bank) data.bank.forEach(it => createItemBox(it.src, it.title, it.desc, itemBank));
-      } else if (loadMode === 'v2') {
-        data.tiers.forEach(tier => {
-          const row = document.createElement('div'); row.className = 'tier-row';
-          row.innerHTML = `<div class="tier-label" contenteditable="true">${tier.label}</div><div class="tier-items" ondrop="window.drop(event)" ondragover="window.allowDrop(event)"></div><button class="delete-tier-btn" onclick="window.deleteTier(this)">X</button>`;
-          board.appendChild(row);
-          tier.items.forEach(it => createItemBox(it.src, it.title, it.desc, itemBank));
-        });
-        if(data.bank) data.bank.forEach(it => createItemBox(it.src, it.title, it.desc, itemBank));
-      }
+      const modeToLoad = loadMode || 'v1';
+      data.tiers.forEach(tier => {
+        const row = document.createElement('div'); row.className = 'tier-row';
+        row.innerHTML = `<div class="tier-label" contenteditable="true">${tier.label}</div><div class="tier-items" ondrop="window.drop(event)" ondragover="window.allowDrop(event)"></div><button class="delete-tier-btn" onclick="window.deleteTier(this)">X</button>`;
+        board.appendChild(row);
+        if(modeToLoad === 'v1') {
+           tier.items.forEach(it => createItemBox(it.src, it.title, it.desc, row.querySelector('.tier-items')));
+        } else {
+           tier.items.forEach(it => createItemBox(it.src, it.title, it.desc, itemBank));
+        }
+      });
+      
+      if(data.bank) data.bank.forEach(it => createItemBox(it.src, it.title, it.desc, itemBank));
       window.updateRowColors();
     }
   } catch (error) { console.error("불러오기 에러:", error); }
 };
 
-// ==========================================
-// 7. 페이지 초기 셋팅
-// ==========================================
 window.onload = function() {
   if (loadId) {
     window.loadBoardData(); 
   } else {
     const board = document.getElementById('board');
-    if(board) {
+    if(board && window.location.pathname.includes('index.html')) {
       ['S','A','B','C','D','E'].forEach(l => {
         board.innerHTML += `<div class="tier-row"><div class="tier-label" contenteditable="true">${l}</div><div class="tier-items" ondrop="window.drop(event)" ondragover="window.allowDrop(event)"></div><button class="delete-tier-btn" onclick="window.deleteTier(this)">X</button></div>`;
       });
@@ -347,10 +327,8 @@ window.onload = function() {
 };
 
 // ==========================================
-// 8. 게시판 뷰어, 좋아요, 댓글 기능 (새로 추가)
+// 6. 게시판 전용 함수 (티어표 보기, 좋아요, 댓글)
 // ==========================================
-
-// 3번 & 4번: 게시판에서 글 클릭 시 티어표와 좋아요 버튼 띄우기
 window.openPostDetail = async function(postId) {
   const docRef = doc(db, "tierLists", postId);
   const docSnap = await getDoc(docRef);
@@ -358,22 +336,21 @@ window.openPostDetail = async function(postId) {
   if (docSnap.exists()) {
     const data = docSnap.data();
     
-    // 티어표 렌더링 (게시판 HTML 안에 id="board-viewer" 영역이 있어야 합니다)
+    // ⭐ 4번 해결: 게시판 상세모달에 티어표 시각화
     const viewer = document.getElementById('board-viewer'); 
     if(viewer) {
-      viewer.innerHTML = ''; 
+      viewer.innerHTML = `<h3>${data.title || "무제 티어표"}</h3>`; 
       data.tiers.forEach(tier => {
         let itemsHtml = tier.items.map(it => `<div class="item" style="pointer-events:none;"><img src="${it.src}"></div>`).join('');
         viewer.innerHTML += `
-          <div class="tier-row" style="min-height: 80px; margin-bottom: 5px;">
-            <div class="tier-label" style="background-color: ${tier.color || '#ccc'}; width: 100px; display:flex; align-items:center; justify-content:center; font-weight:bold;">${tier.label}</div>
+          <div class="tier-row" style="min-height: 80px; margin-bottom: 5px; padding-right:0;">
+            <div class="tier-label" style="background-color: ${tier.color || '#ccc'}; width: 100px; display:flex; align-items:center; justify-content:center; font-weight:bold; color:#000;">${tier.label}</div>
             <div class="tier-items" style="display:flex; flex-wrap:wrap; gap:5px; padding:5px;">${itemsHtml}</div>
           </div>
         `;
       });
     }
 
-    // 4번: 좋아요/싫어요 버튼 렌더링
     const voteSection = document.getElementById('vote-section');
     if(voteSection) {
       voteSection.innerHTML = `
@@ -382,25 +359,25 @@ window.openPostDetail = async function(postId) {
       `;
     }
 
-    // 댓글 목록 불러오기 시작
     window.loadComments(postId);
     
-    // 모달창 띄우기 (게시판 HTML에 팝업이 구현되어 있을 경우)
     const modal = document.getElementById('post-detail-modal');
     if(modal) modal.style.display = 'flex';
   }
 };
 
-// 4번: 좋아요/싫어요 처리 로직
+window.closePostModal = function() {
+  document.getElementById('post-detail-modal').style.display = 'none';
+};
+
 window.vote = async function(postId, type) {
   if (!window.currentUser) return alert("로그인 후 이용할 수 있습니다.");
   const docRef = doc(db, "tierLists", postId);
   if(type === 'like') await updateDoc(docRef, { likes: increment(1) });
   else await updateDoc(docRef, { dislikes: increment(1) });
-  window.openPostDetail(postId); // 반영 후 화면 새로고침
+  window.openPostDetail(postId); 
 };
 
-// 2번: 댓글 삭제 로직 (내가 쓴 댓글만 삭제 버튼이 보이도록)
 window.loadComments = function(postId) {
   const commentList = document.getElementById('comment-list');
   if(!commentList) return;
@@ -411,13 +388,11 @@ window.loadComments = function(postId) {
     snapshot.forEach((docSnap) => {
       const c = docSnap.data();
       const commentId = docSnap.id;
-      
-      // 내 댓글이면 삭제 버튼 표시
       const isMine = window.currentUser && c.authorId === window.currentUser.uid;
-      const deleteBtn = isMine ? `<button style="background:transparent; color:#e74c3c; border:none; cursor:pointer;" onclick="window.deleteComment('${postId}', '${commentId}')">삭제</button>` : '';
+      const deleteBtn = isMine ? `<button class="btn-delete-comment" onclick="window.deleteComment('${postId}', '${commentId}')">삭제</button>` : '';
 
       commentList.innerHTML += `
-        <div style="background:#222; padding:10px; margin-bottom:5px; border-radius:5px; display:flex; justify-content:space-between;">
+        <div class="comment-item">
           <div><strong>${c.authorName}:</strong> ${c.text}</div>
           ${deleteBtn}
         </div>
@@ -429,5 +404,44 @@ window.loadComments = function(postId) {
 window.deleteComment = async function(postId, commentId) {
   if(confirm("이 댓글을 삭제할까요?")) {
     await deleteDoc(doc(db, `tierLists/${postId}/comments`, commentId));
+  }
+};
+
+// ==========================================
+// 7. 내 보관함 로드 함수 (1번 에러 완벽 해결!)
+// ==========================================
+window.loadMyList = async function() {
+  const listContainer = document.getElementById('my-list-container');
+  if (!listContainer || !window.currentUser) return;
+
+  try {
+    const q = query(collection(db, "tierLists"), where("authorId", "==", window.currentUser.uid));
+    const querySnapshot = await getDocs(q);
+    
+    listContainer.innerHTML = ''; 
+    
+    if (querySnapshot.empty) {
+      listContainer.innerHTML = '<p style="text-align:center; padding: 50px; color:#aaa;">저장된 티어표가 없습니다.</p>';
+      return;
+    }
+
+    querySnapshot.forEach((docSnap) => {
+      const data = docSnap.data();
+      listContainer.innerHTML += `
+        <div class="list-item">
+          <div>
+            <h3 style="margin: 0 0 5px 0;">${data.title || "무제 티어표"}</h3>
+            <span style="font-size:0.8rem; color:#888;">👍 ${data.likes || 0} | 👎 ${data.dislikes || 0}</span>
+          </div>
+          <div style="display:flex; gap:10px;">
+            <button class="btn" onclick="location.href='index.html?load=${docSnap.id}'">수정하기</button>
+            <button class="btn" style="background:#888;" onclick="window.openPostDetail('${docSnap.id}')">게시판 뷰로 보기</button>
+          </div>
+        </div>
+      `;
+    });
+  } catch (e) {
+    console.error("보관함 불러오기 에러:", e);
+    listContainer.innerHTML = '<p>데이터를 불러오는데 실패했습니다.</p>';
   }
 };
