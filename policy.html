@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>정책 및 약관 - MyTierList</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .policy-container { background: #343a40; padding: 40px; border-radius: 10px; margin-top: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+    .policy-content { white-space: pre-wrap; line-height: 1.8; color: #ddd; font-size: 1.05rem; }
+    .admin-edit-area { margin-top: 20px; padding-top: 20px; border-top: 1px dashed #555; display: none; }
+    #policy-edit-text { width: 100%; height: 300px; background: #222; color: #fff; border: 1px solid #555; padding: 15px; font-family: inherit; font-size: 1rem; border-radius: 5px; box-sizing: border-box; resize: vertical; }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <div class="nav-left">
+      <a href="index.html" class="nav-logo">MyTierList</a>
+      <div class="nav-links">
+        <a href="index.html">티어 만들기</a>
+        <a href="board.html">티어 게시판</a>
+      </div>
+    </div>
+    <div class="user-menu">
+      <span id="user-name-display" class="user-name">로그인해주세요</span>
+      <button class="btn btn-small" id="btn-login" onclick="window.login()">구글 로그인</button>
+      <button class="btn btn-small" id="btn-logout" style="display:none;" onclick="window.logout()">로그아웃</button>
+    </div>
+  </nav>
+
+  <div class="container">
+    <h1 id="policy-title" style="text-align: center; color: #3498db;">불러오는 중...</h1>
+    
+    <div class="policy-container">
+      <div id="policy-view" class="policy-content">내용을 불러오는 중입니다...</div>
+      
+      <div id="admin-area" class="admin-edit-area">
+        <h3 style="color: #e74c3c;">👑 관리자 수정 모드</h3>
+        <p style="color: #aaa; font-size: 0.9rem;">이곳에 약관 내용을 입력하고 저장하세요.</p>
+        <textarea id="policy-edit-text" placeholder="여기에 약관 내용을 작성하세요..."></textarea>
+        <button class="btn btn-save" style="margin-top: 15px; width: 100%; padding: 15px; font-size: 1.2rem;" onclick="window.savePolicy()">💾 저장 및 반영하기</button>
+      </div>
+    </div>
+  </div>
+
+  <footer class="site-footer">
+    <div class="site-footer-links">
+      <a href="policy.html?type=terms">이용약관</a> | 
+      <a href="policy.html?type=privacy">개인정보처리방침</a> | 
+      <a href="policy.html?type=youth">청소년 보호정책</a>
+    </div>
+    <div class="site-footer-info">
+      <div>@2026 MyTierList.net</div>
+      <div style="margin-top: 5px;">문의: asy0009@naver.com</div>
+    </div>
+  </footer>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAwVjpUANfil947xb0bjKALw2uuGvZYQcs",
+      authDomain: "mytierlist-70989.firebaseapp.com",
+      projectId: "mytierlist-70989",
+      storageBucket: "mytierlist-70989.firebasestorage.app",
+      messagingSenderId: "13881580770",
+      appId: "1:13881580770:web:6f7f9148c4bf5f95add2bb"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const provider = new GoogleAuthProvider();
+
+    // 👑 [관리자 이메일 설정] 반드시 본인의 구글 이메일을 넣으세요.
+    const ADMIN_EMAILS = ["asy0009@naver.com", "fjrzlsiyoung@gmail.com"]; 
+
+    // URL 파라미터에서 현재 보고 있는 정책 종류 가져오기
+    const urlParams = new URLSearchParams(window.location.search);
+    const policyType = urlParams.get('type') || 'terms';
+    
+    const titleMap = {
+      'terms': '이용약관',
+      'privacy': '개인정보처리방침',
+      'youth': '청소년 보호정책'
+    };
+    document.getElementById('policy-title').innerText = titleMap[policyType];
+
+    window.login = () => signInWithPopup(auth, provider).catch(err => alert(err.message));
+    window.logout = () => signOut(auth).then(() => location.reload());
+
+    // 권한 체크 및 UI 변경
+    onAuthStateChanged(auth, (user) => {
+      if(user) {
+        document.getElementById('user-name-display').innerText = user.displayName + "님";
+        document.getElementById('btn-login').style.display = 'none';
+        document.getElementById('btn-logout').style.display = 'inline-block';
+        
+        // 관리자인지 확인하여 에디터 띄우기
+        if(ADMIN_EMAILS.includes(user.email)) {
+          document.getElementById('admin-area').style.display = 'block';
+        }
+      } else {
+        document.getElementById('user-name-display').innerText = "로그인해주세요";
+        document.getElementById('btn-login').style.display = 'inline-block';
+        document.getElementById('btn-logout').style.display = 'none';
+        document.getElementById('admin-area').style.display = 'none';
+      }
+    });
+
+    // DB에서 정책 내용 불러오기
+    async function loadPolicy() {
+      try {
+        const docRef = doc(db, "settings", policyType);
+        const docSnap = await getDoc(docRef);
+        
+        if (docSnap.exists()) {
+          const content = docSnap.data().content;
+          document.getElementById('policy-view').innerText = content;
+          document.getElementById('policy-edit-text').value = content;
+        } else {
+          document.getElementById('policy-view').innerText = "등록된 내용이 없습니다.";
+        }
+      } catch(e) {
+        document.getElementById('policy-view').innerText = "데이터를 불러오는 중 오류가 발생했습니다.";
+      }
+    }
+
+    // 관리자가 정책 저장하기
+    window.savePolicy = async () => {
+      const newContent = document.getElementById('policy-edit-text').value;
+      try {
+        await setDoc(doc(db, "settings", policyType), {
+          content: newContent,
+          updatedAt: new Date()
+        });
+        alert("성공적으로 저장되었습니다!");
+        loadPolicy(); // 화면 갱신
+      } catch(e) {
+        alert("저장 실패: " + e.message);
+      }
+    };
+
+    window.onload = loadPolicy;
+  </script>
+</body>
+</html>
