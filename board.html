@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>게시판 - 마이 티어 메이커</title>
+  <style>
+    body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #121212; color: #e0e0e0; margin: 0; padding: 0; }
+    .top-menu { background: #1f1f1f; display: flex; align-items: center; padding: 10px 30px; box-shadow: 0 2px 10px rgba(0,0,0,0.5); position: fixed; top: 0; width: 100%; box-sizing: border-box; z-index: 2000; }
+    .top-menu a { color: #aaa; text-decoration: none; margin: 0 15px; font-weight: bold; font-size: 16px; transition: 0.3s; }
+    .top-menu a:hover { color: #3498db; }
+    .top-menu .active { color: white; border-bottom: 2px solid #3498db; padding-bottom: 5px; }
+    .logo-btn { font-size: 20px !important; color: #fff !important; margin-right: 40px !important; }
+    
+    .content-wrapper { padding: 80px 40px 40px 40px; max-width: 800px; margin: 0 auto; }
+    .header-area { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; padding-bottom: 10px; margin-bottom: 20px; }
+    .upload-btn { background: #3498db; color: white; border: none; padding: 8px 16px; border-radius: 4px; font-weight: bold; cursor: pointer; }
+    
+    .post { background: #1f1f1f; border-radius: 8px; padding: 20px; margin-bottom: 20px; border: 1px solid #333; }
+    .post-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+    .post-title { font-size: 20px; font-weight: bold; margin: 0; }
+    .post-author { font-size: 14px; color: #aaa; }
+    .post-img { width: 100%; height: 200px; background: #333; border-radius: 4px; display:flex; justify-content:center; align-items:center; color:#666; margin-bottom: 15px;}
+    
+    .post-actions { display: flex; gap: 10px; }
+    .action-btn { background: #2a2a2a; color: #e0e0e0; border: 1px solid #444; padding: 6px 12px; border-radius: 4px; cursor: pointer; transition: 0.2s; font-size: 14px;}
+    .action-btn:hover { background: #444; }
+    .btn-remix { background: #e67e22; border-color: #d35400; font-weight:bold; }
+    .btn-remix:hover { background: #d35400; }
+  </style>
+</head>
+<body>
+
+  <nav class="top-menu">
+    <a href="index.html" class="logo-btn">🏠 My Tier List</a>
+    <a href="index.html">티어 만들기</a>
+    <a href="mylist.html">내 목록</a>
+    <a href="board.html" class="active">게시판</a>
+    <a href="#" style="margin-left:auto;">로그인</a>
+  </nav>
+
+  <div class="content-wrapper">
+    <div class="header-area">
+      <h2>🌐 커뮤니티 게시판</h2>
+      <button class="upload-btn">내 티어표 공유하기</button>
+    </div>
+
+    <div class="post">
+      <div class="post-header">
+        <h3 class="post-title">2026년 한국인이 좋아하는 치킨 브랜드 티어</h3>
+        <span class="post-author">작성자: 치킨매니아</span>
+      </div>
+      <div class="post-img">사용자가 공유한 티어표 이미지 영역</div>
+      <div class="post-actions">
+        <button class="action-btn">❤️ 좋아요 128</button>
+        <button class="action-btn">💬 댓글 32</button>
+        <button class="action-btn btn-remix">🔄 리믹스 (복사해서 내 맘대로 수정)</button>
+      </div>
+    </div>
+
+    <div class="post">
+      <div class="post-header">
+        <h3 class="post-title">마블 시네마틱 유니버스 영화 총정리</h3>
+        <span class="post-author">작성자: MovieGeek</span>
+      </div>
+      <div class="post-img">사용자가 공유한 티어표 이미지 영역</div>
+      <div class="post-actions">
+        <button class="action-btn">❤️ 좋아요 95</button>
+        <button class="action-btn">💬 댓글 14</button>
+        <button class="action-btn btn-remix">🔄 리믹스</button>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>
