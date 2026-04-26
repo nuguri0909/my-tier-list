@@ -22,9 +22,9 @@
     </div>
     <div class="user-menu">
       <span id="user-name-display" class="user-name">로그인해주세요</span>
-      <button class="btn btn-small" id="btn-nickname" style="display:none;" onclick="setNickname()">닉네임 설정</button>
-      <button class="btn btn-small btn-save" id="btn-login" onclick="login()">구글 로그인</button>
-      <button class="btn btn-small" id="btn-logout" style="display:none;" onclick="logout()">로그아웃</button>
+      <button class="btn btn-small" id="btn-nickname" style="display:none;" onclick="window.setNickname()">닉네임 설정</button>
+      <button class="btn btn-small btn-save" id="btn-login" onclick="window.login()">구글 로그인</button>
+      <button class="btn btn-small" id="btn-logout" style="display:none;" onclick="window.logout()">로그아웃</button>
     </div>
   </nav>
 
@@ -34,19 +34,56 @@
 
   <div class="grid-container" id="my-list"></div>
 
-  <script>
-    // 💡 더미 데이터를 비웠습니다.
-    let myDb = [];
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-    // 로그인 공통 로직
-    let currentUser = null; let customNickname = "익명";
-    function login() { currentUser = {uid:"1"}; updateAuthUI(); alert("로그인 되었습니다."); renderMyLists(); }
-    function logout() { currentUser = null; updateAuthUI(); alert("로그아웃 되었습니다."); renderMyLists(); }
-    function setNickname() { const n = prompt("닉네임:", customNickname); if(n) { customNickname = n; updateAuthUI(); } }
-    function updateAuthUI() {
+    const firebaseConfig = {
+      apiKey: "AIzaSyAwVjpUANfil947xb0bjKALw2uuGvZYQcs",
+      authDomain: "mytierlist-70989.firebaseapp.com",
+      projectId: "mytierlist-70989",
+      storageBucket: "mytierlist-70989.firebasestorage.app",
+      messagingSenderId: "13881580770",
+      appId: "1:13881580770:web:6f7f9148c4bf5f95add2bb"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const provider = new GoogleAuthProvider();
+
+    window.currentUser = null; 
+    window.customNickname = "익명";
+    let myDb = []; // 더미 데이터 비움
+
+    window.login = () => signInWithPopup(auth, provider);
+    window.logout = () => signOut(auth);
+    
+    window.setNickname = () => {
+      const nick = prompt("닉네임:", window.customNickname);
+      if(nick && nick.trim() !== "") {
+        updateProfile(auth.currentUser, { displayName: nick.trim() }).then(() => {
+          window.customNickname = nick.trim();
+          window.updateAuthUI();
+        });
+      }
+    };
+
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        window.currentUser = user;
+        window.customNickname = user.displayName || "익명";
+      } else {
+        window.currentUser = null;
+        window.customNickname = "익명";
+      }
+      window.updateAuthUI();
+      window.renderMyLists(); // 로그인 상태가 변할 때마다 리스트 다시 그리기
+    });
+
+    window.updateAuthUI = () => {
       const nm = document.getElementById('user-name-display');
-      if(currentUser) {
-        nm.innerText = customNickname + "님";
+      if(window.currentUser) {
+        nm.innerText = window.customNickname + "님";
         document.getElementById('btn-login').style.display='none';
         document.getElementById('btn-logout').style.display='inline-block';
         document.getElementById('btn-nickname').style.display='inline-block';
@@ -56,13 +93,13 @@
         document.getElementById('btn-logout').style.display='none';
         document.getElementById('btn-nickname').style.display='none';
       }
-    }
+    };
 
-    function renderMyLists() {
+    window.renderMyLists = () => {
       const container = document.getElementById('my-list');
       container.innerHTML = '';
       
-      if (!currentUser) {
+      if (!window.currentUser) {
         container.innerHTML = '<div style="grid-column: span 2; text-align: center; padding: 50px; color: #888;">로그인 후 내 보관함을 확인할 수 있습니다.</div>';
         return;
       }
@@ -70,12 +107,10 @@
         container.innerHTML = '<div style="grid-column: span 2; text-align: center; padding: 50px; color: #888;">저장된 티어표가 없습니다. 첫 티어표를 만들어 보세요!</div>';
         return;
       }
-      // 리스트 렌더링 로직 (데이터가 있을 때 작동)
-    }
+    };
 
-    window.onload = function() {
-      updateAuthUI();
-      renderMyLists();
+    window.onload = () => {
+      window.renderMyLists();
     };
   </script>
 </body>
