@@ -11,7 +11,6 @@ body {
   margin: 0; 
   padding: 0; 
   font-family: 'Pretendard', sans-serif; 
-  /* ⭐ 배경색을 더 짙은 색으로 변경 (#262424) */
   background-color: #262424; 
   color: #ffffff; 
   display: flex;
@@ -20,7 +19,6 @@ body {
 }
 
 .container { 
-  /* ⭐ 최대 너비를 다시 1200px로 변경 */
   max-width: 1200px; 
   width: 95%;
   margin: 0 auto; 
@@ -37,7 +35,8 @@ body {
   align-items: center; 
   background: #1a1a1a; 
   padding: 15px 30px; 
-  border-bottom: 1px solid #333; 
+  border-bottom: 1px solid #333;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3); /* ⭐ 하단 그림자 추가 */
 }
 .nav-left { display: flex; align-items: center; gap: 30px; }
 .nav-logo { font-size: 1.5rem; font-weight: bold; color: #3498db; text-decoration: none; }
@@ -63,16 +62,21 @@ body {
   background: #3498db; 
   color: white; 
   border: none; 
-  padding: 8px 16px; 
-  border-radius: 6px; 
+  padding: 10px 18px; /* 살짝 더 통통하게 */
+  border-radius: 8px; /* 둥글기 증가 */
   cursor: pointer; 
   font-weight: 600; 
   font-family: 'Pretendard', sans-serif;
-  transition: opacity 0.2s;
+  transition: all 0.2s ease; /* ⭐ 부드러운 애니메이션 준비 */
 }
-.btn:hover { opacity: 0.8; }
+/* ⭐ 버튼 Hover 시 살짝 위로 뜨고 그림자 생김 */
+.btn:hover { 
+  opacity: 0.9; 
+  transform: translateY(-2px); 
+  box-shadow: 0 4px 8px rgba(0,0,0,0.3); 
+}
 .btn-save { background: #2ecc71; }
-.btn-small { padding: 5px 10px; font-size: 0.85rem; }
+.btn-small { padding: 6px 12px; font-size: 0.85rem; }
 
 .btn-close {
   position: absolute; top: 15px; right: 20px;
@@ -89,8 +93,9 @@ body {
   color: white; 
   border-radius: 6px; 
   font-family: 'Pretendard', sans-serif; 
+  transition: border-color 0.2s ease;
 }
-.control-input:focus { outline: none; border-color: #3498db; }
+.control-input:focus { outline: none; border-color: #3498db; box-shadow: 0 0 5px rgba(52, 152, 219, 0.5); }
 
 /* ==========================================
    메인 레이아웃 및 티어표 보드
@@ -107,9 +112,10 @@ body {
   display: flex; 
   flex-direction: column; 
   gap: 4px; 
-  background: #000; 
-  padding: 4px; 
-  border-radius: 8px;
+  background: #111; /* 살짝 톤 다운 */
+  padding: 6px; 
+  border-radius: 12px; /* 둥글기 증가 */
+  box-shadow: 0 8px 20px rgba(0,0,0,0.5); /* ⭐ 티어 보드 전체에 깊은 그림자 */
 }
 
 .tier-row { 
@@ -119,6 +125,7 @@ body {
   background-color: #1a1a1a; 
   position: relative;
   padding-right: 40px; 
+  border-radius: 8px; /* 각 줄도 둥글게 */
 }
 .tier-label { 
   width: 100px; 
@@ -131,6 +138,8 @@ body {
   text-shadow: 1px 1px 0px rgba(255,255,255,0.3);
   text-align: center;
   word-break: break-all;
+  border-top-left-radius: 8px;
+  border-bottom-left-radius: 8px;
 }
 .tier-items { 
   flex: 1; 
@@ -152,21 +161,28 @@ body {
   font-size: 1.2rem;
   cursor: pointer;
   padding: 5px;
+  transition: color 0.2s, transform 0.2s;
 }
-.delete-tier-btn:hover { color: #e74c3c; }
+.delete-tier-btn:hover { color: #e74c3c; transform: translateY(-50%) scale(1.2); }
 
 /* ==========================================
-   아이템 썸네일 (잘림 방지 및 정사각형 유지)
+   아이템 썸네일 (Hover 쫀득하게)
    ========================================== */
 .item { 
   position: relative; 
   width: 96px; 
   height: 96px; 
   background-color: #000; 
-  border-radius: 4px; 
+  border-radius: 8px; /* 둥글게 */
   overflow: hidden; 
   cursor: grab; 
   border: 1px solid #333;
+  transition: transform 0.2s ease, box-shadow 0.2s ease; /* ⭐ Hover 애니메이션 */
+}
+.item:hover {
+  transform: scale(1.05); /* 마우스 올리면 살짝 커짐 */
+  box-shadow: 0 5px 15px rgba(0,0,0,0.6); /* 그림자 진해짐 */
+  z-index: 10;
 }
 .item img { 
   width: 100%; 
@@ -179,16 +195,16 @@ body {
   bottom: 0; 
   left: 0; 
   width: 100%; 
-  background: rgba(0,0,0,0.75); 
+  background: rgba(0,0,0,0.8); 
   color: white; 
   font-size: 0.7rem; 
   text-align: center; 
-  padding: 3px 0; 
+  padding: 4px 0; 
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.item-placeholder { border: 2px dashed #666; opacity: 0.5; background: transparent; }
+.item-placeholder { border: 2px dashed #666; opacity: 0.5; background: transparent; box-shadow: none; }
 
 /* 우측 대기열 영역 */
 .item-bank { 
@@ -197,16 +213,18 @@ body {
   gap: 6px; 
   min-height: 200px; 
   border: 2px dashed #444; 
-  border-radius: 8px; 
+  border-radius: 12px; 
   padding: 10px; 
-  background: #151515; 
+  background: #1a1a1a; 
   align-content: flex-start;
+  box-shadow: inset 0 2px 10px rgba(0,0,0,0.3); /* 안쪽 그림자로 음각 느낌 */
 }
 .input-section { 
   background: #1a1a1a; 
-  padding: 15px; 
-  border-radius: 8px; 
+  padding: 20px; 
+  border-radius: 12px; 
   border: 1px solid #333;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4); /* 입체감 추가 */
 }
 .input-group { display: flex; flex-direction: column; gap: 10px; }
 
@@ -214,106 +232,104 @@ body {
    모달 (팝업창)
    ========================================== */
 .modal-overlay { 
-  position: fixed; 
-  top: 0; 
-  left: 0; 
-  width: 100%; 
-  height: 100%; 
-  background: rgba(0,0,0,0.85); 
-  display: none; 
-  justify-content: center; 
-  align-items: center; 
-  z-index: 2000; 
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+  background: rgba(0,0,0,0.85); display: none; justify-content: center; align-items: center; z-index: 2000; 
 }
-
 .modal-content { 
-  position: relative; 
-  background: #1f1f1f; 
-  padding: 25px; 
-  border-radius: 12px; 
-  width: 90vw; 
-  max-width: 1050px; 
-  display: flex; 
-  flex-direction: column; 
-  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  position: relative; background: #1f1f1f; padding: 25px; border-radius: 16px; 
+  width: 90vw; max-width: 1050px; display: flex; flex-direction: column; 
+  box-shadow: 0 15px 40px rgba(0,0,0,0.7); /* 더 깊은 팝업 그림자 */
 }
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-  border-bottom: 1px solid #333;
-  padding-bottom: 10px;
-  padding-right: 30px; 
-}
+.modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #333; padding-bottom: 10px; padding-right: 30px; }
 .modal-body { display: flex; gap: 30px; } 
 
 .modal-left { width: 300px; display: flex; flex-direction: column; gap: 15px; }
-.modal-left img { 
-  width: 100%; 
-  height: 300px; 
-  object-fit: contain; 
-  background: #000; 
-  border-radius: 8px; 
-  border: 1px solid #444;
-}
+.modal-left img { width: 100%; height: 300px; object-fit: contain; background: #000; border-radius: 12px; border: 1px solid #444; }
 .modal-right { flex: 1; display: flex; flex-direction: column; gap: 10px; }
 
 #modal-desc, .modal-desc-view { 
-  flex: 1; 
-  resize: none; 
-  padding: 15px; 
-  font-family: 'Pretendard', sans-serif; 
-  font-size: 1.05rem; 
-  line-height: 1.6; 
-  background: #121212; 
-  color: #eee; 
-  border: 1px solid #444; 
-  border-radius: 8px;
-  min-height: 250px; 
+  flex: 1; resize: none; padding: 15px; font-family: 'Pretendard', sans-serif; font-size: 1.05rem; 
+  line-height: 1.6; background: #121212; color: #eee; border: 1px solid #444; border-radius: 12px; min-height: 250px; 
 }
-
-/* ==========================================
-   게시판 및 보관함 전용 추가 디자인
-   ========================================== */
-.post-detail-modal .modal-content { max-width: 1100px; max-height: 90vh; overflow-y: auto; }
-.board-viewer { display: flex; flex-direction: column; gap: 5px; margin-bottom: 20px; background: #000; padding: 5px; border-radius: 8px; }
-.vote-section { display: flex; gap: 15px; justify-content: center; margin: 20px 0; padding-bottom: 20px; border-bottom: 1px solid #333; }
-.comment-section { display: flex; flex-direction: column; gap: 10px; }
-.comment-form { display: flex; gap: 10px; margin-bottom: 15px; }
-.comment-form input { flex: 1; }
-.comment-item { display: flex; justify-content: space-between; align-items: center; background: #222; padding: 12px 15px; border-radius: 6px; margin-bottom: 8px; }
-.btn-delete-comment { background: transparent; border: none; color: #e74c3c; cursor: pointer; font-weight: bold; font-family: 'Pretendard', sans-serif; }
-.btn-delete-comment:hover { text-decoration: underline; }
-.my-list-container { display: flex; flex-direction: column; gap: 15px; }
-.list-item { background: #1a1a1a; border: 1px solid #333; padding: 20px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; }
 
 /* ==========================================
    최하단 Footer 영역
    ========================================== */
 .site-footer {
-  background-color: #212529; 
+  background-color: #1a1a1a; 
+  text-align: center; padding: 40px 20px; margin-top: auto; border-top: 1px solid #333;
+}
+.site-footer-links { margin-bottom: 15px; }
+.site-footer-links a { color: #adb5bd; text-decoration: none; margin: 0 10px; font-size: 0.95rem; transition: color 0.2s; }
+.site-footer-links a:hover { color: #3498db; text-decoration: underline; }
+.site-footer-info { color: #868e96; font-size: 0.85rem; line-height: 1.6; }
+
+
+/* ==========================================
+   🔥 [신규] 메인 홈 화면 전용 CSS 
+   ========================================== */
+.hero-section {
   text-align: center;
-  padding: 30px 20px;
-  margin-top: 50px;
-  border-top: 1px solid #343a40;
+  padding: 60px 20px;
+  background: linear-gradient(135deg, #1f1f1f 0%, #151515 100%);
+  border-radius: 16px;
+  margin-bottom: 50px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+  border: 1px solid #333;
 }
-.site-footer-links {
-  margin-bottom: 15px;
+.hero-title {
+  font-size: 2.8rem;
+  margin: 0 0 15px 0;
+  color: #fff;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
 }
-.site-footer-links a {
-  color: #adb5bd;
-  text-decoration: none;
-  margin: 0 10px;
-  font-size: 0.95rem;
-  transition: color 0.2s;
+.hero-title span { color: #3498db; }
+.hero-subtitle {
+  font-size: 1.2rem;
+  color: #aaa;
+  margin-bottom: 30px;
 }
-.site-footer-links a:hover {
-  color: #3498db;
-  text-decoration: underline;
+.hero-btn {
+  font-size: 1.2rem;
+  padding: 15px 40px;
+  border-radius: 30px;
 }
-.site-footer-info {
-  color: #868e96;
-  font-size: 0.85rem;
-  line-height: 1.6;
+.home-section-title {
+  font-size: 1.5rem;
+  margin: 0 0 20px 0;
+  padding-left: 15px;
+  border-left: 5px solid #3498db;
 }
+.tier-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 25px;
+  margin-bottom: 50px;
+}
+.tier-card {
+  background: #1a1a1a;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 6px 15px rgba(0,0,0,0.3);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  cursor: pointer;
+  border: 1px solid #333;
+}
+.tier-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 12px 25px rgba(0,0,0,0.6);
+  border-color: #3498db;
+}
+.tier-card-img {
+  width: 100%;
+  height: 150px;
+  background: #111;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-bottom: 1px solid #333;
+}
+.tier-card-img img { width: 100%; height: 100%; object-fit: cover; opacity: 0.7; }
+.tier-card-info { padding: 20px; }
+.tier-card-title { font-size: 1.1rem; font-weight: bold; margin: 0 0 10px 0; color: #fff; }
+.tier-card-meta { font-size: 0.85rem; color: #888; display: flex; justify-content: space-between; }
