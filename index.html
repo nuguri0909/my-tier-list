@@ -56,8 +56,8 @@
     .modal-content input, .modal-content textarea { width: 100%; box-sizing: border-box; margin: 10px 0; padding: 10px; background: #0f0f0f; color: white; border: 1px solid #444; border-radius: 6px; font-size: 14px; }
     .modal-content textarea { resize: none; height: 80px; }
     .modal-btns { display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px; }
-    .modal-btns button { padding: 8px 16px; border-radius: 6px; border: none; cursor: pointer; font-weight: bold; }
-    .btn-save { background: #2ecc71; color: white; } .btn-cancel { background: #444; color: white; }
+    .modal-btns button { padding: 8px 16px; border-radius: 6px; border: none; cursor: pointer; font-weight: bold; transition: 0.2s; }
+    .btn-save { background: #2ecc71; color: white; } .btn-save:hover { background: #27ae60; } .btn-cancel { background: #444; color: white; } .btn-cancel:hover { background: #555; }
   </style>
 </head>
 <body>
@@ -107,15 +107,15 @@
   <script>
     let itemIdCounter = 0; let currentEditItem = null;
 
-    // --- [핵심] 시각적으로 완벽하게 균등한 무지개 색상을 생성하는 알고리즘 ---
+    // --- [핵심] 빨주노초하늘파랑보라를 완벽하게 골고루 생성하는 알고리즘 ---
     function updateRowColors() {
       const rows = document.querySelectorAll('.tier-row');
       const total = rows.length;
       if (total === 0) return;
 
-      // 시각적 균형 stops 정의 (사람의 눈에 맞춘 Hue 값 배치)
-      // 빨강(0) -> 주황(30) -> 노랑(60) -> 초록(120) -> 파랑(240) -> 보라/자주(280 Magenta)
-      const visualStops = [0, 30, 60, 120, 240, 280]; 
+      // 시각적 균형 stops 정의 (하늘색 추가됨)
+      // 빨강(0) -> 주황(30) -> 노랑(60) -> 초록(120) -> 하늘(185) -> 파랑(240) -> 보라/자주(285 Magenta)
+      const visualStops = [0, 30, 60, 120, 185, 240, 285]; 
       
       rows.forEach((row, index) => {
         const label = row.querySelector('.tier-label');
@@ -142,7 +142,7 @@
           hue = lowHue + (highHue - lowHue) * interpolation;
         }
 
-        // 완성된 색상 적용 (HSL SATUATION 80% LIGHTNESS 45% 로 다크모드에서 예쁜 무지개색 고정)
+        // 완성된 색상 적용 (다크모드에서 예쁜 무지개색 고정)
         label.style.backgroundColor = `hsl(${hue}, 80%, 45%)`;
       });
     }
