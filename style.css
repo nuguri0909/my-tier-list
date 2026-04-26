@@ -1,5 +1,5 @@
 /* ==========================================
-   글꼴 설정 (6번 요청: 세련된 Pretendard 폰트 적용)
+   글꼴 설정 (6번: 세련된 Pretendard 폰트 적용)
    ========================================== */
 @import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css");
 
@@ -22,7 +22,7 @@ body {
 }
 
 /* ==========================================
-   네비게이션 바 및 상단 컨트롤
+   네비게이션 바 (2번: 상단바 메뉴 간격 넓히기)
    ========================================== */
 .navbar { 
   display: flex; 
@@ -34,8 +34,12 @@ body {
 }
 .nav-left { display: flex; align-items: center; gap: 30px; }
 .nav-logo { font-size: 1.5rem; font-weight: bold; color: #3498db; text-decoration: none; }
+
+/* ⭐ 2번 해결: gap을 40px로 늘려서 메뉴 사이를 시원하게 띄움 */
+.nav-links { display: flex; gap: 40px; }
 .nav-links a { color: #ccc; text-decoration: none; font-weight: 500; transition: color 0.2s; }
 .nav-links a:hover { color: #fff; }
+
 .user-menu { display: flex; align-items: center; gap: 10px; }
 .user-name { font-size: 0.9rem; color: #aaa; }
 
@@ -75,7 +79,7 @@ body {
 .control-input:focus { outline: none; border-color: #3498db; }
 
 /* ==========================================
-   메인 레이아웃 (티어표 영역 & 아이템 대기열)
+   메인 레이아웃 및 티어표 보드
    ========================================== */
 .layout-wrapper { 
   display: flex; 
@@ -85,7 +89,6 @@ body {
 .layout-left { flex: 1; min-width: 0; }
 .layout-right { width: 300px; flex-shrink: 0; display: flex; flex-direction: column; gap: 20px; }
 
-/* 티어표 보드 */
 .tier-board { 
   display: flex; 
   flex-direction: column; 
@@ -94,12 +97,15 @@ body {
   padding: 4px; 
   border-radius: 8px;
 }
+
+/* ⭐ 3번 해결: X 버튼이 박스 안에 들어가도록 공간 확보(padding-right) 및 위치 조정 */
 .tier-row { 
   display: flex; 
   flex-direction: row; 
   min-height: 90px; 
   background-color: #1a1a1a; 
   position: relative;
+  padding-right: 40px; /* X버튼이 들어갈 우측 여백 */
 }
 .tier-label { 
   width: 100px; 
@@ -124,7 +130,7 @@ body {
 }
 .delete-tier-btn {
   position: absolute;
-  right: -30px;
+  right: 10px; /* 바깥이 아닌 안쪽(10px)으로 쏙 들어오게 수정 */
   top: 50%;
   transform: translateY(-50%);
   background: none;
@@ -132,17 +138,18 @@ body {
   color: #666;
   font-size: 1.2rem;
   cursor: pointer;
+  padding: 5px;
 }
 .delete-tier-btn:hover { color: #e74c3c; }
 
 /* ==========================================
-   아이템 이미지 박스 (5번 요청 반영: 비율 유지/검은 배경)
+   아이템 썸네일 (5번: 잘림 방지 및 정사각형 유지)
    ========================================== */
 .item { 
   position: relative; 
   width: 80px; 
   height: 80px; 
-  background-color: #000; /* 남는 공간을 검은색으로 채움 */
+  background-color: #000; /* 빈 공간 검은색 처리 */
   border-radius: 4px; 
   overflow: hidden; 
   cursor: grab; 
@@ -151,7 +158,7 @@ body {
 .item img { 
   width: 100%; 
   height: 100%; 
-  object-fit: contain; /* 가로/세로 비율을 유지하며 잘리는 부분 없이 전체 표시 */
+  object-fit: contain; /* 이미지가 찌그러지거나 잘리지 않고 원본 비율 유지 */
   pointer-events: none; 
 }
 .item-title { 
@@ -170,7 +177,7 @@ body {
 }
 .item-placeholder { border: 2px dashed #666; opacity: 0.5; background: transparent; }
 
-/* 우측 아이템 대기열 및 입력창 */
+/* 우측 대기열 영역 */
 .item-bank { 
   display: flex; 
   flex-wrap: wrap; 
@@ -191,7 +198,7 @@ body {
 .input-group { display: flex; flex-direction: column; gap: 10px; }
 
 /* ==========================================
-   모달 (팝업창) 디자인
+   모달 (팝업창)
    ========================================== */
 .modal-overlay { 
   position: fixed; 
@@ -223,16 +230,8 @@ body {
   border-bottom: 1px solid #333;
   padding-bottom: 10px;
 }
-.modal-body { 
-  display: flex; 
-  gap: 20px; 
-}
-.modal-left { 
-  width: 200px; 
-  display: flex; 
-  flex-direction: column; 
-  gap: 15px; 
-}
+.modal-body { display: flex; gap: 20px; }
+.modal-left { width: 200px; display: flex; flex-direction: column; gap: 15px; }
 .modal-left img { 
   width: 100%; 
   height: 200px; 
@@ -241,14 +240,9 @@ body {
   border-radius: 8px; 
   border: 1px solid #444;
 }
-.modal-right {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
+.modal-right { flex: 1; display: flex; flex-direction: column; gap: 10px; }
 
-/* 6번 요청 반영: 설명창 예쁜 폰트 적용 및 디자인 개선 */
+/* ⭐ 6번 해결: 아이템 설명창 폰트 예쁘게 통일 */
 #modal-desc { 
   flex: 1; 
   resize: none; 
@@ -264,60 +258,16 @@ body {
 }
 
 /* ==========================================
-   게시판 상세 보기 UI (좋아요, 댓글 등)
+   게시판 및 보관함 전용 추가 디자인
    ========================================== */
-.post-detail-modal .modal-content {
-  max-width: 900px;
-  max-height: 90vh;
-  overflow-y: auto;
-}
-.board-viewer { 
-  display: flex; 
-  flex-direction: column; 
-  gap: 5px; 
-  margin-bottom: 20px; 
-  background: #000; 
-  padding: 5px; 
-  border-radius: 8px; 
-}
-.vote-section { 
-  display: flex; 
-  gap: 15px; 
-  justify-content: center; 
-  margin: 20px 0; 
-  padding-bottom: 20px; 
-  border-bottom: 1px solid #333; 
-}
-.comment-section {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-.comment-form {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 15px;
-}
-.comment-form input {
-  flex: 1;
-}
-.comment-item { 
-  display: flex; 
-  justify-content: space-between; 
-  align-items: center; 
-  background: #222; 
-  padding: 12px 15px; 
-  border-radius: 6px; 
-  margin-bottom: 8px; 
-}
-.btn-delete-comment { 
-  background: transparent; 
-  border: none; 
-  color: #e74c3c; 
-  cursor: pointer; 
-  font-weight: bold; 
-  font-family: 'Pretendard', sans-serif;
-}
-.btn-delete-comment:hover {
-  text-decoration: underline;
-}
+.post-detail-modal .modal-content { max-width: 900px; max-height: 90vh; overflow-y: auto; }
+.board-viewer { display: flex; flex-direction: column; gap: 5px; margin-bottom: 20px; background: #000; padding: 5px; border-radius: 8px; }
+.vote-section { display: flex; gap: 15px; justify-content: center; margin: 20px 0; padding-bottom: 20px; border-bottom: 1px solid #333; }
+.comment-section { display: flex; flex-direction: column; gap: 10px; }
+.comment-form { display: flex; gap: 10px; margin-bottom: 15px; }
+.comment-form input { flex: 1; }
+.comment-item { display: flex; justify-content: space-between; align-items: center; background: #222; padding: 12px 15px; border-radius: 6px; margin-bottom: 8px; }
+.btn-delete-comment { background: transparent; border: none; color: #e74c3c; cursor: pointer; font-weight: bold; font-family: 'Pretendard', sans-serif; }
+.btn-delete-comment:hover { text-decoration: underline; }
+.my-list-container { display: flex; flex-direction: column; gap: 15px; }
+.list-item { background: #1a1a1a; border: 1px solid #333; padding: 20px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; }
