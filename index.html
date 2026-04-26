@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MyTierList - 나만의 티어표 만들기</title>
+  <title>나만의 티어 메이커</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -13,7 +13,8 @@
       <div class="nav-links">
         <a href="maker.html">티어 만들기</a>
         <a href="board.html">티어 게시판</a>
-        <a href="mylist.html">내 보관함</a> </div>
+        <a href="mylist.html">내 보관함</a>
+      </div>
     </div>
     <div class="user-menu">
       <span id="user-name-display" class="user-name">로그인해주세요</span>
@@ -23,22 +24,23 @@
     </div>
   </nav>
 
+  <div class="hero-section">
+    <div class="temp-logo">MTL</div>
+    <h1 class="hero-title">당신의 취향을 <span>티어리스트</span>로 증명하세요</h1>
+    <p class="hero-subtitle">게임, 음식, 영화 무엇이든 좋습니다. 세상의 모든 것을 평가해 보세요.</p>
+    <button class="btn hero-btn" onclick="location.href='maker.html'">새 티어 만들기 🚀</button>
+  </div>
+
   <div class="container">
-    
-    <div class="hero-section">
-      <h1 class="hero-title">당신의 취향을 <span>티어리스트</span>로 증명하세요</h1>
-      <p class="hero-subtitle">게임, 음식, 영화 무엇이든 좋습니다. 세상의 모든 것을 평가해 보세요.</p>
-      <button class="btn hero-btn" onclick="location.href='maker.html'">새 티어 만들기 🚀</button>
-    </div>
+    <section>
+      <h2>🔥 주간 인기 티어리스트</h2>
+      <div id="popular-grid" class="tier-grid"></div>
+    </section>
 
-    <h2 class="home-section-title">🔥 주간 인기 티어리스트</h2>
-    <div id="popular-grid" class="tier-card-grid">
-      </div>
-
-    <h2 class="home-section-title">⚡ 방금 막 올라온 티어리스트</h2>
-    <div id="recent-grid" class="tier-card-grid">
-      </div>
-
+    <section style="margin-top: 40px;">
+      <h2>✨ 방금 막 올라온 티어리스트</h2>
+      <div id="recent-grid" class="tier-grid"></div>
+    </section>
   </div>
 
   <footer class="site-footer">
@@ -53,6 +55,7 @@
     </div>
   </footer>
 
+  <script type="module" src="script.js"></script>
   <script type="module" src="home.js"></script>
 </body>
 </html>
