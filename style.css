@@ -44,12 +44,26 @@ body { font-family: 'Pretendard', -apple-system, sans-serif; background-color: #
 /* ✨ 드래그 미리보기용 반투명 클래스 */
 .item-placeholder { opacity: 0.4 !important; border: 2px dashed #3498db; pointer-events: none; transform: none !important; }
 
-/* ✨ 아이템 설정 모달(팝업) 창 */
-.modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: flex; justify-content: center; align-items: center; z-index: 2000; backdrop-filter: blur(2px); }
-.modal-content { background: #1f1f1f; padding: 20px; border-radius: 12px; width: 320px; border: 1px solid #444; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
-.modal-content h3 { margin-top: 0; border-bottom: 1px solid #333; padding-bottom: 10px; font-size: 1.1rem; }
-.modal-img-wrapper { text-align: center; margin-bottom: 15px; }
-.modal-img-wrapper img { width: 120px; height: 120px; object-fit: cover; border-radius: 8px; border: 1px solid #444; }
+/* ✨ 아이템 설정 모달(초대형) */
+.modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: flex; justify-content: center; align-items: center; z-index: 2000; backdrop-filter: blur(5px); }
+.modal-content { background: #1f1f1f; padding: 30px; border-radius: 12px; width: 90vw; height: 90vh; max-width: 1200px; display: flex; flex-direction: column; border: 1px solid #444; box-shadow: 0 10px 40px rgba(0,0,0,0.8); box-sizing: border-box; }
+.modal-content h3 { margin-top: 0; border-bottom: 1px solid #333; padding-bottom: 15px; font-size: 1.5rem; display: flex; justify-content: space-between; align-items: center; }
+.modal-body { display: flex; gap: 20px; flex: 1; min-height: 0; }
+.modal-left { width: 300px; display: flex; flex-direction: column; gap: 15px; }
+.modal-left img { width: 100%; height: 300px; object-fit: cover; border-radius: 8px; border: 2px solid #444; }
+.modal-right { flex: 1; display: flex; flex-direction: column; gap: 10px; }
+#modal-desc { flex: 1; resize: none; padding: 15px; font-size: 1.1rem; line-height: 1.6; border-radius: 8px; background: #151515; }
+
+/* 💬 댓글창 스타일 (게시판용) */
+.comment-section { margin-top: 20px; border-top: 1px solid #444; padding-top: 20px; flex: 1; overflow-y: auto; }
+.comment-box { display: flex; gap: 10px; margin-bottom: 15px; }
+.comment-input { flex: 1; padding: 10px; border-radius: 6px; background: #1a1a1a; color: white; border: 1px solid #444; }
+.comment-item { background: #2a2a2a; padding: 12px; border-radius: 8px; margin-bottom: 10px; }
+.comment-meta { font-size: 0.85rem; color: #aaa; margin-bottom: 5px; font-weight: bold; }
+.reply-item { margin-left: 30px; border-left: 2px solid #444; padding-left: 10px; background: transparent; }
+
+/* 📋 게시판 카드 버튼 */
+.card-actions { display: flex; gap: 5px; margin-top: 15px; flex-wrap: wrap; }
 
 /* 게시판용 그리드 */
 .grid-container { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; max-width: 1200px; margin: 20px auto; padding: 20px; }
