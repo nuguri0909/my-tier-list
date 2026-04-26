@@ -350,3 +350,101 @@ body {
   box-shadow: 0 4px 15px rgba(52, 152, 219, 0.4);
   border: 3px solid #fff;
 }
+
+
+/* =========================================
+   홈 화면 전용 세로형 3열 카드 그리드
+========================================= */
+.home-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); /* 한 줄에 정확히 3개 */
+  gap: 20px;
+  max-width: 1000px; /* 너무 넓어지지 않게 중앙 정렬 */
+  margin: 0 auto;
+}
+
+/* 모바일 화면에서는 1개씩 보이도록 반응형 처리 */
+@media (max-width: 768px) {
+  .home-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* 카드 전체 디자인 (첨부 이미지 느낌) */
+.home-tier-card {
+  background: #1a1a24; /* 약간 남색 빛이 도는 어두운 배경 */
+  border: 1px solid #2e2e3a;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  height: 380px; /* 세로로 살짝 길게 고정 */
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.home-tier-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.6);
+}
+
+/* 카드 상단: 이미지 영역 */
+.home-tier-card-img {
+  height: 50%; /* 전체 높이의 절반을 차지 */
+  background: #111118;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.home-tier-card-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* 카드 하단: 텍스트 및 버튼 영역 */
+.home-tier-card-info {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  justify-content: space-between; /* 텍스트는 위, 버튼은 아래로 밀착 */
+}
+
+.home-card-title {
+  font-size: 1.3rem;
+  font-weight: bold;
+  color: #ffffff;
+  margin: 0 0 10px 0;
+  word-break: keep-all;
+}
+
+.home-card-desc {
+  font-size: 0.9rem;
+  color: #aaaaaa;
+  line-height: 1.5;
+  margin-bottom: 15px;
+}
+
+/* 예시 이미지 하단의 '티어리스트 보기' 버튼 느낌 */
+.home-card-btn {
+  background: #2a2a36;
+  color: #dddddd;
+  border: 1px solid #3a3a4a;
+  padding: 12px;
+  border-radius: 8px;
+  text-align: center;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: bold;
+  transition: 0.2s;
+  margin-top: auto; /* 버튼을 항상 맨 아래로 밀어냄 */
+}
+
+.home-card-btn:hover {
+  background: #3f3f50;
+  color: #ffffff;
+  border-color: #555566;
+}
