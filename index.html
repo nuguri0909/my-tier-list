@@ -2,10 +2,12 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <title>티어 메이커 - 만들기</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>나만의 티어 메이커</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+
   <nav class="navbar">
     <div class="nav-left">
       <a href="index.html" class="nav-logo">TierMaker</a>
@@ -17,58 +19,70 @@
     </div>
     <div class="user-menu">
       <span id="user-name-display" class="user-name">로그인해주세요</span>
-      <button class="btn btn-small" id="btn-nickname" style="display:none;" onclick="window.setNickname()">닉네임 설정</button>
-      <button class="btn btn-small btn-save" id="btn-login" onclick="window.login()">구글 로그인</button>
+      <button class="btn btn-small" id="btn-login" onclick="window.login()">구글 로그인</button>
+      <button class="btn btn-small" id="btn-nickname" style="display:none;" onclick="window.setNickname()">닉네임 변경</button>
       <button class="btn btn-small" id="btn-logout" style="display:none;" onclick="window.logout()">로그아웃</button>
     </div>
   </nav>
 
-  <div class="header">
-    <h1>🏆 나만의 티어 메이커</h1>
-    <div class="controls">
-      <select id="category-select" class="control-input" style="width:auto; margin:0;">
-        <option value="기타">카테고리: 기타</option>
-        <option value="영화">영화</option>
-        <option value="애니메이션">애니메이션</option>
-        <option value="게임">게임</option>
-        <option value="소설/만화">소설/만화</option>
-      </select>
-      <button class="btn" onclick="window.addTier()">➕ 줄 추가</button>
-      <button class="btn btn-save" onclick="window.saveBoard()">💾 저장하기</button>
-    </div>
-  </div>
-
   <div class="container">
-    <div id="board" class="board"></div>
-    <div class="sidebar">
-      <h3>아이템 대기열</h3>
-      <div id="item-bank" class="item-bank" ondrop="window.drop(event)" ondragover="window.allowDrop(event)"></div>
-      
-      <div class="add-item-box">
-        <h4>새 이미지 추가</h4>
-        <input type="file" id="img-file" class="control-input" accept="image/*" style="width:100%; margin-bottom:5px;">
-        <p style="font-size:11px; color:#888; text-align:center; margin:2px 0;">또는 URL 입력</p>
-        <input type="text" id="img-url" class="control-input" placeholder="이미지 URL" style="width:100%; margin-bottom:5px;">
-        <input type="text" id="img-title" class="control-input" placeholder="아이템 이름(선택)" style="width:100%; margin-bottom:5px;">
-        <button class="btn btn-save" style="width:100%;" onclick="window.addNewItem()">추가하기</button>
+    <div class="header">
+      <h1>🏆 나만의 티어 메이커</h1>
+      <p>이미지를 드래그하여 티어를 분류해보세요.</p>
+    </div>
+
+    <div class="top-controls">
+      <select id="category-select" class="control-input" style="width: 200px;">
+        <option value="기타">카테고리 선택</option>
+        <option value="게임">게임</option>
+        <option value="영화">영화/애니</option>
+        <option value="음식">음식</option>
+        <option value="아이돌">아이돌/연예인</option>
+      </select>
+      <button class="btn btn-save" onclick="window.saveBoard()">💾 서버에 저장하기</button>
+    </div>
+
+    <div id="board" class="tier-board">
+      </div>
+
+    <div class="controls">
+      <button class="btn" onclick="window.addTier()">➕ 티어 줄 추가</button>
+    </div>
+
+    <hr style="border: 0; border-top: 1px solid #444; margin: 40px 0;">
+
+    <div class="item-bank-container">
+      <h3>📥 아이템 대기열</h3>
+      <div id="item-bank" class="item-bank" ondrop="window.drop(event)" ondragover="window.allowDrop(event)">
+        </div>
+    </div>
+
+    <div class="input-section">
+      <h3>✨ 새로운 아이템 추가</h3>
+      <div class="input-group">
+        <input type="text" id="img-title" class="control-input" placeholder="아이템 이름 (선택사항)">
+        <input type="text" id="img-url" class="control-input" placeholder="이미지 주소(URL) 입력">
+        <span style="color:#888;">또는</span>
+        <input type="file" id="img-file" accept="image/*" class="control-input">
+        <button class="btn btn-save" onclick="window.addNewItem()">추가하기</button>
       </div>
     </div>
   </div>
 
-<div id="item-modal" class="modal-overlay" style="display:none;">
+  <div id="item-modal" class="modal-overlay" style="display:none;">
     <div class="modal-content">
       <h3>
         <span>📝 아이템 상세 설정</span>
-        <button class="btn" style="background:transparent; color:#888; border:none;" onclick="window.closeModal()">❌</button>
+        <button class="btn" style="background:transparent; color:#888; border:none; font-size:1.5rem;" onclick="window.closeModal()">&times;</button>
       </h3>
       <div class="modal-body">
         <div class="modal-left">
           <img id="modal-img-preview" src="">
-          <input type="text" id="modal-title" class="control-input" placeholder="제목 (캐릭터명, 영화제목 등)">
-          <button class="btn" style="background:#e74c3c; width:100%;" onclick="window.deleteItem()">🗑️ 이 아이템 완전 삭제</button>
+          <input type="text" id="modal-title" class="control-input" placeholder="아이템 제목">
+          <button class="btn" style="background:#e74c3c; width:100%; margin-top:10px;" onclick="window.deleteItem()">🗑️ 이 아이템 완전 삭제</button>
         </div>
         <div class="modal-right">
-          <textarea id="modal-desc" class="control-input" placeholder="이곳에 짧은 칼럼이나 논문을 적으셔도 됩니다! 화면에 꽉 차게 커졌습니다."></textarea>
+          <textarea id="modal-desc" class="control-input" placeholder="이 아이템에 대한 긴 설명이나 칼럼을 적어보세요. 화면에 꽉 차게 작성할 수 있습니다."></textarea>
           <div style="text-align: right; margin-top: 10px;">
             <button class="btn btn-save" style="width: 150px; font-size:1.1rem; padding: 12px;" onclick="window.saveItemInfo()">💾 내용 저장</button>
           </div>
@@ -78,5 +92,6 @@
   </div>
 
   <script type="module" src="script.js"></script>
+
 </body>
 </html>
