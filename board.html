@@ -2,15 +2,30 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <title>게시판 - 나만의 티어 메이커</title>
+  <title>티어 게시판 - 나만의 티어 메이커</title>
   <link rel="stylesheet" href="style.css">
   <style>
-    .filter-bar { display: flex; justify-content: center; gap: 10px; margin: 20px auto; max-width: 1200px; padding: 0 20px; flex-wrap: wrap; }
-    .search-input { padding: 10px; border-radius: 6px; border: 1px solid #444; background: #1a1a1a; color: white; width: 250px; }
-    .card-title { font-size: 1.3rem; margin: 0 0 10px 0; color: #fff; }
-    .card-meta { font-size: 0.9rem; color: #aaa; margin-bottom: 15px; }
-    .card-info { display: flex; justify-content: space-between; font-size: 0.9rem; color: #888; border-top: 1px solid #333; padding-top: 15px; }
-    .author-link { color: #3498db; font-weight: bold; text-decoration: none; }
+    /* 게시판 전용 추가 스타일 */
+    .board-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; padding: 20px; max-width: 1200px; margin: 0 auto; }
+    .tier-card { background: #1f1f1f; border: 1px solid #444; border-radius: 10px; padding: 20px; transition: 0.2s; }
+    .tier-card:hover { transform: translateY(-5px); box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
+    .card-title { font-size: 1.2rem; font-weight: bold; margin-bottom: 10px; }
+    .card-meta { color: #888; font-size: 0.9rem; margin-bottom: 15px; }
+    
+    /* 댓글 모달 전용 스타일 */
+    .comment-modal-content { width: 600px; max-width: 90vw; height: 80vh; display: flex; flex-direction: column; background: #1f1f1f; padding: 25px; border-radius: 12px; border: 1px solid #444; }
+    .comment-list { flex: 1; overflow-y: auto; margin: 15px 0; padding-right: 10px; }
+    .comment-item { background: #2a2a2a; padding: 12px; border-radius: 8px; margin-bottom: 10px; }
+    .reply-item { margin-left: 30px; border-left: 3px solid #3498db; padding-left: 10px; background: transparent; }
+    .comment-author { font-weight: bold; color: #3498db; font-size: 0.9rem; }
+    .comment-date { font-size: 0.75rem; color: #888; margin-left: 10px; }
+    .comment-text { margin: 8px 0; font-size: 1rem; line-height: 1.4; }
+    .btn-reply-open { background: transparent; color: #aaa; border: none; font-size: 0.8rem; cursor: pointer; padding: 0; }
+    .btn-reply-open:hover { color: #fff; }
+    
+    .comment-input-box { display: flex; gap: 10px; margin-top: 10px; }
+    .comment-input-box input { flex: 1; }
+    .reply-input-box { display: flex; gap: 10px; margin-top: 10px; margin-left: 30px; }
   </style>
 </head>
 <body>
@@ -25,34 +40,44 @@
     </div>
     <div class="user-menu">
       <span id="user-name-display" class="user-name">로그인해주세요</span>
-      <button class="btn btn-small" id="btn-nickname" style="display:none;" onclick="window.setNickname()">닉네임 설정</button>
-      <button class="btn btn-small btn-save" id="btn-login" onclick="window.login()">구글 로그인</button>
+      <button class="btn btn-small" id="btn-login" onclick="window.login()">구글 로그인</button>
       <button class="btn btn-small" id="btn-logout" style="display:none;" onclick="window.logout()">로그아웃</button>
     </div>
   </nav>
 
   <div class="header">
-    <h1>📋 티어표 게시판</h1>
+    <h1>🌍 티어 게시판</h1>
+    <p style="color:#aaa;">다른 사람들이 만든 티어표를 구경하고, 댓글을 남기거나 내 보관함으로 가져와 수정해보세요!</p>
   </div>
 
-  <div class="filter-bar">
-    <input type="text" id="search-bar" class="search-input" placeholder="제목 또는 제작자 검색..." onkeyup="if(event.key==='Enter') window.filterLists()">
-    <select id="category-filter" class="search-input" style="width: 150px;">
-      <option value="all">전체 카테고리</option>
-      <option value="영화">영화</option>
-      <option value="애니메이션">애니메이션</option>
-      <option value="게임">게임</option>
-      <option value="소설/만화">소설/만화</option>
-      <option value="기타">기타</option>
-    </select>
-    <button class="btn btn-save" onclick="window.filterLists()">🔍 검색</button>
+  <div id="board-container" class="board-grid">
+    <p style="text-align:center; color:#888; grid-column: 1 / -1;">데이터를 불러오는 중입니다...</p>
   </div>
 
-  <div class="grid-container" id="board-list"></div>
+  <div id="comment-modal" class="modal-overlay" style="display:none;">
+    <div class="comment-modal-content">
+      <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #444; padding-bottom:10px;">
+        <h3 id="modal-post-title" style="margin:0; font-size:1.3rem;">티어표 댓글</h3>
+        <button class="btn" style="background:transparent; color:#888;" onclick="window.closeCommentModal()">❌</button>
+      </div>
+      
+      <div id="comment-list" class="comment-list">
+        </div>
+
+      <div id="comment-auth-guard" style="text-align:center; padding:15px; background:#2a2a2a; border-radius:8px; color:#aaa;">
+        로그인 후 댓글을 남길 수 있습니다.
+      </div>
+      <div id="comment-input-area" class="comment-input-box" style="display:none;">
+        <input type="text" id="new-comment-text" class="control-input" placeholder="아름다운 인터넷 문화를 위해 바른 말을 사용해주세요.">
+        <button class="btn btn-save" onclick="window.submitComment()">등록</button>
+      </div>
+    </div>
+  </div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import { getFirestore, collection, getDocs, doc, addDoc, query, orderBy, serverTimestamp, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAwVjpUANfil947xb0bjKALw2uuGvZYQcs",
@@ -65,64 +90,213 @@
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
+    const db = getFirestore(app);
     const provider = new GoogleAuthProvider();
 
-    window.currentUser = null; 
-    window.customNickname = "익명";
+    window.currentUser = null;
+    let currentPostId = null; // 현재 보고 있는 게시글 ID
+    let commentsUnsubscribe = null; // 실시간 댓글 감지 취소용 함수
 
-    window.login = () => signInWithPopup(auth, provider);
-    window.logout = () => signOut(auth);
+    // [로그인 로직]
+    window.login = () => signInWithPopup(auth, provider).catch(err => alert(err.message));
+    window.logout = () => signOut(auth).then(() => alert("로그아웃 되었습니다."));
     
-    window.setNickname = () => {
-      const nick = prompt("닉네임:", window.customNickname);
-      if(nick && nick.trim() !== "") {
-        updateProfile(auth.currentUser, { displayName: nick.trim() }).then(() => {
-          window.customNickname = nick.trim();
-          window.updateAuthUI();
-        });
-      }
-    };
-
     onAuthStateChanged(auth, (user) => {
-      if (user) {
-        window.currentUser = user;
-        window.customNickname = user.displayName || "익명";
-      } else {
-        window.currentUser = null;
-        window.customNickname = "익명";
-      }
-      window.updateAuthUI();
-    });
-
-    window.updateAuthUI = () => {
+      window.currentUser = user;
       const nm = document.getElementById('user-name-display');
-      if(window.currentUser) {
-        nm.innerText = window.customNickname + "님";
-        document.getElementById('btn-login').style.display='none';
-        document.getElementById('btn-logout').style.display='inline-block';
-        document.getElementById('btn-nickname').style.display='inline-block';
+      if(user) {
+        nm.innerText = (user.displayName || "익명") + "님";
+        document.getElementById('btn-login').style.display = 'none';
+        document.getElementById('btn-logout').style.display = 'inline-block';
+        // 댓글 입력창 권한 풀기
+        document.getElementById('comment-auth-guard').style.display = 'none';
+        document.getElementById('comment-input-area').style.display = 'flex';
       } else {
         nm.innerText = "로그인해주세요";
-        document.getElementById('btn-login').style.display='inline-block';
-        document.getElementById('btn-logout').style.display='none';
-        document.getElementById('btn-nickname').style.display='none';
+        document.getElementById('btn-login').style.display = 'inline-block';
+        document.getElementById('btn-logout').style.display = 'none';
+        // 댓글 입력창 잠그기
+        document.getElementById('comment-auth-guard').style.display = 'block';
+        document.getElementById('comment-input-area').style.display = 'none';
+      }
+    });
+
+    // [게시판 목록 불러오기]
+    async function loadBoard() {
+      const container = document.getElementById('board-container');
+      try {
+        const q = query(collection(db, "tierLists"), orderBy("createdAt", "desc"));
+        const snapshot = await getDocs(q);
+        
+        container.innerHTML = '';
+        if(snapshot.empty) {
+          container.innerHTML = '<p style="text-align:center; grid-column: 1 / -1;">아직 등록된 티어표가 없습니다!</p>';
+          return;
+        }
+
+        snapshot.forEach(docSnap => {
+          const data = docSnap.data();
+          const dateStr = data.createdAt ? data.createdAt.toDate().toLocaleDateString() : "최근";
+          
+          const card = document.createElement('div');
+          card.className = 'tier-card';
+          card.innerHTML = `
+            <div class="card-title">${data.category} 티어표</div>
+            <div class="card-meta">작성자: ${data.authorName} | ${dateStr}</div>
+            <div class="card-actions">
+              <button class="btn btn-save" style="width:100%; margin-bottom:5px;" onclick="window.openCommentModal('${docSnap.id}', '${data.authorName}')">💬 구경 및 댓글 보기</button>
+              <div style="display:flex; gap:5px;">
+                <button class="btn btn-small" style="flex:1;" onclick="location.href='index.html?load=${docSnap.id}&mode=v1'">🔄 V1 (티어 유지)</button>
+                <button class="btn btn-small" style="flex:1;" onclick="location.href='index.html?load=${docSnap.id}&mode=v2'">📥 V2 (대기열로)</button>
+              </div>
+            </div>
+          `;
+          container.appendChild(card);
+        });
+      } catch (error) {
+        container.innerHTML = `<p style="color:red;">에러 발생: ${error.message}</p>`;
+      }
+    }
+
+    // ✨ [댓글 모달 열기 및 실시간 댓글 불러오기]
+    window.openCommentModal = (postId, authorName) => {
+      currentPostId = postId;
+      document.getElementById('modal-post-title').innerText = `${authorName}님의 티어표`;
+      document.getElementById('comment-modal').style.display = 'flex';
+      
+      const listContainer = document.getElementById('comment-list');
+      listContainer.innerHTML = '<p style="text-align:center; color:#888;">댓글을 불러오는 중...</p>';
+
+      // Firestore 실시간 리스너 (댓글이 달리면 즉시 화면 갱신)
+      const commentsRef = collection(db, "tierLists", postId, "comments");
+      const q = query(commentsRef, orderBy("createdAt", "asc"));
+      
+      commentsUnsubscribe = onSnapshot(q, (snapshot) => {
+        listContainer.innerHTML = '';
+        if(snapshot.empty) {
+          listContainer.innerHTML = '<p style="text-align:center; color:#888;">아직 댓글이 없습니다. 첫 댓글을 남겨보세요!</p>';
+          return;
+        }
+
+        // 댓글과 대댓글(답글)을 분리해서 정리
+        const commentsMap = new Map();
+        const topLevelComments = [];
+
+        snapshot.forEach(docSnap => {
+          const data = Object.assign({ id: docSnap.id }, docSnap.data());
+          data.replies = []; // 대댓글 담을 배열
+          commentsMap.set(data.id, data);
+          
+          if(data.parentId) {
+            // 부모가 있으면 답글
+            if(commentsMap.has(data.parentId)) {
+              commentsMap.get(data.parentId).replies.push(data);
+            }
+          } else {
+            // 부모가 없으면 원본 댓글
+            topLevelComments.push(data);
+          }
+        });
+
+        // 화면에 그리기
+        topLevelComments.forEach(comment => {
+          listContainer.appendChild(createCommentHTML(comment, false));
+          // 대댓글 그리기
+          comment.replies.forEach(reply => {
+            listContainer.appendChild(createCommentHTML(reply, true));
+          });
+        });
+        
+        // 스크롤 맨 아래로
+        listContainer.scrollTop = listContainer.scrollHeight;
+      });
+    };
+
+    window.closeCommentModal = () => {
+      document.getElementById('comment-modal').style.display = 'none';
+      currentPostId = null;
+      if(commentsUnsubscribe) {
+        commentsUnsubscribe(); // 창을 닫으면 실시간 감지 종료 (메모리 절약)
+        commentsUnsubscribe = null;
       }
     };
 
-    const dbList = []; // 더미 데이터 비움
-    window.renderLists = (lists) => {
-      const container = document.getElementById('board-list');
-      container.innerHTML = '';
-      if (lists.length === 0) {
-        container.innerHTML = '<div style="grid-column: span 2; text-align: center; padding: 50px; color: #888;">아직 등록된 티어표가 없습니다. 첫 티어표의 주인공이 되어보세요!</div>';
-        return;
+    // 댓글 HTML 요소 생성 함수
+    function createCommentHTML(data, isReply) {
+      const div = document.createElement('div');
+      div.className = isReply ? 'comment-item reply-item' : 'comment-item';
+      
+      const dateStr = data.createdAt ? data.createdAt.toDate().toLocaleString() : "방금 전";
+      
+      let html = `
+        <div>
+          <span class="comment-author">${data.authorName}</span>
+          <span class="comment-date">${dateStr}</span>
+        </div>
+        <div class="comment-text">${data.text}</div>
+      `;
+
+      // 대댓글이 아닌 원본 댓글에만 '답글 달기' 버튼 표시 (로그인한 경우만)
+      if (!isReply && window.currentUser) {
+        html += `<button class="btn-reply-open" onclick="window.showReplyInput('${data.id}')">↳ 답글 달기</button>`;
+        // 답글 입력창 (숨겨져 있음)
+        html += `
+          <div id="reply-box-${data.id}" class="reply-input-box" style="display:none;">
+            <input type="text" id="reply-input-${data.id}" class="control-input" placeholder="답글을 입력하세요">
+            <button class="btn btn-save btn-small" onclick="window.submitComment('${data.id}')">확인</button>
+            <button class="btn btn-small" onclick="window.hideReplyInput('${data.id}')">취소</button>
+          </div>
+        `;
+      }
+      div.innerHTML = html;
+      return div;
+    }
+
+    // 답글 창 열기/닫기
+    window.showReplyInput = (commentId) => {
+      document.getElementById(`reply-box-${commentId}`).style.display = 'flex';
+      document.getElementById(`reply-input-${commentId}`).focus();
+    };
+    window.hideReplyInput = (commentId) => {
+      document.getElementById(`reply-box-${commentId}`).style.display = 'none';
+      document.getElementById(`reply-input-${commentId}`).value = '';
+    };
+
+    // ✨ [댓글 & 답글 서버로 전송]
+    window.submitComment = async (parentId = null) => {
+      if(!window.currentUser) return alert("로그인이 필요합니다.");
+      
+      let inputElem;
+      if(parentId) {
+        inputElem = document.getElementById(`reply-input-${parentId}`);
+      } else {
+        inputElem = document.getElementById('new-comment-text');
+      }
+
+      const text = inputElem.value.trim();
+      if(!text) return alert("내용을 입력해주세요!");
+
+      const payload = {
+        text: text,
+        authorId: window.currentUser.uid,
+        authorName: window.currentUser.displayName || "익명",
+        parentId: parentId, // null이면 일반 댓글, 값이 있으면 답글
+        createdAt: serverTimestamp()
+      };
+
+      try {
+        const commentsRef = collection(db, "tierLists", currentPostId, "comments");
+        await addDoc(commentsRef, payload);
+        inputElem.value = ''; // 전송 성공 시 입력창 비우기
+        if(parentId) window.hideReplyInput(parentId);
+      } catch (error) {
+        alert("댓글 등록 실패: " + error.message);
       }
     };
 
-    window.filterLists = () => window.renderLists(dbList);
-
+    // 페이지 로드 시 게시판 불러오기
     window.onload = () => {
-      window.renderLists(dbList);
+      loadBoard();
     };
   </script>
 </body>
