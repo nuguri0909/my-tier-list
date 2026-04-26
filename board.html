@@ -4,28 +4,34 @@
   <meta charset="UTF-8">
   <title>게시판 - 마이 티어 메이커</title>
   <style>
-    body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #121212; color: #e0e0e0; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #121212; color: #e0e0e0; margin: 0; padding: 0; }
     .top-menu { background: #1f1f1f; display: flex; align-items: center; padding: 10px 30px; box-shadow: 0 2px 10px rgba(0,0,0,0.5); position: fixed; top: 0; width: 100%; box-sizing: border-box; z-index: 2000; }
     .top-menu a { color: #aaa; text-decoration: none; margin: 0 15px; font-weight: bold; font-size: 16px; transition: 0.3s; }
-    .top-menu a:hover { color: #3498db; }
     .top-menu .active { color: white; border-bottom: 2px solid #3498db; padding-bottom: 5px; }
     .logo-btn { font-size: 20px !important; color: #fff !important; margin-right: 40px !important; }
+    #login-btn { color: #f39c12; cursor: pointer; }
     
-    .content-wrapper { padding: 80px 40px 40px 40px; max-width: 800px; margin: 0 auto; }
-    .header-area { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; padding-bottom: 10px; margin-bottom: 20px; }
-    .upload-btn { background: #3498db; color: white; border: none; padding: 8px 16px; border-radius: 4px; font-weight: bold; cursor: pointer; }
+    .content-wrapper { padding: 80px 40px; max-width: 1000px; margin: 0 auto; }
+    .header-section { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 20px; }
+    .header-section h2 { margin: 0; color: #3498db; }
+    .header-section p { margin: 0; color: #888; font-size: 14px; }
     
-    .post { background: #1f1f1f; border-radius: 8px; padding: 20px; margin-bottom: 20px; border: 1px solid #333; }
-    .post-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-    .post-title { font-size: 20px; font-weight: bold; margin: 0; }
-    .post-author { font-size: 14px; color: #aaa; }
-    .post-img { width: 100%; height: 200px; background: #333; border-radius: 4px; display:flex; justify-content:center; align-items:center; color:#666; margin-bottom: 15px;}
+    .grid-container { display: flex; gap: 20px; flex-wrap: wrap; }
     
-    .post-actions { display: flex; gap: 10px; }
-    .action-btn { background: #2a2a2a; color: #e0e0e0; border: 1px solid #444; padding: 6px 12px; border-radius: 4px; cursor: pointer; transition: 0.2s; font-size: 14px;}
-    .action-btn:hover { background: #444; }
-    .btn-remix { background: #e67e22; border-color: #d35400; font-weight:bold; }
-    .btn-remix:hover { background: #d35400; }
+    .card { background: #1f1f1f; border-radius: 12px; width: 220px; padding: 15px; border: 1px solid #333; position: relative; display: flex; flex-direction: column; transition: transform 0.2s; }
+    .card:hover { transform: translateY(-5px); box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
+    
+    .card-img { width: 100%; height: 120px; background: #111; border-radius: 8px; margin-bottom: 10px; display: flex; flex-wrap: wrap; justify-content: center; align-items: center; overflow: hidden; border: 1px solid #222; }
+    .card-img img { width: 50%; height: 50%; object-fit: cover; } 
+    
+    .card h4 { margin: 10px 0 5px 0; font-size: 18px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .card p { font-size: 13px; color: #888; margin: 3px 0; }
+    
+    .btn-group { display: flex; gap: 8px; margin-top: 15px; }
+    .btn-action { flex: 1; padding: 8px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; color: white; transition: 0.2s; text-align: center; text-decoration: none; }
+    .btn-view { background: #9b59b6; } .btn-view:hover { background: #8e44ad; }
+    
+    .info-msg { text-align: center; width: 100%; margin-top: 50px; color: #aaa; font-size: 18px; }
   </style>
 </head>
 <body>
@@ -35,41 +41,116 @@
     <a href="index.html">티어 만들기</a>
     <a href="mylist.html">내 목록</a>
     <a href="board.html" class="active">게시판</a>
-    <a href="#" style="margin-left:auto;">로그인</a>
+    <a href="#" id="login-btn" style="margin-left:auto;">🚀 구글 로그인</a>
   </nav>
 
   <div class="content-wrapper">
-    <div class="header-area">
-      <h2>🌐 커뮤니티 게시판</h2>
-      <button class="upload-btn">내 티어표 공유하기</button>
-    </div>
-
-    <div class="post">
-      <div class="post-header">
-        <h3 class="post-title">2026년 한국인이 좋아하는 치킨 브랜드 티어</h3>
-        <span class="post-author">작성자: 치킨매니아</span>
-      </div>
-      <div class="post-img">사용자가 공유한 티어표 이미지 영역</div>
-      <div class="post-actions">
-        <button class="action-btn">❤️ 좋아요 128</button>
-        <button class="action-btn">💬 댓글 32</button>
-        <button class="action-btn btn-remix">🔄 리믹스 (복사해서 내 맘대로 수정)</button>
+    <div class="header-section">
+      <div>
+        <h2>🌍 모두의 갤러리</h2>
+        <p>다른 사람들이 만든 재미있는 티어표를 구경해보세요!</p>
       </div>
     </div>
-
-    <div class="post">
-      <div class="post-header">
-        <h3 class="post-title">마블 시네마틱 유니버스 영화 총정리</h3>
-        <span class="post-author">작성자: MovieGeek</span>
-      </div>
-      <div class="post-img">사용자가 공유한 티어표 이미지 영역</div>
-      <div class="post-actions">
-        <button class="action-btn">❤️ 좋아요 95</button>
-        <button class="action-btn">💬 댓글 14</button>
-        <button class="action-btn btn-remix">🔄 리믹스</button>
-      </div>
+    
+    <div class="grid-container" id="board-container">
+      <div class="info-msg">데이터를 불러오는 중입니다...</div>
     </div>
   </div>
 
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
+    import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
+    import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAwVjpUANfil947xb0bjKALw2uuGvZYQcs",
+      authDomain: "mytierlist-70989.firebaseapp.com",
+      projectId: "mytierlist-70989",
+      storageBucket: "mytierlist-70989.firebasestorage.app",
+      messagingSenderId: "13881580770",
+      appId: "1:13881580770:web:6f7f9148c4bf5f95add2bb"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    let currentUser = null;
+
+    // --- 로그인 기능 ---
+    const loginBtn = document.getElementById('login-btn');
+    loginBtn.addEventListener('click', () => {
+      if (currentUser) {
+        signOut(auth).then(() => { alert("로그아웃 되었습니다."); location.reload(); });
+      } else {
+        const provider = new GoogleAuthProvider();
+        signInWithPopup(auth, provider).catch(err => console.error("로그인 에러:", err));
+      }
+    });
+
+    onAuthStateChanged(auth, (user) => {
+      currentUser = user;
+      if (user) {
+        loginBtn.innerText = `👋 ${user.displayName} (로그아웃)`;
+        loginBtn.style.color = "#2ecc71";
+      } else {
+        loginBtn.innerText = "🚀 구글 로그인";
+        loginBtn.style.color = "#f39c12";
+      }
+    });
+
+    // --- 모두의 데이터 불러오기 ---
+    window.onload = async function() {
+      const container = document.getElementById('board-container');
+      
+      try {
+        // 🔥 핵심: where(조건문) 없이 TierLists의 모든 데이터를 가져옵니다!
+        const querySnapshot = await getDocs(collection(db, "TierLists"));
+        
+        const allLists = [];
+        querySnapshot.forEach((doc) => allLists.push(doc.data()));
+
+        if(allLists.length === 0) {
+          container.innerHTML = "<div class='info-msg'>아직 아무도 티어표를 만들지 않았어요. 첫 번째 주인공이 되어보세요!</div>";
+          return;
+        }
+
+        container.innerHTML = "";
+        
+        // 정렬: 최신순 정렬
+        allLists.sort((a, b) => parseInt(b.id) - parseInt(a.id)).forEach(list => {
+          let previewHTML = '';
+          let imgCount = 0;
+          
+          for (let row of list.data) {
+            for (let item of row.items) {
+              if (imgCount < 4) { previewHTML += `<img src="${item.src}" alt="preview">`; imgCount++; }
+            }
+          }
+          if (imgCount < 4 && list.bank) {
+            for (let item of list.bank) {
+              if (imgCount < 4) { previewHTML += `<img src="${item.src}" alt="preview">`; imgCount++; }
+            }
+          }
+          if (imgCount === 0) previewHTML = '<div style="color:#666; font-size:14px; font-weight:bold;">이미지 없음</div>';
+
+          const card = document.createElement('div');
+          card.className = 'card';
+          card.innerHTML = `
+            <div class="card-img">${previewHTML}</div>
+            <h4>${list.title}</h4>
+            <p>📅 ${list.date}</p>
+            <div class="btn-group">
+              <a href="index.html?id=${list.id}" class="btn-action btn-view">👀 구경하기</a>
+            </div>
+          `;
+          container.appendChild(card);
+        });
+      } catch (err) {
+        console.error(err);
+        container.innerHTML = "<div class='info-msg' style='color:#e74c3c;'>데이터를 불러오는 데 실패했습니다.</div>";
+      }
+    };
+  </script>
 </body>
 </html>
