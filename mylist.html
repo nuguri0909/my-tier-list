@@ -18,7 +18,6 @@
     .card h4 { margin: 10px 0 5px 0; font-size: 18px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .card p { font-size: 13px; color: #888; margin: 3px 0; }
     
-    /* 버튼 스타일 통일 */
     .btn-group { display: flex; gap: 8px; margin-top: 15px; }
     .btn-action { flex: 1; padding: 8px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; color: white; transition: 0.2s; }
     .btn-edit { background: #3498db; } .btn-edit:hover { background: #2980b9; }
@@ -36,49 +35,96 @@
   </nav>
 
   <div class="content-wrapper">
-    <h2>📂 내가 저장한 티어표</h2>
-    <p style="color:#aaa; font-size:14px;">저장된 목록을 클릭하여 다시 수정하거나 이어서 만들 수 있습니다.</p>
+    <h2>📂 내가 저장한 티어표 (대용량 보관함)</h2>
+    <p style="color:#aaa; font-size:14px;">브라우저 DB를 활용하여 수많은 고화질 이미지도 안전하게 보관됩니다.</p>
     <div class="grid-container" id="list-container">
       </div>
   </div>
 
   <script>
-    function loadLists() {
-      const container = document.getElementById('list-container');
-      const savedLists = JSON.parse(localStorage.getItem('myTierLists') || '[]');
-      
-      if(savedLists.length === 0) {
-        container.innerHTML = "<div style='text-align:center; width:100%; margin-top:50px;'><p style='color:#666; font-size:18px;'>저장된 티어표가 없습니다. 첫 티어표를 만들어보세요!</p></div>";
-        return;
-      }
+    const DB_NAME = "TierMakerDB";
+    const STORE_NAME = "TierLists";
 
-      container.innerHTML = "";
-      savedLists.forEach(list => {
-        const card = document.createElement('div');
-        card.className = 'card';
-        card.innerHTML = `
-          <div class="card-img">📋 TIER LIST</div>
-          <h4>${list.title}</h4>
-          <p>📅 수정일: ${list.date}</p>
-          <p>🗂️ 티어 줄 개수: ${list.data.length}줄</p>
-          <div class="btn-group">
-            <button class="btn-action btn-edit" onclick="location.href='index.html?id=${list.id}'">조회/수정</button>
-            <button class="btn-action btn-del" onclick="deleteItem(${list.id})">삭제</button>
-          </div>
-        `;
-        container.appendChild(card);
+    // DB 초기화
+    function initDB() {
+      return new Promise((resolve, reject) => {
+        const request = indexedDB.open(DB_NAME, 1);
+        request.onupgradeneeded = (e) => {
+          const db = e.target.result;
+          if (!db.objectStoreNames.contains(STORE_NAME)) {
+            db.createObjectStore(STORE_NAME, { keyPath: "id" });
+          }
+        };
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
       });
     }
 
-    function deleteItem(id) {
-      if(confirm("이 티어표를 영구적으로 삭제하시겠습니까?")) {
-        let savedLists = JSON.parse(localStorage.getItem('myTierLists') || '[]');
-        savedLists = savedLists.filter(item => item.id !== id);
-        localStorage.setItem('myTierLists', JSON.stringify(savedLists));
-        loadLists();
+    // 모든 목록 가져오기
+    async function getAllLists() {
+      const db = await initDB();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE_NAME, "readonly");
+        const store = tx.objectStore(STORE_NAME);
+        const request = store.getAll();
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+    }
+
+    // 목록 삭제하기
+    async function deleteListFromDB(id) {
+      const db = await initDB();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE_NAME, "readwrite");
+        const store = tx.objectStore(STORE_NAME);
+        const request = store.delete(id);
+        request.onsuccess = () => resolve();
+        request.onerror = () => reject(request.error);
+      });
+    }
+
+    // 화면에 리스트 그리기
+    async function loadLists() {
+      const container = document.getElementById('list-container');
+      
+      try {
+        const savedLists = await getAllLists();
+
+        if(savedLists.length === 0) {
+          container.innerHTML = "<div style='text-align:center; width:100%; margin-top:50px;'><p style='color:#666; font-size:18px;'>저장된 티어표가 없습니다. 첫 티어표를 만들어보세요!</p></div>";
+          return;
+        }
+
+        container.innerHTML = "";
+        savedLists.forEach(list => {
+          const card = document.createElement('div');
+          card.className = 'card';
+          card.innerHTML = `
+            <div class="card-img">📋 TIER LIST</div>
+            <h4>${list.title}</h4>
+            <p>📅 수정일: ${list.date}</p>
+            <p>🗂️ 티어 줄 개수: ${list.data.length}줄</p>
+            <div class="btn-group">
+              <button class="btn-action btn-edit" onclick="location.href='index.html?id=${list.id}'">조회/수정</button>
+              <button class="btn-action btn-del" onclick="handleDelete(${list.id})">삭제</button>
+            </div>
+          `;
+          container.appendChild(card);
+        });
+      } catch (err) {
+        console.error("목록을 불러오는 중 오류 발생:", err);
       }
     }
 
+    async function handleDelete(id) {
+      if(confirm("이 티어표를 영구적으로 삭제하시겠습니까?")) {
+        await deleteListFromDB(id);
+        loadLists(); // 삭제 후 새로고침
+      }
+    }
+
+    // 페이지 시작 시 불러오기
     loadLists();
   </script>
 </body>
