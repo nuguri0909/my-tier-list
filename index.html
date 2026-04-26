@@ -221,7 +221,8 @@
     function createDefaultBoard() {
       const board = document.getElementById('board');
       board.innerHTML = '';
-      ['S', 'A', 'B', 'C', 'D'].forEach(label => {
+      // 여기에 'E'를 추가해서 기본 6줄(빨주노초파보)이 되게 합니다.
+      ['S', 'A', 'B', 'C', 'D', 'E'].forEach(label => {
         board.innerHTML += `<div class="tier-row"><div class="tier-label" contenteditable="true">${label}</div><div class="tier-items" ondrop="window.drop(event)" ondragover="window.allowDrop(event)"></div><button class="delete-tier-btn" onclick="window.deleteTier(this)">X</button></div>`;
       });
       updateRowColors();
@@ -287,8 +288,7 @@
       if (draggedItem) { draggedItem.classList.remove('dragging'); draggedItem = null; }
     });
 
-// 기준이 되는 6가지 무지개색의 HSL 색상값 (Hue: 색상 각도)
-    // 빨(0), 주(30), 노(60), 초(120), 파(220), 보(270)
+    // 6가지 기준색 (빨, 주, 노, 초, 파, 보)
     const rainbowStops = [0, 30, 60, 120, 220, 270];
 
     function updateRowColors() {
@@ -301,23 +301,20 @@
         let hue;
 
         if (total <= 6) {
-          // 1. 기본 6줄 이하일 때: 무지개색 배열에서 순서대로 정확히 하나씩 픽업
-          hue = rainbowStops[index];
+          // 6줄 이하일 때는 배열에 지정된 정확한 색상을 부여
+          // (index가 0이면 빨강, 1이면 주황...)
+          hue = rainbowStops[index] !== undefined ? rainbowStops[index] : rainbowStops[rainbowStops.length - 1];
         } else {
-          // 2. 7줄 이상일 때: 양 끝(빨강, 보라)을 고정하고 그 사이를 전체 줄 개수로 쪼개서 분배
-          const ratio = index / (total - 1); // 0.0 ~ 1.0 사이의 진행률
+          // 7줄 이상일 때는 수학적 비율(그라데이션)로 쪼개기
+          const ratio = index / (total - 1);
           const p = ratio * (rainbowStops.length - 1);
-          
           const lowIdx = Math.floor(p);
           const highIdx = Math.ceil(p);
-          const interpolation = p - lowIdx; // 두 색상 사이의 미세 비율
-          
-          // 수학적 보간법을 이용해 사이사이의 세분화된 색상값 계산
+          const interpolation = p - lowIdx;
           hue = rainbowStops[lowIdx] + (rainbowStops[highIdx] - rainbowStops[lowIdx]) * interpolation;
         }
 
-        // HSL 색상계를 사용하여 채도(80%)와 명도(60%)를 고정해 톤을 통일감 있게 맞춤
-        label.style.backgroundColor = `hsl(${hue}, 80%, 60%)`;
+        label.style.backgroundColor = `hsl(${hue}, 85%, 60%)`; // 채도를 살짝 높여 더 선명하게!
         label.style.color = "#333";
         label.style.textShadow = "none";
       });
