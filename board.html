@@ -25,9 +25,9 @@
     </div>
     <div class="user-menu">
       <span id="user-name-display" class="user-name">로그인해주세요</span>
-      <button class="btn btn-small" id="btn-nickname" style="display:none;" onclick="setNickname()">닉네임 설정</button>
-      <button class="btn btn-small btn-save" id="btn-login" onclick="login()">구글 로그인</button>
-      <button class="btn btn-small" id="btn-logout" style="display:none;" onclick="logout()">로그아웃</button>
+      <button class="btn btn-small" id="btn-nickname" style="display:none;" onclick="window.setNickname()">닉네임 설정</button>
+      <button class="btn btn-small btn-save" id="btn-login" onclick="window.login()">구글 로그인</button>
+      <button class="btn btn-small" id="btn-logout" style="display:none;" onclick="window.logout()">로그아웃</button>
     </div>
   </nav>
 
@@ -36,7 +36,7 @@
   </div>
 
   <div class="filter-bar">
-    <input type="text" id="search-bar" class="search-input" placeholder="제목 또는 제작자 검색..." onkeyup="if(event.key==='Enter') filterLists()">
+    <input type="text" id="search-bar" class="search-input" placeholder="제목 또는 제작자 검색..." onkeyup="if(event.key==='Enter') window.filterLists()">
     <select id="category-filter" class="search-input" style="width: 150px;">
       <option value="all">전체 카테고리</option>
       <option value="영화">영화</option>
@@ -45,24 +45,59 @@
       <option value="소설/만화">소설/만화</option>
       <option value="기타">기타</option>
     </select>
-    <button class="btn btn-save" onclick="filterLists()">🔍 검색</button>
+    <button class="btn btn-save" onclick="window.filterLists()">🔍 검색</button>
   </div>
 
   <div class="grid-container" id="board-list"></div>
 
-  <script>
-    // 💡 더미 데이터를 비웠습니다.
-    const dbList = [];
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-    // 로그인 공통 로직 (실제 개발 시 별도 js 파일로 분리하는 것이 좋습니다)
-    let currentUser = null; let customNickname = "익명";
-    function login() { currentUser = {uid:"1"}; updateAuthUI(); alert("로그인 되었습니다."); }
-    function logout() { currentUser = null; updateAuthUI(); alert("로그아웃 되었습니다."); }
-    function setNickname() { const n = prompt("닉네임:", customNickname); if(n) { customNickname = n; updateAuthUI(); } }
-    function updateAuthUI() {
+    const firebaseConfig = {
+      apiKey: "AIzaSyAwVjpUANfil947xb0bjKALw2uuGvZYQcs",
+      authDomain: "mytierlist-70989.firebaseapp.com",
+      projectId: "mytierlist-70989",
+      storageBucket: "mytierlist-70989.firebasestorage.app",
+      messagingSenderId: "13881580770",
+      appId: "1:13881580770:web:6f7f9148c4bf5f95add2bb"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const provider = new GoogleAuthProvider();
+
+    window.currentUser = null; 
+    window.customNickname = "익명";
+
+    window.login = () => signInWithPopup(auth, provider);
+    window.logout = () => signOut(auth);
+    
+    window.setNickname = () => {
+      const nick = prompt("닉네임:", window.customNickname);
+      if(nick && nick.trim() !== "") {
+        updateProfile(auth.currentUser, { displayName: nick.trim() }).then(() => {
+          window.customNickname = nick.trim();
+          window.updateAuthUI();
+        });
+      }
+    };
+
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        window.currentUser = user;
+        window.customNickname = user.displayName || "익명";
+      } else {
+        window.currentUser = null;
+        window.customNickname = "익명";
+      }
+      window.updateAuthUI();
+    });
+
+    window.updateAuthUI = () => {
       const nm = document.getElementById('user-name-display');
-      if(currentUser) {
-        nm.innerText = customNickname + "님";
+      if(window.currentUser) {
+        nm.innerText = window.customNickname + "님";
         document.getElementById('btn-login').style.display='none';
         document.getElementById('btn-logout').style.display='inline-block';
         document.getElementById('btn-nickname').style.display='inline-block';
@@ -72,23 +107,22 @@
         document.getElementById('btn-logout').style.display='none';
         document.getElementById('btn-nickname').style.display='none';
       }
-    }
+    };
 
-    function renderLists(lists) {
+    const dbList = []; // 더미 데이터 비움
+    window.renderLists = (lists) => {
       const container = document.getElementById('board-list');
       container.innerHTML = '';
       if (lists.length === 0) {
         container.innerHTML = '<div style="grid-column: span 2; text-align: center; padding: 50px; color: #888;">아직 등록된 티어표가 없습니다. 첫 티어표의 주인공이 되어보세요!</div>';
         return;
       }
-      // 리스트 렌더링 로직 (데이터가 있을 때 작동)
-    }
+    };
 
-    function filterLists() { renderLists(dbList); }
+    window.filterLists = () => window.renderLists(dbList);
 
-    window.onload = function() {
-      updateAuthUI();
-      renderLists(dbList);
+    window.onload = () => {
+      window.renderLists(dbList);
     };
   </script>
 </body>
