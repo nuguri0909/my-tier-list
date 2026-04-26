@@ -74,7 +74,7 @@ function renderCards(posts, containerId) {
 async function loadHomePosts() {
   try {
     // 게시판 컬렉션 이름 (본인의 DB 설정에 맞게 변경하세요. 예: 'board', 'posts' 등)
-    const postsRef = collection(db, "posts"); 
+    const postsRef = collection(db, "tierLists"); 
 
     // 1. 인기글 가져오기 (좋아요 순으로 3개)
     const popularQuery = query(postsRef, orderBy("likes", "desc"), limit(3));
