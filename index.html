@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>나만의 티어 메이커</title>
+  <style>
+    body { font-family: 'Malgun Gothic', sans-serif; background: #121212; color: white; text-align: center; }
+    .tier-row { display: flex; align-items: center; border-bottom: 1px solid #444; min-height: 100px; }
+    .tier-label { width: 100px; font-weight: bold; font-size: 24px; padding: 20px; color: black; }
+    .s-tier { background: #ff7f7f; }
+    .a-tier { background: #ffbf7f; }
+    .b-tier { background: #ffff7f; }
+    .tier-items { display: flex; flex-wrap: wrap; flex-grow: 1; padding: 10px; min-height: 100px; background: #1e1e1e; }
+    .item { width: 80px; height: 80px; background: #ffffff; color: #000; display: flex; justify-content: center; align-items: center; margin: 5px; cursor: grab; font-weight: bold; border-radius: 8px; }
+    #item-bank { display: flex; flex-wrap: wrap; padding: 20px; min-height: 150px; background: #2a2a2a; margin-top: 20px; border-radius: 10px; }
+  </style>
+</head>
+<body>
+  <h1>🏆 나만의 티어 메이커</h1>
+  <p>아래 박스들을 마우스로 드래그해서 등급을 매겨보세요!</p>
+  
+  <div id="tier-board">
+    <div class="tier-row">
+      <div class="tier-label s-tier">S</div>
+      <div class="tier-items" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+    </div>
+    <div class="tier-row">
+      <div class="tier-label a-tier">A</div>
+      <div class="tier-items" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+    </div>
+    <div class="tier-row">
+      <div class="tier-label b-tier">B</div>
+      <div class="tier-items" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+    </div>
+  </div>
+
+  <h3>⬇️ 평가할 항목들 ⬇️</h3>
+  <div id="item-bank" ondrop="drop(event)" ondragover="allowDrop(event)">
+    <div class="item" draggable="true" ondragstart="drag(event)" id="item1">라면</div>
+    <div class="item" draggable="true" ondragstart="drag(event)" id="item2">치킨</div>
+    <div class="item" draggable="true" ondragstart="drag(event)" id="item3">피자</div>
+    <div class="item" draggable="true" ondragstart="drag(event)" id="item4">초밥</div>
+  </div>
+
+  <script>
+    function allowDrop(ev) { ev.preventDefault(); }
+    function drag(ev) { ev.dataTransfer.setData("text", ev.target.id); }
+    function drop(ev) {
+      ev.preventDefault();
+      var data = ev.dataTransfer.getData("text");
+      var target = ev.target;
+      // 항목이 다른 항목 안으로 들어가지 않도록 보호
+      if(target.classList.contains('tier-items') || target.id === 'item-bank') {
+        target.appendChild(document.getElementById(data));
+      }
+    }
+  </script>
+</body>
+</html>
