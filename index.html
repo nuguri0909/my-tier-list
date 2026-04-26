@@ -12,7 +12,7 @@
     .top-menu a:hover { color: #3498db; }
     .top-menu .active { color: white; border-bottom: 2px solid #3498db; padding-bottom: 5px; }
     .logo-btn { font-size: 20px !important; color: #fff !important; margin-right: 40px !important; }
-    #login-btn { color: #f39c12; } /* 로그인 버튼 강조 */
+    #login-btn { color: #f39c12; }
 
     .content-wrapper { padding-top: 100px; padding-bottom: 50px; }
     .action-buttons { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
@@ -47,7 +47,13 @@
     .modal-content textarea { resize: none; height: 80px; }
     .modal-btns { display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px; }
     .modal-btns button { padding: 8px 16px; border-radius: 6px; border: none; cursor: pointer; font-weight: bold; transition: 0.2s; }
-    .btn-save { background: #2ecc71; color: white; } .btn-save:hover { background: #27ae60; } .btn-cancel { background: #444; color: white; } .btn-cancel:hover { background: #555; }
+    .btn-save { background: #2ecc71; color: white; } .btn-save:hover { background: #27ae60; } 
+    .btn-delete { background: #e74c3c; color: white; } .btn-delete:hover { background: #c0392b; } 
+    .btn-cancel { background: #444; color: white; } .btn-cancel:hover { background: #555; }
+
+    /* 읽기 전용(조회) 모드일 때 적용되는 스타일 */
+    body.read-only .delete-tier-btn { display: none !important; }
+    body.read-only .item { cursor: default; }
   </style>
 </head>
 <body>
@@ -75,7 +81,7 @@
     <div class="tier-board" id="board"></div>
 
     <div class="bank-header">
-      📥 대기열 <span>(아래 아이템을 드래그하여 위쪽 티어에 배치하세요)</span>
+      📥 대기열 <span id="bank-desc">(아래 아이템을 드래그하여 위쪽 티어에 배치하세요)</span>
     </div>
     <div id="item-bank" ondrop="window.drop(event)" ondragover="window.allowDrop(event)"></div>
   </div>
@@ -87,6 +93,7 @@
       <textarea id="edit-desc" placeholder="설명"></textarea>
       <div class="modal-btns">
         <button class="btn-cancel" onclick="window.closeModal()">취소</button>
+        <button class="btn-delete" onclick="window.deleteItem()">삭제</button>
         <button class="btn-save" onclick="window.saveModal()">저장</button>
       </div>
     </div>
@@ -97,7 +104,6 @@
     import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
     import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
 
-    // 전달해주신 비밀 열쇠 적용!
     const firebaseConfig = {
       apiKey: "AIzaSyAwVjpUANfil947xb0bjKALw2uuGvZYQcs",
       authDomain: "mytierlist-70989.firebaseapp.com",
@@ -117,6 +123,11 @@
     let draggedItem = null;
     let ghostItem = null;
     let editingListId = null;
+    
+    // ⭐ 다른 사람의 티어표인지 판별하기 위한 변수
+    let loadedListUid = null; 
+    let loadedListTitle = "";
+
     const visualStops = [0, 30, 60, 120, 185, 240, 285];
 
     // --- 로그인 기능 ---
@@ -139,7 +150,47 @@
         loginBtn.innerText = "🚀 구글 로그인";
         loginBtn.style.color = "#f39c12";
       }
+      // 로그인 상태가 변할 때마다 권한 다시 체크 (내 티어표면 수정 가능, 남의 거면 읽기 전용)
+      applyPermissions();
     });
+
+    // --- 권한 체크 함수 (읽기 전용 모드 전환) ---
+    function applyPermissions() {
+      if (!editingListId) return; // 새로 만드는 중이면 제한 없음
+      
+      const isOwner = currentUser && (currentUser.uid === loadedListUid);
+      
+      if (!isOwner) {
+        // 남의 것이거나 비로그인 상태 (읽기 전용)
+        document.body.classList.add('read-only');
+        document.getElementById('page-title').innerText = `👀 구경 중: ${loadedListTitle}`;
+        document.getElementById('bank-desc').innerText = "(조회 모드입니다. 다른 이름으로 저장하여 내 보관함으로 가져가세요)";
+        
+        // 버튼 숨기기
+        document.getElementById('btn-save').style.display = 'none';
+        document.querySelector('.btn-upload').style.display = 'none';
+        document.querySelector('.btn-add-tier').style.display = 'none';
+        
+        // 텍스트 편집 및 드래그 방지
+        document.querySelectorAll('.tier-label').forEach(el => el.setAttribute('contenteditable', 'false'));
+        document.querySelectorAll('.item').forEach(el => el.setAttribute('draggable', 'false'));
+      } else {
+        // 내 티어표일 때 (수정 가능)
+        document.body.classList.remove('read-only');
+        document.getElementById('page-title').innerText = `✏️ 수정 중: ${loadedListTitle}`;
+        document.getElementById('bank-desc').innerText = "(아래 아이템을 드래그하여 위쪽 티어에 배치하세요)";
+        
+        // 버튼 다시 보이기
+        document.getElementById('btn-save').style.display = 'inline-block';
+        document.getElementById('btn-save').innerText = '✅ 덮어쓰기 저장';
+        document.querySelector('.btn-upload').style.display = 'inline-block';
+        document.querySelector('.btn-add-tier').style.display = 'inline-block';
+        
+        // 텍스트 편집 및 드래그 허용
+        document.querySelectorAll('.tier-label').forEach(el => el.setAttribute('contenteditable', 'true'));
+        document.querySelectorAll('.item').forEach(el => el.setAttribute('draggable', 'true'));
+      }
+    }
 
     // --- 클라우드 데이터 불러오기 ---
     window.onload = async function() {
@@ -153,10 +204,12 @@
         
         if (docSnap.exists()) {
           const listData = docSnap.data();
-          document.getElementById('page-title').innerText = `✏️ 수정 중: ${listData.title}`;
-          document.getElementById('btn-save').innerText = '✅ 덮어쓰기 저장';
+          loadedListUid = listData.uid; // 작성자 UID 저장
+          loadedListTitle = listData.title; // 제목 저장
+          
           document.getElementById('btn-save-as').style.display = 'inline-block';
           rebuildBoard(listData);
+          applyPermissions(); // 불러온 직후 권한 체크
           return;
         } else {
             alert("삭제되었거나 존재하지 않는 티어표입니다.");
@@ -165,7 +218,6 @@
       createDefaultBoard();
     };
 
-    // --- 티어보드 생성 및 드래그 앤 드롭 ---
     function createDefaultBoard() {
       const board = document.getElementById('board');
       board.innerHTML = '';
@@ -205,7 +257,9 @@
       return div;
     }
 
+    // --- 드래그 앤 드롭 ---
     function drag(ev) {
+      if (document.body.classList.contains('read-only')) { ev.preventDefault(); return; } // 읽기 전용 차단
       draggedItem = ev.target; ev.dataTransfer.setData("text", ev.target.id); draggedItem.classList.add('dragging');
       ghostItem = draggedItem.cloneNode(true); ghostItem.id = 'ghost-placeholder';
       ghostItem.classList.remove('dragging'); ghostItem.style.opacity = '0.4';
@@ -213,12 +267,14 @@
     }
 
     window.allowDrop = function(ev) {
+      if (document.body.classList.contains('read-only')) return; // 읽기 전용 차단
       ev.preventDefault();
       const target = ev.target.closest('.tier-items, #item-bank');
       if (target && ghostItem && ghostItem.parentElement !== target) { target.appendChild(ghostItem); }
     }
 
     window.drop = function(ev) {
+      if (document.body.classList.contains('read-only')) return; // 읽기 전용 차단
       ev.preventDefault();
       const target = ev.target.closest('.tier-items, #item-bank');
       if (ghostItem) { ghostItem.remove(); ghostItem = null; }
@@ -246,6 +302,7 @@
     }
 
     window.addTier = function() {
+      if (document.body.classList.contains('read-only')) return;
       const board = document.getElementById('board'); const row = document.createElement('div'); row.className = 'tier-row';
       row.innerHTML = `<div class="tier-label" contenteditable="true">NEW</div><div class="tier-items" ondrop="window.drop(event)" ondragover="window.allowDrop(event)"></div><button class="delete-tier-btn" onclick="window.deleteTier(this)">X</button>`;
       board.appendChild(row); updateRowColors();
@@ -260,7 +317,7 @@
       }
     }
 
-    // --- ⭐ 클라우드(Firestore) 저장 로직 ---
+    // --- ⭐ 클라우드 저장 (다른 이름으로 저장 시 내 소유로 변경) ---
     window.saveData = async function(isSaveAsNew) {
       if (!currentUser) {
         alert("저장하려면 먼저 우측 상단의 [🚀 구글 로그인]을 진행해주세요!");
@@ -270,15 +327,14 @@
       let listId = editingListId; let title = "나의 새로운 티어표";
       
       if (isSaveAsNew || !editingListId) {
-        let defaultTitle = isSaveAsNew && editingListId ? (document.getElementById('page-title').innerText.replace('✏️ 수정 중: ', '') + " (복사본)") : "나의 새로운 티어표";
+        let defaultTitle = isSaveAsNew && editingListId ? (loadedListTitle + " (복사본)") : "나의 새로운 티어표";
         title = prompt("티어표의 이름을 입력해주세요:", defaultTitle);
         if (!title) return; 
-        listId = Date.now().toString(); // 고유 ID 문자열 생성
+        listId = Date.now().toString(); 
       } else {
-        title = document.getElementById('page-title').innerText.replace('✏️ 수정 중: ', '');
+        title = loadedListTitle;
       }
 
-      // 화면 데이터 수집
       const rowsData = [];
       document.querySelectorAll('.tier-row').forEach(row => {
         const labelText = row.querySelector('.tier-label').innerText;
@@ -295,10 +351,9 @@
         bankData.push({ src: itemDiv.querySelector('img').src, title: itemDiv.dataset.title || '', desc: itemDiv.dataset.desc || '' });
       });
 
-      // 클라우드에 올릴 최종 데이터 패키지 (uid 추가!)
       const newListData = { 
           id: listId, 
-          uid: currentUser.uid, // 이 티어표의 주인 표시
+          uid: currentUser.uid, 
           title: title, 
           date: new Date().toLocaleDateString(), 
           data: rowsData, 
@@ -306,22 +361,25 @@
       };
 
       try {
+        const prevBtnText = document.getElementById('btn-save').innerText;
         document.getElementById('btn-save').innerText = '저장 중...⏳';
         
-        // Firestore에 저장 (setDoc)
         await setDoc(doc(db, "TierLists", listId), newListData);
         
+        // ⭐ 다른 이름으로 저장 성공 시, 이제 '내 티어표'가 되었으므로 즉시 권한을 변경합니다!
         editingListId = listId; 
-        document.getElementById('page-title').innerText = `✏️ 수정 중: ${title}`;
-        document.getElementById('btn-save').innerText = '✅ 덮어쓰기 저장'; 
+        loadedListUid = currentUser.uid; 
+        loadedListTitle = title;
         document.getElementById('btn-save-as').style.display = 'inline-block';
+        
+        applyPermissions(); // 여기서 화면 제한이 즉시 해제됩니다!
         
         if (!isSaveAsNew && editingListId !== listId) alert("클라우드 서버에 안전하게 저장되었습니다! ☁️");
         else if (!isSaveAsNew) alert("현재 상태가 클라우드에 덮어쓰기 되었습니다! ☁️");
-        else alert("새로운 복사본으로 저장되었습니다!");
+        else alert("새로운 복사본으로 저장되어 이제 자유롭게 수정이 가능합니다!");
         
       } catch (err) { 
-          alert("저장 중 오류가 발생했습니다. (이미지 용량이 너무 클 수 있습니다)"); 
+          alert("저장 중 오류가 발생했습니다."); 
           console.error(err); 
           document.getElementById('btn-save').innerText = '☁️ 클라우드 저장';
       }
@@ -337,11 +395,29 @@
       this.value = ''; 
     });
 
+    // --- 모달 및 아이템 정보 관리 ---
     window.openModal = function(itemDiv) {
-      currentEditItem = itemDiv; document.getElementById('edit-title').value = itemDiv.dataset.title || '';
-      document.getElementById('edit-desc').value = itemDiv.dataset.desc || ''; document.getElementById('modal-overlay').style.display = 'flex';
+      if (document.body.classList.contains('read-only')) {
+        alert("👀 조회 모드입니다. 다른 이름으로 저장하여 내 보관함으로 가져온 후 수정해 주세요!");
+        return;
+      }
+      currentEditItem = itemDiv; 
+      document.getElementById('edit-title').value = itemDiv.dataset.title || '';
+      document.getElementById('edit-desc').value = itemDiv.dataset.desc || ''; 
+      document.getElementById('modal-overlay').style.display = 'flex';
     }
     window.closeModal = function() { document.getElementById('modal-overlay').style.display = 'none'; }
+    
+    // ⭐ 아이템 완전 삭제 기능
+    window.deleteItem = function() {
+      if (currentEditItem) {
+        if(confirm("이 아이템을 삭제하시겠습니까?")) {
+          currentEditItem.remove();
+          window.closeModal();
+        }
+      }
+    }
+
     window.saveModal = function() {
       if (currentEditItem) {
         const t = document.getElementById('edit-title').value; const d = document.getElementById('edit-desc').value;
@@ -354,7 +430,7 @@
     }
 
     window.downloadImage = function() {
-      if(confirm("현재 티어표를 캡처하여 저장하시겠습니까?")) {
+      if(confirm("현재 화면을 이미지로 저장하시겠습니까?")) {
         html2canvas(document.getElementById('board'), { scale: 2, backgroundColor: '#0f0f0f', logging: false }).then(canvas => {
           const link = document.createElement('a'); link.download = 'tier_list.png'; link.href = canvas.toDataURL(); link.click();
         });
