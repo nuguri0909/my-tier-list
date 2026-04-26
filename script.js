@@ -1,8 +1,6 @@
-// Firebase 최신 버전(v10) 모듈 불러오기
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-// 회원님의 Firebase 인증 정보
 const firebaseConfig = {
   apiKey: "AIzaSyAwVjpUANfil947xb0bjKALw2uuGvZYQcs",
   authDomain: "mytierlist-70989.firebaseapp.com",
@@ -12,7 +10,6 @@ const firebaseConfig = {
   appId: "1:13881580770:web:6f7f9148c4bf5f95add2bb"
 };
 
-// Firebase 초기화
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
@@ -21,40 +18,32 @@ let itemIdCounter = 0;
 window.currentUser = null; 
 window.customNickname = "익명"; 
 
-// 1. 진짜 구글 로그인 기능
+// 진짜 구글 로그인 연결
 window.login = function() {
-  signInWithPopup(auth, provider).catch(error => {
-    console.error(error);
-    alert("로그인 실패: " + error.message);
-  });
+  signInWithPopup(auth, provider).catch(error => alert("로그인 실패: " + error.message));
 };
 
 window.logout = function() {
-  signOut(auth).then(() => {
-    alert("로그아웃 되었습니다.");
-  }).catch(error => alert("로그아웃 실패: " + error.message));
+  signOut(auth).then(() => alert("로그아웃 되었습니다.")).catch(error => alert("로그아웃 실패: " + error.message));
 };
 
 window.setNickname = function() {
   const nick = prompt("사용하실 닉네임을 입력하세요:", window.customNickname);
   if(nick && nick.trim() !== "") {
     const newName = nick.trim();
-    // Firebase 계정 프로필에 닉네임 진짜로 업데이트하기
     updateProfile(auth.currentUser, { displayName: newName }).then(() => {
       window.customNickname = newName;
       window.updateAuthUI();
       alert(`닉네임이 [${window.customNickname}](으)로 변경되었습니다!`);
-    }).catch(error => {
-      alert("닉네임 변경 실패: " + error.message);
-    });
+    }).catch(error => alert("닉네임 변경 실패: " + error.message));
   }
 };
 
-// 로그인 상태 실시간 감지 (새로고침해도 로그인 유지됨)
+// 실시간 로그인 상태 감지
 onAuthStateChanged(auth, (user) => {
   if (user) {
     window.currentUser = user;
-    window.customNickname = user.displayName || "익명"; // 설정한 닉네임이 있으면 불러옴
+    window.customNickname = user.displayName || "익명";
   } else {
     window.currentUser = null;
     window.customNickname = "익명";
@@ -77,7 +66,7 @@ window.updateAuthUI = function() {
   }
 };
 
-// 2. 무지개 색상 로직
+// 무지개 색상
 const rainbowStops = [0, 30, 60, 120, 220, 270];
 window.updateRowColors = function() {
   const rows = document.querySelectorAll('.tier-row');
@@ -90,7 +79,7 @@ window.updateRowColors = function() {
   });
 };
 
-// 3. 줄 관리 및 드래그 앤 드롭
+// 티어 줄 및 아이템 추가 로직
 window.addTier = function() {
   const board = document.getElementById('board');
   const div = document.createElement('div');
@@ -116,7 +105,6 @@ window.drop = function(ev) {
   if (target) target.appendChild(document.getElementById(data));
 };
 
-// 4. 아이템 추가
 window.addNewItem = function() {
   const fileInput = document.getElementById('img-file');
   const urlInput = document.getElementById('img-url').value;
@@ -143,7 +131,6 @@ function createItemBox(src, title) {
   document.getElementById('item-bank').appendChild(item);
 }
 
-// 초기화
 window.onload = function() {
   const board = document.getElementById('board');
   ['S','A','B','C','D','E'].forEach(l => {
