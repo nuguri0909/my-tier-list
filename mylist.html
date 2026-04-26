@@ -5,130 +5,73 @@
   <title>내 보관함 - 나만의 티어 메이커</title>
   <link rel="stylesheet" href="style.css">
   <style>
-    /* 리스트 가로 2열 배치 (게시판과 동일한 디자인) */
-    .list-container {
-      display: grid;
-      grid-template-columns: 1fr 1fr; 
-      gap: 20px;
-      max-width: 1200px;
-      margin: 20px auto;
-      padding: 20px;
-    }
-    
-    .tier-card {
-      background: #1f1f1f;
-      border-radius: 12px;
-      padding: 25px;
-      border: 1px solid #333;
-      transition: transform 0.2s, border-color 0.2s;
-      cursor: pointer;
-      position: relative; /* 삭제 버튼 배치를 위해 추가 */
-    }
-    .tier-card:hover {
-      transform: translateY(-5px);
-      border-color: #e74c3c; /* 내 목록은 삭제/수정이 메인이니 강조색 변경 */
-    }
-    
-    .card-title { font-size: 1.5rem; margin: 0 0 10px 0; color: #fff; }
-    .card-meta { font-size: 0.95rem; color: #aaa; margin-bottom: 20px; }
-    
-    /* 삭제 버튼 디자인 */
-    .delete-btn {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      background: #e74c3c;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      padding: 5px 10px;
-      cursor: pointer;
-      font-weight: bold;
-    }
+    /* 삭제 버튼 및 내 목록 전용 스타일 */
+    .delete-btn { position: absolute; top: 15px; right: 15px; background: #e74c3c; color: white; border: none; border-radius: 6px; padding: 5px 10px; cursor: pointer; font-size: 12px; font-weight: bold; }
     .delete-btn:hover { background: #c0392b; }
-    
-    /* 빈 화면 안내 메시지 */
-    .empty-message {
-      text-align: center;
-      grid-column: span 2;
-      padding: 50px;
-      color: #888;
-    }
+    .card-title { font-size: 1.3rem; margin: 0 0 10px 0; color: #fff; width: 80%; /* 삭제버튼과 안 겹치게 여백 줌 */ }
+    .card-meta { font-size: 0.9rem; color: #aaa; margin-bottom: 15px; }
   </style>
 </head>
 <body>
+  <nav class="navbar">
+    <a href="index.html" class="nav-logo">TierMaker</a>
+    <div class="nav-links">
+      <a href="index.html">티어 만들기</a>
+      <a href="board.html">티어 게시판</a>
+      <a href="mylist.html">내 보관함</a>
+    </div>
+  </nav>
 
   <div class="header">
     <h1>🗂️ 내 보관함</h1>
-    <p style="color: #aaa; font-size: 14px; margin-top: 5px;">내가 만든 티어표를 확인하고 관리하세요.</p>
-    <div class="controls">
-      <button class="btn btn-save" onclick="location.href='index.html'">➕ 새 티어표 만들기</button>
-      <button class="btn" onclick="location.href='board.html'">📋 게시판 가기 ➔</button>
-    </div>
   </div>
 
-  <div class="list-container" id="my-list">
-    </div>
+  <div class="grid-container" id="my-list"></div>
 
   <script>
-    // 💡 테스트용 임시 내 데이터 (Firebase 연결 시 내 UID로 작성된 글만 가져와야 합니다)
-    let myDatabase = [
-      { id: "my1", title: "나의 인생 영화 TOP 10", category: "영화", views: 42 },
-      { id: "my2", title: "가장 매운 라면 순위", category: "기타", views: 120 }
+    // 임시 테스트용 내 데이터
+    let myDb = [
+      { id: "m1", title: "나의 인생 영화 TOP 10", category: "영화", views: 42 },
+      { id: "m2", title: "가장 매운 라면 순위", category: "기타", views: 120 }
     ];
 
     function renderMyLists() {
       const container = document.getElementById('my-list');
       container.innerHTML = '';
       
-      if (myDatabase.length === 0) {
-        container.innerHTML = `
-          <div class="empty-message">
-            <h2>아직 저장된 티어표가 없네요! 😢</h2>
-            <p>새 티어표 만들기를 눌러 나만의 첫 티어표를 완성해 보세요.</p>
-          </div>
-        `;
+      if (myDb.length === 0) {
+        container.innerHTML = '<div style="grid-column: span 2; text-align: center; padding: 50px; color: #888;">저장된 티어표가 없습니다. 첫 티어표를 만들어 보세요!</div>';
         return;
       }
-
-      myDatabase.forEach(list => {
+      
+      myDb.forEach(list => {
         const card = document.createElement('div');
         card.className = 'tier-card';
-        
         card.innerHTML = `
-          <button class="delete-btn" onclick="deleteMyList(event, '${list.id}')">삭제</button>
+          <button class="delete-btn" onclick="deleteList(event, '${list.id}')">삭제</button>
           <h3 class="card-title">${list.title}</h3>
           <div class="card-meta">📁 카테고리: ${list.category}</div>
-          <div style="font-size: 0.95rem; color: #888; border-top: 1px solid #333; padding-top: 15px;">
+          <div style="font-size: 0.9rem; color: #888; border-top: 1px solid #333; padding-top: 15px;">
             <span>👁️ ${list.views}회 조회</span>
           </div>
         `;
-
-        // 카드를 클릭하면 수정 화면(index.html)으로 이동
         card.onclick = (e) => {
-          // 삭제 버튼을 눌렀을 때는 이동하지 않도록 방어
           if(!e.target.classList.contains('delete-btn')) {
-            alert(`[${list.title}] 수정 화면으로 이동합니다!\n(나중에 index.html?id=${list.id} 로 연결됩니다)`);
+            alert(`[${list.title}] 수정 화면으로 이동합니다! (추후 연동)`);
           }
         };
-
         container.appendChild(card);
       });
     }
 
-    // 내 티어표 삭제 기능
-    window.deleteMyList = function(event, id) {
-      event.stopPropagation(); // 카드 클릭(이동) 이벤트가 같이 실행되는 것을 막아줌
-      
-      if(confirm("정말 이 티어표를 삭제하시겠습니까? 복구할 수 없습니다!")) {
-        // 임시 데이터에서 삭제하는 로직 (Firebase에서는 deleteDoc 사용)
-        myDatabase = myDatabase.filter(list => list.id !== id);
-        renderMyLists(); // 화면 다시 그리기
-        alert("삭제되었습니다.");
+    window.deleteList = function(e, id) {
+      e.stopPropagation(); // 카드 클릭 막기
+      if(confirm("정말 이 티어표를 삭제하시겠습니까?")) {
+        myDb = myDb.filter(l => l.id !== id);
+        renderMyLists();
       }
     };
 
-    // 페이지가 열리면 내 리스트를 화면에 그림
     window.onload = renderMyLists;
   </script>
 </body>
