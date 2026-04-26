@@ -11,8 +11,8 @@ body {
   margin: 0; 
   padding: 0; 
   font-family: 'Pretendard', sans-serif; 
-  /* 배경색 (#343434) */
-  background-color: #343434; 
+  /* ⭐ 배경색을 더 짙은 색으로 변경 (#262424) */
+  background-color: #262424; 
   color: #ffffff; 
   display: flex;
   flex-direction: column;
@@ -20,8 +20,8 @@ body {
 }
 
 .container { 
-  /* ⭐ 최대 너비를 1600px에서 1400px로 변경 */
-  max-width: 1400px; 
+  /* ⭐ 최대 너비를 다시 1200px로 변경 */
+  max-width: 1200px; 
   width: 95%;
   margin: 0 auto; 
   padding: 20px; 
