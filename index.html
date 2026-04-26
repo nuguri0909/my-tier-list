@@ -20,7 +20,6 @@
     .btn-add-tier { background: #e67e22; } .btn-add-tier:hover { background: #d35400; }
     .btn-download { background: #9b59b6; } .btn-download:hover { background: #8e44ad; }
     .btn-save-db { background: #2ecc71; } .btn-save-db:hover { background: #27ae60; }
-    /* 새 파일로 저장 버튼 스타일 추가 */
     .btn-save-as { background: #f39c12; display: none; } .btn-save-as:hover { background: #d68910; }
 
     .tier-board { display: flex; flex-direction: column; border: 2px solid #000; margin: 0 auto; max-width: 900px; background: #0f0f0f; border-radius: 8px; overflow: hidden; box-shadow: 0 8px 30px rgba(0,0,0,0.7); }
@@ -37,7 +36,10 @@
     .item img { width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
     .item-title { position: absolute; bottom: 0; left: 0; width: 100%; background: rgba(0,0,0,0.8); color: white; font-size: 11px; padding: 2px 0; text-align: center; display: none; pointer-events: none; }
 
-    #item-bank { display: flex; flex-wrap: wrap; margin: 30px auto; max-width: 900px; min-height: 150px; background: #1a1a1a; padding: 15px; border: 2px dashed #444; gap: 5px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+    /* 대기열 헤더 추가 */
+    .bank-header { max-width: 900px; margin: 40px auto 5px auto; text-align: left; font-weight: bold; font-size: 18px; color: #ddd; display: flex; align-items: center; gap: 10px; }
+    .bank-header span { font-size: 13px; color: #888; font-weight: normal; }
+    #item-bank { display: flex; flex-wrap: wrap; margin: 0 auto 30px auto; max-width: 900px; min-height: 150px; background: #1a1a1a; padding: 15px; border: 2px dashed #444; gap: 5px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
     
     #modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 10000; justify-content: center; align-items: center; }
     .modal-content { background: #1f1f1f; padding: 25px; border-radius: 12px; width: 320px; text-align: left; border: 1px solid #333; }
@@ -72,6 +74,9 @@
     
     <div class="tier-board" id="board"></div>
 
+    <div class="bank-header">
+      📥 대기열 <span>(아래 아이템을 드래그하여 위쪽 티어에 배치하세요)</span>
+    </div>
     <div id="item-bank" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
   </div>
 
@@ -96,7 +101,6 @@
 
     const visualStops = [0, 30, 60, 120, 185, 240, 285];
 
-    // --- IndexedDB ---
     const DB_NAME = "TierMakerDB";
     const STORE_NAME = "TierLists";
 
@@ -136,7 +140,6 @@
       });
     }
 
-    // --- 페이지 로드 ---
     window.onload = async function() {
       const urlParams = new URLSearchParams(window.location.search);
       const id = urlParams.get('id');
@@ -147,11 +150,8 @@
         
         if (listData) {
           document.getElementById('page-title').innerText = `✏️ 수정 중: ${listData.title}`;
-          
-          // 기존 문서 불러오기 성공 시 UI 변경
           document.getElementById('btn-save').innerText = '✅ 덮어쓰기 저장';
           document.getElementById('btn-save-as').style.display = 'inline-block';
-          
           rebuildBoard(listData);
           return;
         }
@@ -173,7 +173,6 @@
     function rebuildBoard(listData) {
       const board = document.getElementById('board');
       board.innerHTML = '';
-      
       listData.data.forEach(row => {
         const rowDiv = document.createElement('div');
         rowDiv.className = 'tier-row';
@@ -181,19 +180,14 @@
                             <div class="tier-items" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
                             <button class="delete-tier-btn" onclick="deleteTier(this)">X</button>`;
         const itemsContainer = rowDiv.querySelector('.tier-items');
-        
-        row.items.forEach(itemData => {
-          itemsContainer.appendChild(createItemElement(itemData));
-        });
+        row.items.forEach(itemData => { itemsContainer.appendChild(createItemElement(itemData)); });
         board.appendChild(rowDiv);
       });
 
       const bank = document.getElementById('item-bank');
       bank.innerHTML = '';
       if(listData.bank) {
-        listData.bank.forEach(itemData => {
-          bank.appendChild(createItemElement(itemData));
-        });
+        listData.bank.forEach(itemData => { bank.appendChild(createItemElement(itemData)); });
       }
       updateRowColors();
     }
@@ -202,42 +196,27 @@
       const div = document.createElement('div');
       div.className = 'item'; div.draggable = true; div.id = 'item-' + itemIdCounter++;
       div.ondragstart = drag; div.onclick = function() { openModal(this); };
-      
-      div.dataset.title = data.title || '';
-      div.dataset.desc = data.desc || '';
+      div.dataset.title = data.title || ''; div.dataset.desc = data.desc || '';
       div.title = (data.title ? "["+data.title+"]\n" : "") + (data.desc || '');
-
-      const img = document.createElement('img'); img.src = data.src;
-      div.appendChild(img);
-
+      const img = document.createElement('img'); img.src = data.src; div.appendChild(img);
       if(data.title) {
-        const tDiv = document.createElement('div');
-        tDiv.className = 'item-title'; tDiv.textContent = data.title; tDiv.style.display = 'block';
-        div.appendChild(tDiv);
+        const tDiv = document.createElement('div'); tDiv.className = 'item-title'; 
+        tDiv.textContent = data.title; tDiv.style.display = 'block'; div.appendChild(tDiv);
       }
       return div;
     }
 
-    // --- 드래그 앤 드롭 및 미리보기 ---
     function drag(ev) {
-      draggedItem = ev.target;
-      ev.dataTransfer.setData("text", ev.target.id);
-      draggedItem.classList.add('dragging');
-
-      ghostItem = draggedItem.cloneNode(true);
-      ghostItem.id = 'ghost-placeholder';
-      ghostItem.classList.remove('dragging');
-      ghostItem.style.opacity = '0.4';
-      ghostItem.style.border = '2px dashed #fff';
-      ghostItem.style.pointerEvents = 'none';
+      draggedItem = ev.target; ev.dataTransfer.setData("text", ev.target.id); draggedItem.classList.add('dragging');
+      ghostItem = draggedItem.cloneNode(true); ghostItem.id = 'ghost-placeholder';
+      ghostItem.classList.remove('dragging'); ghostItem.style.opacity = '0.4';
+      ghostItem.style.border = '2px dashed #fff'; ghostItem.style.pointerEvents = 'none';
     }
 
     function allowDrop(ev) {
       ev.preventDefault();
       const target = ev.target.closest('.tier-items, #item-bank');
-      if (target && ghostItem) {
-        if (ghostItem.parentElement !== target) { target.appendChild(ghostItem); }
-      }
+      if (target && ghostItem && ghostItem.parentElement !== target) { target.appendChild(ghostItem); }
     }
 
     function drop(ev) {
@@ -253,19 +232,13 @@
       if (draggedItem) { draggedItem.classList.remove('dragging'); draggedItem = null; }
     });
 
-    // --- UI 업데이트 ---
     function updateRowColors() {
-      const rows = document.querySelectorAll('.tier-row');
-      const total = rows.length;
-      if (total === 0) return;
+      const rows = document.querySelectorAll('.tier-row'); const total = rows.length; if (total === 0) return;
       rows.forEach((row, index) => {
-        const label = row.querySelector('.tier-label');
-        let hue = visualStops[0];
+        const label = row.querySelector('.tier-label'); let hue = visualStops[0];
         if (total > 1) {
-          const ratio = index / (total - 1);
-          const sectionProgress = ratio * (visualStops.length - 1);
-          const lowIndex = Math.floor(sectionProgress);
-          const highIndex = Math.ceil(sectionProgress);
+          const ratio = index / (total - 1); const sectionProgress = ratio * (visualStops.length - 1);
+          const lowIndex = Math.floor(sectionProgress); const highIndex = Math.ceil(sectionProgress);
           const interpolation = sectionProgress - lowIndex;
           hue = visualStops[lowIndex] + (visualStops[highIndex] - visualStops[lowIndex]) * interpolation;
         }
@@ -274,126 +247,77 @@
     }
 
     function addTier() {
-      const board = document.getElementById('board');
-      const row = document.createElement('div');
-      row.className = 'tier-row';
-      row.innerHTML = `<div class="tier-label" contenteditable="true">NEW</div>
-                       <div class="tier-items" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
-                       <button class="delete-tier-btn" onclick="deleteTier(this)">X</button>`;
-      board.appendChild(row);
-      updateRowColors();
+      const board = document.getElementById('board'); const row = document.createElement('div'); row.className = 'tier-row';
+      row.innerHTML = `<div class="tier-label" contenteditable="true">NEW</div><div class="tier-items" ondrop="drop(event)" ondragover="allowDrop(event)"></div><button class="delete-tier-btn" onclick="deleteTier(this)">X</button>`;
+      board.appendChild(row); updateRowColors();
     }
 
     function deleteTier(btn) {
       if(confirm("이 줄을 삭제할까요? (안에 있던 아이템은 보관함으로 이동)")) {
-        const row = btn.parentElement;
-        const items = row.querySelector('.tier-items');
+        const row = btn.parentElement; const items = row.querySelector('.tier-items');
         const bank = document.getElementById('item-bank');
         while(items.firstChild) bank.appendChild(items.firstChild);
-        row.remove();
-        updateRowColors();
+        row.remove(); updateRowColors();
       }
     }
 
-    // --- ⭐ 핵심: 저장 로직 분리 (덮어쓰기 vs 다른 이름으로 저장) ---
     async function saveData(isSaveAsNew) {
-      let listId = editingListId;
-      let title = "나의 새로운 티어표";
-
+      let listId = editingListId; let title = "나의 새로운 티어표";
       if (isSaveAsNew || !editingListId) {
-        // 상황 1: 완전 처음 저장하거나, '다른 이름으로 저장'을 눌렀을 때
         let defaultTitle = isSaveAsNew && editingListId ? (document.getElementById('page-title').innerText.replace('✏️ 수정 중: ', '') + " (복사본)") : "나의 새로운 티어표";
         title = prompt("티어표의 이름을 입력해주세요:", defaultTitle);
-        if (!title) return; // 취소 누르면 중단
-        listId = Date.now(); // 새로운 고유 ID 발급
+        if (!title) return; listId = Date.now();
       } else {
-        // 상황 2: 기존 파일을 '덮어쓰기' 할 때 (묻지도 따지지도 않고 바로 저장)
         title = document.getElementById('page-title').innerText.replace('✏️ 수정 중: ', '');
       }
 
-      // 화면에 있는 데이터 긁어오기
       const rowsData = [];
       document.querySelectorAll('.tier-row').forEach(row => {
         const labelText = row.querySelector('.tier-label').innerText;
         const color = row.querySelector('.tier-label').style.backgroundColor;
         const items = [];
         row.querySelectorAll('.item').forEach(itemDiv => {
-          items.push({
-            src: itemDiv.querySelector('img').src,
-            title: itemDiv.dataset.title || '',
-            desc: itemDiv.dataset.desc || ''
-          });
+          items.push({ src: itemDiv.querySelector('img').src, title: itemDiv.dataset.title || '', desc: itemDiv.dataset.desc || '' });
         });
         rowsData.push({ label: labelText, color: color, items: items });
       });
 
       const bankData = [];
       document.querySelectorAll('#item-bank .item').forEach(itemDiv => {
-        bankData.push({
-          src: itemDiv.querySelector('img').src,
-          title: itemDiv.dataset.title || '',
-          desc: itemDiv.dataset.desc || ''
-        });
+        bankData.push({ src: itemDiv.querySelector('img').src, title: itemDiv.dataset.title || '', desc: itemDiv.dataset.desc || '' });
       });
 
-      const newListData = {
-        id: listId,
-        title: title,
-        date: new Date().toLocaleDateString(),
-        data: rowsData,
-        bank: bankData
-      };
+      const newListData = { id: listId, title: title, date: new Date().toLocaleDateString(), data: rowsData, bank: bankData };
 
       try {
         await saveListToDB(newListData);
-        
-        // UI 상태 업데이트
-        editingListId = listId; 
-        document.getElementById('page-title').innerText = `✏️ 수정 중: ${title}`;
-        document.getElementById('btn-save').innerText = '✅ 덮어쓰기 저장';
-        document.getElementById('btn-save-as').style.display = 'inline-block'; // 이제부터는 다른이름 저장 활성화
-
-        if (!isSaveAsNew && editingListId !== listId) {
-            // 처음 저장할 때
-            alert("새로운 티어표가 대용량 DB에 저장되었습니다!");
-        } else if (!isSaveAsNew) {
-            // 덮어쓰기 성공
-            alert("현재 상태가 성공적으로 덮어쓰기(저장) 되었습니다! 💾");
-        } else {
-            // 다른 이름으로 저장 성공
-            alert("새로운 복사본으로 저장되었습니다!");
-        }
-      } catch (err) {
-        alert("저장 중 오류가 발생했습니다.");
-        console.error(err);
-      }
+        editingListId = listId; document.getElementById('page-title').innerText = `✏️ 수정 중: ${title}`;
+        document.getElementById('btn-save').innerText = '✅ 덮어쓰기 저장'; document.getElementById('btn-save-as').style.display = 'inline-block';
+        if (!isSaveAsNew && editingListId !== listId) { alert("새로운 티어표가 대용량 DB에 저장되었습니다!"); } 
+        else if (!isSaveAsNew) { alert("현재 상태가 성공적으로 덮어쓰기(저장) 되었습니다! 💾"); } 
+        else { alert("새로운 복사본으로 저장되었습니다!"); }
+      } catch (err) { alert("저장 중 오류가 발생했습니다."); console.error(err); }
     }
 
     document.getElementById('image-upload').addEventListener('change', function(e) {
       for (const file of e.target.files) {
         if (!file.type.startsWith('image/')) continue;
         const reader = new FileReader();
-        reader.onload = function(event) {
-          document.getElementById('item-bank').appendChild(createItemElement({src: event.target.result, title: '', desc: ''}));
-        };
+        reader.onload = function(event) { document.getElementById('item-bank').appendChild(createItemElement({src: event.target.result, title: '', desc: ''})); };
         reader.readAsDataURL(file);
       }
       this.value = ''; 
     });
 
     function openModal(itemDiv) {
-      currentEditItem = itemDiv;
-      document.getElementById('edit-title').value = itemDiv.dataset.title || '';
-      document.getElementById('edit-desc').value = itemDiv.dataset.desc || '';
-      document.getElementById('modal-overlay').style.display = 'flex';
+      currentEditItem = itemDiv; document.getElementById('edit-title').value = itemDiv.dataset.title || '';
+      document.getElementById('edit-desc').value = itemDiv.dataset.desc || ''; document.getElementById('modal-overlay').style.display = 'flex';
     }
     function closeModal() { document.getElementById('modal-overlay').style.display = 'none'; }
     function saveModal() {
       if (currentEditItem) {
-        const t = document.getElementById('edit-title').value;
-        const d = document.getElementById('edit-desc').value;
-        currentEditItem.dataset.title = t; currentEditItem.dataset.desc = d;
-        currentEditItem.title = (t ? "["+t+"]\n" : "") + d;
+        const t = document.getElementById('edit-title').value; const d = document.getElementById('edit-desc').value;
+        currentEditItem.dataset.title = t; currentEditItem.dataset.desc = d; currentEditItem.title = (t ? "["+t+"]\n" : "") + d;
         let tDiv = currentEditItem.querySelector('.item-title');
         if (!tDiv) { tDiv = document.createElement('div'); tDiv.className = 'item-title'; currentEditItem.appendChild(tDiv); }
         tDiv.textContent = t; tDiv.style.display = t ? 'block' : 'none';
