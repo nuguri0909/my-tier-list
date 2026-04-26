@@ -13,10 +13,13 @@
       <div class="nav-links">
         <a href="maker.html">티어 만들기</a>
         <a href="board.html">티어 게시판</a>
-      </div>
+        <a href="mylist.html">내 보관함</a> </div>
     </div>
     <div class="user-menu">
-      <span id="user-name-display" class="user-name"></span>
+      <span id="user-name-display" class="user-name">로그인해주세요</span>
+      <button class="btn btn-small" id="btn-login" onclick="window.login()">구글 로그인</button>
+      <button class="btn btn-small" id="btn-nickname" style="display:none;" onclick="window.setNickname()">닉네임 변경</button>
+      <button class="btn btn-small" id="btn-logout" style="display:none;" onclick="window.logout()">로그아웃</button>
     </div>
   </nav>
 
