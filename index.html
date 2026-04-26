@@ -7,18 +7,26 @@
 </head>
 <body>
   <nav class="navbar">
-    <a href="index.html" class="nav-logo">TierMaker</a>
-    <div class="nav-links">
-      <a href="index.html">티어 만들기</a>
-      <a href="board.html">티어 게시판</a>
-      <a href="mylist.html">내 보관함</a>
+    <div class="nav-left">
+      <a href="index.html" class="nav-logo">TierMaker</a>
+      <div class="nav-links">
+        <a href="index.html">티어 만들기</a>
+        <a href="board.html">티어 게시판</a>
+        <a href="mylist.html">내 보관함</a>
+      </div>
+    </div>
+    <div class="user-menu">
+      <span id="user-name-display" class="user-name">로그인해주세요</span>
+      <button class="btn btn-small" id="btn-nickname" style="display:none;" onclick="window.setNickname()">닉네임 설정</button>
+      <button class="btn btn-small btn-save" id="btn-login" onclick="window.login()">구글 로그인</button>
+      <button class="btn btn-small" id="btn-logout" style="display:none;" onclick="window.logout()">로그아웃</button>
     </div>
   </nav>
 
   <div class="header">
     <h1>🏆 나만의 티어 메이커</h1>
     <div class="controls">
-      <select id="category-select" class="control-input">
+      <select id="category-select" class="control-input" style="width:auto; margin:0;">
         <option value="기타">카테고리: 기타</option>
         <option value="영화">영화</option>
         <option value="애니메이션">애니메이션</option>
@@ -36,10 +44,13 @@
     <div class="sidebar">
       <h3>아이템 대기열</h3>
       <div id="item-bank" class="item-bank" ondrop="window.drop(event)" ondragover="window.allowDrop(event)"></div>
+      
       <div class="add-item-box">
         <h4>새 이미지 추가</h4>
+        <input type="file" id="img-file" class="control-input" accept="image/*" style="width:100%; margin-bottom:5px;">
+        <p style="font-size:11px; color:#888; text-align:center; margin:2px 0;">또는 URL 입력</p>
         <input type="text" id="img-url" class="control-input" placeholder="이미지 URL" style="width:100%; margin-bottom:5px;">
-        <input type="text" id="img-title" class="control-input" placeholder="이름(선택)" style="width:100%; margin-bottom:5px;">
+        <input type="text" id="img-title" class="control-input" placeholder="아이템 이름(선택)" style="width:100%; margin-bottom:5px;">
         <button class="btn btn-save" style="width:100%;" onclick="window.addNewItem()">추가하기</button>
       </div>
     </div>
