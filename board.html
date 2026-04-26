@@ -46,7 +46,17 @@
     <h1>🌍 티어 게시판</h1>
     <p style="color:#aaa;">다른 사람들이 만든 티어표를 구경하고, 항목을 눌러 설명을 확인하세요!</p>
     
-    <div style="max-width: 600px; margin: 20px auto 0; display: flex; gap: 10px;">
+    <div style="max-width: 700px; margin: 20px auto 0; display: flex; gap: 10px;">
+      <select id="filter-category" class="control-input" style="width: 130px;" onchange="window.executeSearch()">
+        <option value="all">전체 카테고리</option>
+        <option value="애니">애니</option>
+        <option value="게임">게임</option>
+        <option value="영화">영화</option>
+        <option value="음악">음악</option>
+        <option value="만화">만화</option>
+        <option value="소설">소설</option>
+        <option value="기타">기타</option>
+      </select>
       <select id="search-type" class="control-input" style="width: 100px;">
         <option value="all">전체</option>
         <option value="title">제목</option>
@@ -104,9 +114,10 @@
   </div>
 
   <script type="module">
+    // ⭐ deleteDoc이 추가로 import 되었습니다.
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-    import { getFirestore, collection, getDocs, doc, getDoc, addDoc, query, orderBy, serverTimestamp, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getFirestore, collection, getDocs, doc, getDoc, addDoc, deleteDoc, query, orderBy, serverTimestamp, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAwVjpUANfil947xb0bjKALw2uuGvZYQcs",
@@ -122,6 +133,9 @@
     const db = getFirestore(app);
     const provider = new GoogleAuthProvider();
 
+    // 👑 [관리자 이메일 설정] 본인의 구글 로그인 이메일을 넣어주세요. (여러 명일 경우 쉼표로 구분)
+    const ADMIN_EMAILS = ["본인구글이메일@gmail.com"]; 
+
     window.currentUser = null;
     let currentPostId = null; 
     let commentsUnsubscribe = null; 
@@ -131,10 +145,13 @@
     window.logout = () => signOut(auth).then(() => alert("로그아웃 되었습니다."));
     
     onAuthStateChanged(auth, (user) => {
+      const prevUser = window.currentUser;
       window.currentUser = user;
       const nm = document.getElementById('user-name-display');
+      
       if(user) {
         nm.innerText = (user.displayName || "익명") + "님";
+        if(ADMIN_EMAILS.includes(user.email)) nm.innerText += " (👑관리자)";
         document.getElementById('btn-login').style.display = 'none';
         document.getElementById('btn-logout').style.display = 'inline-block';
         document.getElementById('comment-auth-guard').style.display = 'none';
@@ -145,6 +162,11 @@
         document.getElementById('btn-logout').style.display = 'none';
         document.getElementById('comment-auth-guard').style.display = 'block';
         document.getElementById('comment-input-area').style.display = 'none';
+      }
+      
+      // 유저 상태가 변하면 게시판을 다시 그려서 삭제 버튼 활성화/비활성화 반영
+      if(prevUser !== user && allBoardData.length > 0) {
+        window.executeSearch();
       }
     });
 
@@ -158,7 +180,7 @@
         snapshot.forEach(docSnap => {
           allBoardData.push({ id: docSnap.id, ...docSnap.data() });
         });
-        renderBoard(allBoardData);
+        window.executeSearch(); // 최초 로드 시에도 필터 적용하여 렌더링
       } catch (error) {
         container.innerHTML = `<p style="color:red; text-align:center;">에러 발생: ${error.message}</p>`;
       }
@@ -174,17 +196,26 @@
 
       dataList.forEach(data => {
         const dateStr = data.createdAt && data.createdAt.toDate ? data.createdAt.toDate().toLocaleDateString() : "최근";
+        
+        // 👑 관리자 또는 본인 게시글 삭제 권한 체크
+        const isAdmin = window.currentUser && ADMIN_EMAILS.includes(window.currentUser.email);
+        const isAuthor = window.currentUser && window.currentUser.uid === data.authorId;
+        const canDeletePost = isAuthor || isAdmin;
+        
+        const deleteBtnHtml = canDeletePost ? 
+          `<button class="btn" style="background:#e74c3c; width:100%; margin-bottom:5px;" onclick="window.deletePost('${data.id}')">🗑️ 이 게시글 삭제하기</button>` : '';
+
         const card = document.createElement('div');
         card.className = 'tier-card';
-        
-        // 작성자 클릭 시 필터링 함수(searchByAuthor) 실행
         card.innerHTML = `
           <div class="card-title">${data.title || data.category + " 티어표"}</div>
           <div class="card-meta">
+            <span style="color:#2ecc71; font-weight:bold;">[${data.category || "기타"}]</span> | 
             작성자: <span style="cursor:pointer; color:#3498db; text-decoration:underline;" onclick="window.searchByAuthor('${data.authorName}')">${data.authorName}</span> 
             | ${dateStr}
           </div>
           <div class="card-actions">
+            ${deleteBtnHtml}
             <button class="btn btn-save" style="width:100%; margin-bottom:5px;" onclick="window.openCommentModal('${data.id}', '${data.authorName}')">💬 구경 및 댓글 보기</button>
             <div style="display:flex; gap:5px;">
               <button class="btn btn-small" style="flex:1;" onclick="location.href='index.html?load=${data.id}&mode=v1'">🔄 V1 (티어 유지)</button>
@@ -196,19 +227,28 @@
       });
     }
 
-    // 검색 기능 처리
+    // ⭐ 검색 및 카테고리 필터링 기능 통합
     window.executeSearch = () => {
+      const catFilter = document.getElementById('filter-category').value;
       const type = document.getElementById('search-type').value;
       const keyword = document.getElementById('search-input').value.toLowerCase().trim();
-      if(!keyword) return renderBoard(allBoardData);
 
       const filtered = allBoardData.filter(data => {
+        // 카테고리 체크 (all이면 모두 통과)
+        const matchCategory = (catFilter === 'all') || (data.category === catFilter);
+        
         const titleCat = (data.title || "") + " " + (data.category || "");
         const author = data.authorName || "";
         
-        if(type === 'title') return titleCat.toLowerCase().includes(keyword);
-        if(type === 'author') return author.toLowerCase().includes(keyword);
-        return titleCat.toLowerCase().includes(keyword) || author.toLowerCase().includes(keyword);
+        // 검색어 체크
+        let matchKeyword = true;
+        if(keyword) {
+          if(type === 'title') matchKeyword = titleCat.toLowerCase().includes(keyword);
+          else if(type === 'author') matchKeyword = author.toLowerCase().includes(keyword);
+          else matchKeyword = titleCat.toLowerCase().includes(keyword) || author.toLowerCase().includes(keyword);
+        }
+        
+        return matchCategory && matchKeyword;
       });
       renderBoard(filtered);
     };
@@ -216,14 +256,28 @@
     window.resetSearch = () => {
       document.getElementById('search-input').value = '';
       document.getElementById('search-type').value = 'all';
+      document.getElementById('filter-category').value = 'all';
       renderBoard(allBoardData);
     };
 
     window.searchByAuthor = (authorName) => {
       document.getElementById('search-type').value = 'author';
       document.getElementById('search-input').value = authorName;
+      document.getElementById('filter-category').value = 'all';
       window.executeSearch();
       window.scrollTo(0, 0); 
+    };
+
+    // 🗑️ 게시글 삭제 기능
+    window.deletePost = async (postId) => {
+      if(!confirm("이 게시글을 정말 삭제하시겠습니까?\n(한 번 삭제하면 복구할 수 없습니다.)")) return;
+      try {
+        await deleteDoc(doc(db, "tierLists", postId));
+        alert("게시글이 삭제되었습니다.");
+        loadBoard(); // 목록 새로고침
+      } catch(e) {
+        alert("삭제 실패: " + e.message);
+      }
     };
 
     window.openCommentModal = async (postId, authorName) => {
@@ -241,7 +295,6 @@
         if(docSnap.exists()) {
           const data = docSnap.data();
           viewer.innerHTML = ''; 
-          
           catDiv.innerText = `🏷️ 카테고리: ${data.category || '지정되지 않음'}`;
           
           if(data.tiers && data.tiers.length > 0) {
@@ -249,7 +302,6 @@
               let itemsHtml = tier.items.map(it => {
                 const encTitle = encodeURIComponent(it.title || "");
                 const encDesc = encodeURIComponent(it.desc || "");
-                // 아이템 클릭 시 상세 조회 함수 실행
                 return `
                   <div class="item" style="cursor:pointer; transition: transform 0.1s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'" onclick="window.openReadOnlyItem('${it.src}', '${encTitle}', '${encDesc}')">
                     <img src="${it.src}">
@@ -311,23 +363,34 @@
       if(commentsUnsubscribe) { commentsUnsubscribe(); commentsUnsubscribe = null; }
     };
 
-    // 아이템 상세 조회 처리
     window.openReadOnlyItem = (src, encTitle, encDesc) => {
       document.getElementById('ro-modal-img').src = src;
       const title = decodeURIComponent(encTitle);
       document.getElementById('ro-modal-title').innerText = title ? title : "이름 없음";
       const desc = decodeURIComponent(encDesc);
       document.getElementById('ro-modal-desc').innerText = desc ? desc : "상세 설명이 등록되지 않았습니다.";
-      
       document.getElementById('ro-item-modal').style.display = 'flex';
     };
 
+    // ⭐ 댓글 생성 및 삭제 버튼 추가
     function createCommentHTML(data, isReply) {
       const div = document.createElement('div');
       div.className = isReply ? 'comment-item reply-item' : 'comment-item';
       const dateStr = data.createdAt ? data.createdAt.toDate().toLocaleString() : "방금 전";
       
-      let html = `<div><span class="comment-author">${data.authorName}</span><span class="comment-date">${dateStr}</span></div><div class="comment-text">${data.text}</div>`;
+      // 권한 체크: 관리자이거나 내 댓글이면 삭제 가능
+      const isAdmin = window.currentUser && ADMIN_EMAILS.includes(window.currentUser.email);
+      const isAuthor = window.currentUser && window.currentUser.uid === data.authorId;
+      const canDelete = isAuthor || isAdmin;
+
+      let html = `
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div><span class="comment-author">${data.authorName}</span><span class="comment-date">${dateStr}</span></div>
+          ${canDelete ? `<button class="btn-delete-comment" onclick="window.deleteComment('${data.id}')">삭제</button>` : ''}
+        </div>
+        <div class="comment-text">${data.text}</div>
+      `;
+      
       if (!isReply && window.currentUser) {
         html += `<button class="btn-reply-open" onclick="window.showReplyInput('${data.id}')">↳ 답글 달기</button>
           <div id="reply-box-${data.id}" class="reply-input-box" style="display:none;">
@@ -339,6 +402,17 @@
       div.innerHTML = html;
       return div;
     }
+
+    // 🗑️ 댓글 삭제 기능
+    window.deleteComment = async (commentId) => {
+      if(!confirm("정말 이 댓글을 삭제하시겠습니까?")) return;
+      try {
+        await deleteDoc(doc(db, "tierLists", currentPostId, "comments", commentId));
+        // 삭제 성공 시 실시간 리스너(onSnapshot)가 자동으로 화면을 갱신해 줍니다.
+      } catch(e) {
+        alert("댓글 삭제 실패: " + e.message);
+      }
+    };
 
     window.showReplyInput = (commentId) => {
       document.getElementById(`reply-box-${commentId}`).style.display = 'flex';
