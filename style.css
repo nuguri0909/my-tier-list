@@ -11,14 +11,21 @@ body {
   margin: 0; 
   padding: 0; 
   font-family: 'Pretendard', sans-serif; 
-  background-color: #121212; 
+  /* ⭐ 배경색을 요청하신 어두운 회색으로 변경 */
+  background-color: #495057; 
   color: #ffffff; 
+  /* ⭐ 푸터를 하단에 고정하기 위한 flex 설정 추가 */
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
 }
 
 .container { 
   max-width: 1200px; 
   margin: 0 auto; 
   padding: 20px; 
+  /* ⭐ 남은 공간을 모두 차지하여 푸터를 맨 아래로 밀어냄 */
+  flex: 1; 
 }
 
 /* ==========================================
@@ -287,3 +294,33 @@ body {
 .btn-delete-comment:hover { text-decoration: underline; }
 .my-list-container { display: flex; flex-direction: column; gap: 15px; }
 .list-item { background: #1a1a1a; border: 1px solid #333; padding: 20px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; }
+
+/* ==========================================
+   ⭐ 신규 추가: 최하단 Footer 영역
+   ========================================== */
+.site-footer {
+  background-color: #212529; /* 배경보다 살짝 더 어두운 색으로 구분감 부여 */
+  text-align: center;
+  padding: 30px 20px;
+  margin-top: 50px;
+  border-top: 1px solid #343a40;
+}
+.site-footer-links {
+  margin-bottom: 15px;
+}
+.site-footer-links a {
+  color: #adb5bd;
+  text-decoration: none;
+  margin: 0 10px;
+  font-size: 0.95rem;
+  transition: color 0.2s;
+}
+.site-footer-links a:hover {
+  color: #3498db;
+  text-decoration: underline;
+}
+.site-footer-info {
+  color: #868e96;
+  font-size: 0.85rem;
+  line-height: 1.6;
+}
