@@ -2,9 +2,94 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>나만의 티어 메이커</title>
+  <title>MyTierList - 나만의 티어 메이커</title>
   <link rel="stylesheet" href="style.css">
+  <style>
+    /* 홈 화면 전용 세로형 3열 카드 그리드 */
+    .home-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      max-width: 1000px;
+      margin: 0 auto 40px auto;
+    }
+    @media (max-width: 768px) {
+      .home-grid { grid-template-columns: 1fr; }
+    }
+    .home-tier-card {
+      background: #1a1a24;
+      border: 1px solid #2e2e3a;
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      height: 380px;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .home-tier-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.6);
+    }
+    .home-tier-card-img {
+      height: 50%;
+      background: #111118;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    .home-tier-card-img img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .home-tier-card-info {
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      flex-grow: 1;
+      justify-content: space-between;
+    }
+    .home-card-title {
+      font-size: 1.3rem;
+      font-weight: bold;
+      color: #ffffff;
+      margin: 0 0 10px 0;
+      word-break: keep-all;
+    }
+    .home-card-desc {
+      font-size: 0.9rem;
+      color: #aaaaaa;
+      line-height: 1.5;
+      margin-bottom: 15px;
+    }
+    .home-card-btn {
+      background: #2a2a36;
+      color: #dddddd;
+      border: 1px solid #3a3a4a;
+      padding: 12px;
+      border-radius: 8px;
+      text-align: center;
+      cursor: pointer;
+      font-size: 0.95rem;
+      font-weight: bold;
+      transition: 0.2s;
+      margin-top: auto;
+    }
+    .home-card-btn:hover {
+      background: #3f3f50;
+      color: #ffffff;
+      border-color: #555566;
+    }
+    .section-title {
+      max-width: 1000px;
+      margin: 40px auto 20px auto;
+      text-align: left;
+      padding-left: 10px;
+      color: #fff;
+    }
+  </style>
 </head>
 <body>
   <nav class="navbar">
@@ -16,32 +101,149 @@
         <a href="mylist.html">내 보관함</a>
       </div>
     </div>
-    <div class="user-menu">
-      <span id="user-name-display" class="user-name">로그인해주세요</span>
-      <button class="btn btn-small" id="btn-login" onclick="window.login()">구글 로그인</button>
-      <button class="btn btn-small" id="btn-nickname" style="display:none;" onclick="window.setNickname()">닉네임 변경</button>
-      <button class="btn btn-small" id="btn-logout" style="display:none;" onclick="window.logout()">로그아웃</button>
-    </div>
   </nav>
 
-  <div class="hero-section">
-    <div class="temp-logo">MTL</div>
-    <h1 class="hero-title">당신의 취향을 <span>티어리스트</span>로 증명하세요</h1>
-    <p class="hero-subtitle">게임, 음식, 영화 무엇이든 좋습니다. 세상의 모든 것을 평가해 보세요.</p>
-    <button class="btn hero-btn" onclick="location.href='maker.html'">새 티어 만들기 🚀</button>
+  <div class="header" style="text-align: center; padding: 50px 20px;">
+    <h1>나만의 티어표를 만들어보세요!</h1>
+    <p style="color:#aaa; font-size: 1.1rem;">쉽고 간편하게 아이템을 분류하고 사람들과 공유하세요.</p>
+    <br>
+    <button class="btn btn-save" style="font-size: 1.2rem; padding: 15px 30px;" onclick="location.href='maker.html'">새 티어 만들기</button>
   </div>
 
-  <div class="container">
-    <section>
-      <h2>🔥 주간 인기 티어리스트</h2>
-      <div id="popular-grid" class="tier-grid"></div>
-    </section>
+  <h2 class="section-title">🔥 주간 인기 티어리스트</h2>
+  <div id="popular-grid"></div>
 
-    <section style="margin-top: 40px;">
-      <h2>✨ 방금 막 올라온 티어리스트</h2>
-      <div id="recent-grid" class="tier-grid"></div>
-    </section>
-  </div>
+  <h2 class="section-title">🕒 방금 올라온 티어리스트</h2>
+  <div id="recent-grid"></div>
+
+  <div id="random-category-container"></div>
+
+  <script type="module">
+    import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getFirestore, collection, query, orderBy, getDocs, limit, where } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAwVjpUANfil947xb0bjKALw2uuGvZYQcs",
+      authDomain: "mytierlist-70989.firebaseapp.com",
+      projectId: "mytierlist-70989",
+      storageBucket: "mytierlist-70989.firebasestorage.app",
+      messagingSenderId: "13881580770",
+      appId: "1:13881580770:web:6f7f9148c4bf5f95add2bb"
+    };
+
+    const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+    const db = getFirestore(app);
+
+    // 보유하신 카테고리 목록을 모두 적어주세요.
+    const ALL_CATEGORIES = ["애니", "게임", "영화", "음악", "만화", "소설", "기타"];
+
+    function timeAgo(timestamp) {
+      if (!timestamp) return '알 수 없음';
+      const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+      const now = new Date();
+      const diffInSeconds = Math.floor((now - date) / 1000);
+      if (diffInSeconds < 60) return '방금 전';
+      if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}분 전`;
+      if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}시간 전`;
+      return `${Math.floor(diffInSeconds / 86400)}일 전`;
+    }
+
+    function renderCards(posts, containerId) {
+      const container = document.getElementById(containerId);
+      if (!container) return;
+      container.innerHTML = ''; 
+      container.className = 'home-grid';
+
+      if (posts.length === 0) {
+        container.innerHTML = '<p style="color: #aaa; padding: 20px; grid-column: 1 / -1; text-align: center;">아직 작성된 티어리스트가 없습니다.</p>';
+        return;
+      }
+
+      posts.forEach(post => {
+        const thumbnailHtml = post.thumbnailUrl 
+          ? `<img src="${post.thumbnailUrl}" alt="썸네일">` 
+          : `<div style="color:#666; font-size: 0.9rem;">(이미지 없음)</div>`;
+
+        const cardHtml = `
+          <div class="home-tier-card">
+            <div class="home-tier-card-img">${thumbnailHtml}</div>
+            <div class="home-tier-card-info">
+              <div>
+                <h3 class="home-card-title">${post.title || '무제 티어표'}</h3>
+                <div class="home-card-desc">
+                  ${post.authorName || '익명'} 님의 티어리스트<br>
+                  ❤️ ${post.likes || 0} &nbsp; 👁️ ${post.views || 0} &nbsp;·&nbsp; ${timeAgo(post.createdAt)}
+                </div>
+              </div>
+              <div class="home-card-btn" onclick="location.href='board.html?id=${post.id}'">
+                티어리스트 보기
+              </div>
+            </div>
+          </div>
+        `;
+        container.insertAdjacentHTML('beforeend', cardHtml);
+      });
+    }
+
+    async function loadHomePosts() {
+      try {
+        const postsRef = collection(db, "tierLists"); 
+        
+        // 인기글 불러오기
+        const popularQuery = query(postsRef, orderBy("likes", "desc"), limit(3));
+        const popularSnapshot = await getDocs(popularQuery);
+        const popularPosts = popularSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        renderCards(popularPosts, "popular-grid");
+
+        // 최신글 불러오기
+        const recentQuery = query(postsRef, orderBy("createdAt", "desc"), limit(3));
+        const recentSnapshot = await getDocs(recentQuery);
+        const recentPosts = recentSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        renderCards(recentPosts, "recent-grid");
+
+      } catch (error) {
+        console.error("데이터를 불러오는 중 에러 발생:", error);
+      }
+    }
+
+    // ⭐ 랜덤 카테고리 2개 추천 로직
+    async function loadRandomCategorySections() {
+      // 카테고리 배열 무작위 섞기 후 2개 추출
+      const shuffled = ALL_CATEGORIES.sort(() => 0.5 - Math.random());
+      const selectedCategories = shuffled.slice(0, 2);
+
+      const container = document.getElementById("random-category-container");
+      if(!container) return;
+      container.innerHTML = ""; 
+
+      for (const cat of selectedCategories) {
+        const q = query(
+          collection(db, "tierLists"),
+          where("category", "==", cat),
+          orderBy("likes", "desc"),
+          limit(3)
+        );
+        
+        const snap = await getDocs(q);
+        const posts = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+        // 해당 카테고리에 글이 1개라도 있을 때만 표시
+        if (posts.length > 0) {
+          const sectionHtml = `
+            <h2 class="section-title">✨ 지금 뜨는 [${cat}] 티어리스트</h2>
+            <div id="grid-${cat}" class="home-grid"></div>
+          `;
+          container.insertAdjacentHTML('beforeend', sectionHtml);
+          renderCards(posts, `grid-${cat}`);
+        }
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      loadHomePosts();
+      loadRandomCategorySections();
+    });
+  </script>
 
   <footer class="site-footer">
     <div class="site-footer-links">
@@ -54,8 +256,5 @@
       <div style="margin-top: 5px;">문의: asy0009@naver.com</div>
     </div>
   </footer>
-
-  <script type="module" src="script.js"></script>
-  <script type="module" src="home.js"></script>
 </body>
 </html>
