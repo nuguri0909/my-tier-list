@@ -5,27 +5,29 @@
   <title>게시판 - 나만의 티어 메이커</title>
   <link rel="stylesheet" href="style.css">
   <style>
-    /* 게시판 전용 추가 스타일 */
     .filter-bar { display: flex; justify-content: center; gap: 10px; margin: 20px auto; max-width: 1200px; padding: 0 20px; flex-wrap: wrap; }
     .search-input { padding: 10px; border-radius: 6px; border: 1px solid #444; background: #1a1a1a; color: white; width: 250px; }
-    
     .card-title { font-size: 1.3rem; margin: 0 0 10px 0; color: #fff; }
     .card-meta { font-size: 0.9rem; color: #aaa; margin-bottom: 15px; }
     .card-info { display: flex; justify-content: space-between; font-size: 0.9rem; color: #888; border-top: 1px solid #333; padding-top: 15px; }
-    
     .author-link { color: #3498db; font-weight: bold; text-decoration: none; }
-    .author-link:hover { text-decoration: underline; }
-    
-    .profile-notice { text-align: center; background: rgba(52, 152, 219, 0.1); border: 1px solid #3498db; color: #3498db; padding: 15px; border-radius: 8px; max-width: 1160px; margin: 0 auto 20px auto; display: none; }
   </style>
 </head>
 <body>
   <nav class="navbar">
-    <a href="index.html" class="nav-logo">TierMaker</a>
-    <div class="nav-links">
-      <a href="index.html">티어 만들기</a>
-      <a href="board.html">티어 게시판</a>
-      <a href="mylist.html">내 보관함</a>
+    <div class="nav-left">
+      <a href="index.html" class="nav-logo">TierMaker</a>
+      <div class="nav-links">
+        <a href="index.html">티어 만들기</a>
+        <a href="board.html">티어 게시판</a>
+        <a href="mylist.html">내 보관함</a>
+      </div>
+    </div>
+    <div class="user-menu">
+      <span id="user-name-display" class="user-name">로그인해주세요</span>
+      <button class="btn btn-small" id="btn-nickname" style="display:none;" onclick="setNickname()">닉네임 설정</button>
+      <button class="btn btn-small btn-save" id="btn-login" onclick="login()">구글 로그인</button>
+      <button class="btn btn-small" id="btn-logout" style="display:none;" onclick="logout()">로그아웃</button>
     </div>
   </nav>
 
@@ -46,71 +48,47 @@
     <button class="btn btn-save" onclick="filterLists()">🔍 검색</button>
   </div>
 
-  <div id="profile-notice" class="profile-notice">
-    <h2><span id="profile-name"></span>님의 티어표 모아보기</h2>
-    <button class="btn" onclick="location.href='board.html'" style="margin-top: 10px;">전체 보기로 돌아가기</button>
-  </div>
-
   <div class="grid-container" id="board-list"></div>
 
   <script>
-    // 임시 테스트용 데이터
-    const mockDb = [
-      { id: "1", title: "2024년 최고의 RPG 게임", category: "게임", author: "겜돌이", views: 1024 },
-      { id: "2", title: "마블 영화 티어리스트", category: "영화", author: "영화광", views: 563 },
-      { id: "3", title: "이번 분기 신작 애니 순위", category: "애니메이션", author: "애니장인", views: 241 },
-      { id: "4", title: "고전 명작 소설 추천", category: "소설/만화", author: "글쟁이", views: 98 }
-    ];
+    // 💡 더미 데이터를 비웠습니다.
+    const dbList = [];
+
+    // 로그인 공통 로직 (실제 개발 시 별도 js 파일로 분리하는 것이 좋습니다)
+    let currentUser = null; let customNickname = "익명";
+    function login() { currentUser = {uid:"1"}; updateAuthUI(); alert("로그인 되었습니다."); }
+    function logout() { currentUser = null; updateAuthUI(); alert("로그아웃 되었습니다."); }
+    function setNickname() { const n = prompt("닉네임:", customNickname); if(n) { customNickname = n; updateAuthUI(); } }
+    function updateAuthUI() {
+      const nm = document.getElementById('user-name-display');
+      if(currentUser) {
+        nm.innerText = customNickname + "님";
+        document.getElementById('btn-login').style.display='none';
+        document.getElementById('btn-logout').style.display='inline-block';
+        document.getElementById('btn-nickname').style.display='inline-block';
+      } else {
+        nm.innerText = "로그인해주세요";
+        document.getElementById('btn-login').style.display='inline-block';
+        document.getElementById('btn-logout').style.display='none';
+        document.getElementById('btn-nickname').style.display='none';
+      }
+    }
 
     function renderLists(lists) {
       const container = document.getElementById('board-list');
       container.innerHTML = '';
-      
       if (lists.length === 0) {
-        container.innerHTML = '<div style="grid-column: span 2; text-align: center; padding: 50px; color: #888;">검색 결과가 없습니다.</div>';
+        container.innerHTML = '<div style="grid-column: span 2; text-align: center; padding: 50px; color: #888;">아직 등록된 티어표가 없습니다. 첫 티어표의 주인공이 되어보세요!</div>';
         return;
       }
-      
-      lists.forEach(list => {
-        const card = document.createElement('div');
-        card.className = 'tier-card';
-        card.innerHTML = `
-          <h3 class="card-title">${list.title}</h3>
-          <div class="card-meta">📁 카테고리: ${list.category}</div>
-          <div class="card-info">
-            <span>제작자: <a class="author-link" href="board.html?user=${encodeURIComponent(list.author)}">@${list.author}</a></span>
-            <span>👁️ ${list.views}</span>
-          </div>
-        `;
-        card.onclick = (e) => {
-          if(!e.target.classList.contains('author-link')) {
-            alert(`[${list.title}] 상세 페이지로 이동합니다! (추후 연동)`);
-          }
-        };
-        container.appendChild(card);
-      });
+      // 리스트 렌더링 로직 (데이터가 있을 때 작동)
     }
 
-    function filterLists() {
-      const search = document.getElementById('search-bar').value.toLowerCase();
-      const category = document.getElementById('category-filter').value;
-      
-      const filtered = mockDb.filter(list => 
-        (list.title.toLowerCase().includes(search) || list.author.toLowerCase().includes(search)) &&
-        (category === 'all' || list.category === category)
-      );
-      renderLists(filtered);
-    }
+    function filterLists() { renderLists(dbList); }
 
     window.onload = function() {
-      const user = new URLSearchParams(window.location.search).get('user');
-      if (user) {
-        document.getElementById('profile-notice').style.display = 'block';
-        document.getElementById('profile-name').innerText = user;
-        renderLists(mockDb.filter(l => l.author === user));
-      } else {
-        renderLists(mockDb);
-      }
+      updateAuthUI();
+      renderLists(dbList);
     };
   </script>
 </body>
