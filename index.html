@@ -70,18 +70,18 @@
             
             <label style="font-weight: bold; color: #ccc; margin-top: 15px;">2. 이미지 등록 <span style="color: #e74c3c; font-size: 0.85rem; font-weight: normal;">(둘 중 하나 필수)</span></label>
             
-            <div style="display: flex; gap: 15px; align-items: center; background: #222; padding: 15px; border-radius: 8px; border: 1px dashed #555;">
+            <div style="display: flex; flex-direction: column; gap: 10px; align-items: stretch; background: #222; padding: 15px; border-radius: 8px; border: 1px dashed #555;">
               
-              <div style="flex: 1; display: flex; flex-direction: column; gap: 8px;">
+              <div style="display: flex; flex-direction: column; gap: 8px;">
                 <span style="font-size: 0.9rem; color: #aaa;">방법 A. 웹 이미지 주소</span>
                 <input type="text" id="img-url" class="control-input" placeholder="https://...">
               </div>
               
-              <div style="font-weight: 900; color: #666; font-size: 1.2rem;">OR</div>
+              <div style="font-weight: 900; color: #666; font-size: 1.2rem; text-align: center; margin: 5px 0;">OR</div>
               
-              <div style="flex: 1; display: flex; flex-direction: column; gap: 8px;">
+              <div style="display: flex; flex-direction: column; gap: 8px;">
                 <span style="font-size: 0.9rem; color: #aaa;">방법 B. 내 PC/폰 파일</span>
-                <input type="file" id="img-file" class="control-input" accept="image/*" style="padding: 7px;">
+                <input type="file" id="img-file" class="control-input" accept="image/*" style="padding: 7px; width: 100%; box-sizing: border-box;">
               </div>
               
             </div>
@@ -89,7 +89,7 @@
             <button class="btn btn-save" style="margin-top: 15px; padding: 12px; font-size: 1.1rem;" onclick="window.addNewItem()">추가하기</button>
           </div>
         </div>
-        </div>
+      </div>
     </div>
   </div>
 
