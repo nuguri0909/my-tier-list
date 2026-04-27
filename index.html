@@ -19,43 +19,20 @@
     .wide-banner-btn:hover { background: #2980b9; transform: translateY(-2px); }
     .wide-banner-img { width: 35%; height: 180px; background: #1a1a24; border: 1px dashed #555; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #666; overflow: hidden; }
 
-    /* ⭐ 2번 요청: 좌우 5개 배치 고정 */
-    .home-grid {
-      display: grid;
-      grid-template-columns: repeat(5, 1fr) !important;
-      gap: 15px;
-      max-width: 1200px !important;
-      margin: 0 auto 40px auto;
-      padding: 0 20px;
-      box-sizing: border-box;
-    }
-    .home-section-title { max-width: 1200px !important; margin: 40px auto 20px auto; text-align: left !important; }
-
-    @media (max-width: 1024px) { .home-grid { grid-template-columns: repeat(3, 1fr) !important; } }
-    @media (max-width: 768px) { .home-grid { grid-template-columns: 1fr !important; } .wide-banner-card { flex-direction: column; padding: 20px; } }
-
-    /* ⭐ 1번 요청: 로그인 버튼 디자인 */
-    .user-menu { display: flex; align-items: center; gap: 15px; margin-left: auto; }
-    .user-name { color: #fff; font-weight: bold; font-size: 0.95rem; }
-    .login-btn-header { background: #3498db; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; }
-    .login-btn-header:hover { background: #2980b9; }
-    .logout-btn-header { background: #e74c3c !important; }
+    @media (max-width: 768px) { .wide-banner-card { flex-direction: column; padding: 20px; } .wide-banner-img { width: 100%; margin-top: 20px; } .wide-banner-content { max-width: 100%; text-align: center; } }
   </style>
 </head>
 <body>
   <nav class="navbar">
-    <div class="nav-left" style="display: flex; width: 100%; align-items: center;">
+    <div class="nav-left" style="display: flex; align-items: center;">
       <a href="index.html" class="nav-logo">MyTierList</a>
       <div class="nav-links">
         <a href="maker.html">티어 만들기</a>
         <a href="board.html">티어 게시판</a>
         <a href="mylist.html">내 보관함</a>
       </div>
-      <div class="user-menu" id="user-menu">
-        <span id="user-info" class="user-name"></span>
-        <button id="login-btn" class="login-btn-header">Google 로그인</button>
-      </div>
     </div>
+    <div class="user-menu"></div>
   </nav>
 
   <div class="container">
@@ -67,27 +44,27 @@
         <div class="wide-banner-content">
           <h2 class="wide-banner-title">세상의 모든 것을 줄 세우다</h2>
           <p class="wide-banner-desc">게임, 애니메이션, 음식 등 어떤 주제든 쉽고 빠르게 티어표를 제작해 보세요.</p>
-          <button class="wide-banner-btn" onclick="location.href='maker.html'">✨ 새 티어 만들기</button>
+          <button class="wide-banner-btn" onclick="location.href='maker.html'">새 티어 만들기</button>
         </div>
         <div class="wide-banner-img" id="dynamic-banner"><span>이미지 로딩중...</span></div>
       </div>
     </div>
 
-    <h2 class="home-section-title"><span style="border-left: 5px solid #e74c3c; padding-left: 15px;">🔥 주간 인기 티어리스트</span></h2>
+    <h2 class="home-section-title"><span style="border-left: 5px solid #e74c3c; padding-left: 15px;">주간 인기 티어리스트</span></h2>
     <div id="popular-grid"></div>
 
-    <h2 class="home-section-title"><span style="border-left: 5px solid #2ecc71; padding-left: 15px;">🕒 방금 올라온 티어리스트</span></h2>
+    <h2 class="home-section-title"><span style="border-left: 5px solid #2ecc71; padding-left: 15px;">방금 올라온 티어리스트</span></h2>
     <div id="recent-grid"></div>
 
     <div id="random-category-container"></div>
   </div>
 
+  <script type="module" src="script.js"></script>
+
   <script type="module">
     import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getFirestore, collection, query, orderBy, getDocs, limit, where, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-    import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-    // ⚠️ 본인의 Firebase 설정값을 사용하세요
     const firebaseConfig = {
       apiKey: "AIzaSyAwVjpUANfil947xb0bjKALw2uuGvZYQcs",
       authDomain: "mytierlist-70989.firebaseapp.com",
@@ -99,28 +76,6 @@
 
     const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
     const db = getFirestore(app);
-    const auth = getAuth(app);
-
-    // 로그인 상태 처리
-    const loginBtn = document.getElementById("login-btn");
-    const userInfo = document.getElementById("user-info");
-
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
-        userInfo.textContent = `${user.displayName}님`;
-        loginBtn.textContent = "로그아웃";
-        loginBtn.classList.add("logout-btn-header");
-        loginBtn.onclick = () => signOut(auth);
-      } else {
-        userInfo.textContent = "";
-        loginBtn.textContent = "Google 로그인";
-        loginBtn.classList.remove("logout-btn-header");
-        loginBtn.onclick = () => {
-          const provider = new GoogleAuthProvider();
-          signInWithPopup(auth, provider);
-        };
-      }
-    });
 
     // 배너 로드
     async function loadBannerImage() {
@@ -135,7 +90,7 @@
       } catch (e) { bannerContainer.innerHTML = `<span>MyTierList</span>`; }
     }
 
-    // 카드 렌더링 (⭐ 2번 요청: 좌우 5개)
+    // ⭐ 4번 요청 반영: style.css의 새 카드 디자인에 맞춘 HTML 구조 렌더링
     function renderCards(posts, containerId) {
       const container = document.getElementById(containerId);
       if (!container) return;
@@ -144,14 +99,14 @@
       
       posts.forEach(post => {
         const card = `
-          <div class="home-tier-card" style="background:#1f1f1f; border-radius:10px; overflow:hidden; cursor:pointer;" onclick="location.href='board.html?id=${post.id}'">
-            <div style="height:140px; background:#111;">
-              <img src="${post.thumbnailUrl || 'https://via.placeholder.com/300x150'}" style="width:100%; height:100%; object-fit:cover;">
+          <div class="home-tier-card" style="cursor:pointer;" onclick="location.href='board.html?id=${post.id}'">
+            <div class="home-tier-card-img">
+              <img src="${post.thumbnailUrl || 'https://via.placeholder.com/300x150'}" alt="썸네일">
             </div>
-            <div style="padding:12px;">
-              <h3 style="font-size:0.95rem; margin-bottom:8px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${post.title || '무제'}</h3>
-              <div style="font-size:0.8rem; color:#888;">${post.authorName || '익명'}</div>
-              <div style="font-size:0.75rem; color:#666; margin-top:4px;">❤️ ${post.likes || 0}  👁️ ${post.views || 0}</div>
+            <div class="home-tier-card-info">
+              <h3 class="home-card-title">${post.title || '무제'}</h3>
+              <div class="home-card-desc">작성자: ${post.authorName || '익명'}</div>
+              <div class="home-card-btn">좋아요 ${post.likes || 0} · 조회수 ${post.views || 0}</div>
             </div>
           </div>`;
         container.insertAdjacentHTML('beforeend', card);
@@ -160,22 +115,21 @@
 
     async function loadHomePosts() {
       const postsRef = collection(db, "tierLists");
-      // ⭐ 2번 요청: limit(5) 적용
       const popular = await getDocs(query(postsRef, orderBy("likes", "desc"), limit(5)));
       renderCards(popular.docs.map(d => ({id:d.id, ...d.data()})), "popular-grid");
       const recent = await getDocs(query(postsRef, orderBy("createdAt", "desc"), limit(5)));
       renderCards(recent.docs.map(d => ({id:d.id, ...d.data()})), "recent-grid");
     }
 
-    // 카테고리 섹션 (⭐ 2번 요청: limit(5) 적용)
+    // ⭐ 7번 요청 반영: 카테고리 섹션 제목에서도 이모티콘 제거
     async function loadRandomCategories() {
-      const categories = ["애니", "게임", "영화", "음식"].sort(() => 0.5 - Math.random()).slice(0, 2);
+      const categories = ["애니", "게임", "영화", "음식", "만화", "캐릭터"].sort(() => 0.5 - Math.random()).slice(0, 2);
       const container = document.getElementById("random-category-container");
       for (const cat of categories) {
         const q = query(collection(db, "tierLists"), where("category", "==", cat), limit(5));
         const snap = await getDocs(q);
         if (!snap.empty) {
-          const html = `<h2 class="home-section-title"><span style="border-left: 5px solid #3498db; padding-left: 15px;">✨ 지금 뜨는 [${cat}]</span></h2><div id="grid-${cat}"></div>`;
+          const html = `<h2 class="home-section-title"><span style="border-left: 5px solid #3498db; padding-left: 15px;">지금 뜨는 [${cat}] 티어리스트</span></h2><div id="grid-${cat}"></div>`;
           container.insertAdjacentHTML('beforeend', html);
           renderCards(snap.docs.map(d => ({id:d.id, ...d.data()})), `grid-${cat}`);
         }
@@ -185,11 +139,16 @@
     window.onload = () => { loadBannerImage(); loadHomePosts(); loadRandomCategories(); };
   </script>
 
-  <footer class="site-footer" style="background:#1a1a1a; padding:40px; margin-top:50px; text-align:center; border-top:1px solid #333;">
-    <div class="site-footer-links" style="margin-bottom:15px;">
-      <a href="policy.html?type=terms">이용약관</a> | <a href="policy.html?type=privacy">개인정보처리방침</a>
+  <footer class="site-footer">
+    <div class="site-footer-links">
+      <a href="policy.html?type=terms">이용약관</a> | 
+      <a href="policy.html?type=privacy">개인정보처리방침</a> | 
+      <a href="policy.html?type=youth">청소년 보호정책</a>
     </div>
-    <p style="color:#666; font-size:0.9rem;">@2026 MyTierList.net | 문의: asy0009@naver.com</p>
+    <div class="site-footer-info">
+      <div>© 2026 MyTierList.net</div>
+      <div style="margin-top: 5px;">문의: asy0009@naver.com</div>
+    </div>
   </footer>
 </body>
 </html>
