@@ -106,7 +106,7 @@
             <div class="home-tier-card-info">
               <h3 class="home-card-title">${post.title || '무제'}</h3>
               <div class="home-card-desc">작성자: ${post.authorName || '익명'}</div>
-              <div class="home-card-btn">❤️ ${post.likes || 0} · 👁️ ${post.views || 0}</div>
+              <div class="home-card-btn">좋아요❤️ ${post.likes || 0} · 조회수 ${post.views || 0}</div>
             </div>
           </div>`;
         container.insertAdjacentHTML('beforeend', card);
