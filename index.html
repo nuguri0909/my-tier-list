@@ -11,7 +11,6 @@
     .hero-section {
       text-align: center;
       padding: 60px 20px 40px;
-      /* 배경에 은은한 그라데이션을 주어 예시 이미지 느낌을 살림 */
       background: radial-gradient(circle at center, #2a2a36 0%, #111118 70%);
     }
     .hero-title {
@@ -33,11 +32,11 @@
     ========================================= */
     .wide-banner-card {
       display: flex;
-      background: rgba(255, 255, 255, 0.05); /* 반투명한 유리 느낌 */
+      background: rgba(255, 255, 255, 0.05); 
       border: 1px solid #3a3a4a;
       border-radius: 16px;
       max-width: 1000px;
-      margin: 0 auto;
+      margin: 0 auto 60px auto; /* 배너 아래 공간 확보 */
       padding: 40px;
       align-items: center;
       justify-content: space-between;
@@ -76,7 +75,6 @@
       background: #2980b9;
       transform: translateY(-2px);
     }
-    /* 우측 이미지 영역 (예시 이미지의 우측 그림 역할) */
     .wide-banner-img {
       width: 35%;
       height: 180px;
@@ -91,31 +89,20 @@
     }
 
     /* =========================================
-       3. 섹션 제목 및 카드 그리드 (홈 화면 전용)
+       3. 5열 세로형 카드 그리드 (홈 화면 전용)
     ========================================= */
-    /* ⭐ 섹션 제목 크기 및 여백 완벽 통일 */
-    .section-title {
-      max-width: 1300px;
-      margin: 50px auto 20px auto; 
-      text-align: left;
-      padding-left: 20px;
-      color: #ffffff;
-      font-size: 1.6rem; /* 기존보다 살짝 키우고 모든 제목에 강제 적용 */
-      font-weight: bold;
-    }
-
     .home-grid {
       display: grid;
       grid-template-columns: repeat(5, 1fr); 
       gap: 15px;
-      max-width: 1300px; 
-      margin: 0 auto 50px auto;
+      max-width: 1350px; /* 카드가 커졌으므로 전체 너비 살짝 증가 */
+      margin: 0 auto 60px auto; /* 그리드 아래 공간 확보 */
       padding: 0 20px;
     }
     /* 모바일/태블릿 반응형 처리 */
-    @media (max-width: 1200px) { .home-grid { grid-template-columns: repeat(3, 1fr); } }
-    @media (max-width: 768px) { .home-grid { grid-template-columns: repeat(2, 1fr); } }
-    @media (max-width: 480px) { .home-grid { grid-template-columns: 1fr; } }
+    @media (max-width: 1250px) { .home-grid { grid-template-columns: repeat(3, 1fr); } }
+    @media (max-width: 850px) { .home-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 500px) { .home-grid { grid-template-columns: 1fr; } }
 
     .home-tier-card {
       background: #1a1a24;
@@ -124,7 +111,7 @@
       display: flex;
       flex-direction: column;
       overflow: hidden;
-      height: 350px; 
+      height: 370px; /* ⭐ 카드 전체 크기 살짝 키움 (기존 350) */
       transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
     .home-tier-card:hover {
@@ -132,7 +119,7 @@
       box-shadow: 0 8px 20px rgba(0, 0, 0, 0.6);
     }
     .home-tier-card-img {
-      height: 45%;
+      height: 50%; /* ⭐ 이미지 비율 살짝 조정 (비주얼 강조) */
       background: #111118;
       width: 100%;
       display: flex;
@@ -146,14 +133,14 @@
       object-fit: cover;
     }
     .home-tier-card-info {
-      padding: 15px;
+      padding: 18px; /* 여백 살짝 증가 */
       display: flex;
       flex-direction: column;
       flex-grow: 1;
       justify-content: space-between;
     }
     .home-card-title {
-      font-size: 1.1rem;
+      font-size: 1.2rem; /* ⭐ 제목 크기 살짝 키움 */
       font-weight: bold;
       color: #ffffff;
       margin: 0 0 8px 0;
@@ -162,9 +149,9 @@
       text-overflow: ellipsis; 
     }
     .home-card-desc {
-      font-size: 0.85rem;
+      font-size: 0.9rem; /* ⭐ 설명 크기 살짝 키움 */
       color: #aaaaaa;
-      line-height: 1.4;
+      line-height: 1.5;
       margin-bottom: 10px;
     }
     .home-card-btn {
@@ -184,6 +171,16 @@
       background: #3f3f50;
       color: #ffffff;
       border-color: #555566;
+    }
+
+    /* ⭐ 섹션 제목 스타일 통일 및 크기 조정 */
+    .section-title {
+      max-width: 1350px;
+      margin: 0 auto 20px auto; /* 위 여백은 요소간 간격으로 조절 */
+      text-align: left;
+      padding-left: 20px;
+      color: #fff;
+      font-size: 1.6rem; /* 모든 섹션 제목 크기 통일 */
     }
   </style>
 </head>
@@ -259,7 +256,7 @@
       const container = document.getElementById(containerId);
       if (!container) return;
       container.innerHTML = ''; 
-      container.className = 'home-grid';
+      container.className = 'home-grid'; // CSS 클래스 적용
 
       if (posts.length === 0) {
         container.innerHTML = '<p style="color: #aaa; padding: 20px; grid-column: 1 / -1; text-align: center;">아직 작성된 티어리스트가 없습니다.</p>';
@@ -296,11 +293,13 @@
       try {
         const postsRef = collection(db, "tierLists"); 
         
+        // 주간 인기 5개 로드
         const popularQuery = query(postsRef, orderBy("likes", "desc"), limit(5));
         const popularSnapshot = await getDocs(popularQuery);
         const popularPosts = popularSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         renderCards(popularPosts, "popular-grid");
 
+        // 방금 올라온 5개 로드
         const recentQuery = query(postsRef, orderBy("createdAt", "desc"), limit(5));
         const recentSnapshot = await getDocs(recentQuery);
         const recentPosts = recentSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -311,6 +310,7 @@
       }
     }
 
+    // ⭐ 랜덤 카테고리 로직 수정: 인라인 스타일 제거
     async function loadRandomCategorySections() {
       const shuffled = ALL_CATEGORIES.sort(() => 0.5 - Math.random());
       const selectedCategories = shuffled.slice(0, 2);
@@ -329,7 +329,6 @@
           posts = posts.slice(0, 5);
 
           if (posts.length > 0) {
-            // ⭐ 인라인 스타일(style="margin-top:20px;") 제거하여 크기와 여백 완벽 통일
             const sectionHtml = `
               <h2 class="section-title">✨ 지금 뜨는 [${cat}] 티어리스트</h2>
               <div id="grid-${cat}" class="home-grid"></div>
