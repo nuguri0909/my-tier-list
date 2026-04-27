@@ -36,7 +36,7 @@ body {
   background: #1a1a1a; 
   padding: 15px 30px; 
   border-bottom: 1px solid #333;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.3); /* ⭐ 하단 그림자 추가 */
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
 }
 .nav-left { display: flex; align-items: center; gap: 30px; }
 .nav-logo { font-size: 1.5rem; font-weight: bold; color: #3498db; text-decoration: none; }
@@ -62,14 +62,13 @@ body {
   background: #3498db; 
   color: white; 
   border: none; 
-  padding: 10px 18px; /* 살짝 더 통통하게 */
-  border-radius: 8px; /* 둥글기 증가 */
+  padding: 10px 18px; 
+  border-radius: 8px; 
   cursor: pointer; 
   font-weight: 600; 
   font-family: 'Pretendard', sans-serif;
-  transition: all 0.2s ease; /* ⭐ 부드러운 애니메이션 준비 */
+  transition: all 0.2s ease; 
 }
-/* ⭐ 버튼 Hover 시 살짝 위로 뜨고 그림자 생김 */
 .btn:hover { 
   opacity: 0.9; 
   transform: translateY(-2px); 
@@ -112,10 +111,10 @@ body {
   display: flex; 
   flex-direction: column; 
   gap: 4px; 
-  background: #111; /* 살짝 톤 다운 */
+  background: #111; 
   padding: 6px; 
-  border-radius: 12px; /* 둥글기 증가 */
-  box-shadow: 0 8px 20px rgba(0,0,0,0.5); /* ⭐ 티어 보드 전체에 깊은 그림자 */
+  border-radius: 12px; 
+  box-shadow: 0 8px 20px rgba(0,0,0,0.5); 
 }
 
 .tier-row { 
@@ -125,7 +124,7 @@ body {
   background-color: #1a1a1a; 
   position: relative;
   padding-right: 40px; 
-  border-radius: 8px; /* 각 줄도 둥글게 */
+  border-radius: 8px; 
 }
 .tier-label { 
   width: 100px; 
@@ -173,15 +172,15 @@ body {
   width: 96px; 
   height: 96px; 
   background-color: #000; 
-  border-radius: 8px; /* 둥글게 */
+  border-radius: 8px; 
   overflow: hidden; 
   cursor: grab; 
   border: 1px solid #333;
-  transition: transform 0.2s ease, box-shadow 0.2s ease; /* ⭐ Hover 애니메이션 */
+  transition: transform 0.2s ease, box-shadow 0.2s ease; 
 }
 .item:hover {
-  transform: scale(1.05); /* 마우스 올리면 살짝 커짐 */
-  box-shadow: 0 5px 15px rgba(0,0,0,0.6); /* 그림자 진해짐 */
+  transform: scale(1.05); 
+  box-shadow: 0 5px 15px rgba(0,0,0,0.6); 
   z-index: 10;
 }
 .item img { 
@@ -206,7 +205,6 @@ body {
 }
 .item-placeholder { border: 2px dashed #666; opacity: 0.5; background: transparent; box-shadow: none; }
 
-/* 우측 대기열 영역 */
 .item-bank { 
   display: flex; 
   flex-wrap: wrap; 
@@ -217,14 +215,14 @@ body {
   padding: 10px; 
   background: #1a1a1a; 
   align-content: flex-start;
-  box-shadow: inset 0 2px 10px rgba(0,0,0,0.3); /* 안쪽 그림자로 음각 느낌 */
+  box-shadow: inset 0 2px 10px rgba(0,0,0,0.3); 
 }
 .input-section { 
   background: #1a1a1a; 
   padding: 20px; 
   border-radius: 12px; 
   border: 1px solid #333;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.4); /* 입체감 추가 */
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4); 
 }
 .input-group { display: flex; flex-direction: column; gap: 10px; }
 
@@ -238,7 +236,7 @@ body {
 .modal-content { 
   position: relative; background: #1f1f1f; padding: 25px; border-radius: 16px; 
   width: 90vw; max-width: 1050px; display: flex; flex-direction: column; 
-  box-shadow: 0 15px 40px rgba(0,0,0,0.7); /* 더 깊은 팝업 그림자 */
+  box-shadow: 0 15px 40px rgba(0,0,0,0.7); 
 }
 .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #333; padding-bottom: 10px; padding-right: 30px; }
 .modal-body { display: flex; gap: 30px; } 
@@ -263,7 +261,6 @@ body {
 .site-footer-links a { color: #adb5bd; text-decoration: none; margin: 0 10px; font-size: 0.95rem; transition: color 0.2s; }
 .site-footer-links a:hover { color: #3498db; text-decoration: underline; }
 .site-footer-info { color: #868e96; font-size: 0.85rem; line-height: 1.6; }
-
 
 /* ==========================================
    🔥 [신규] 메인 홈 화면 전용 CSS 
@@ -294,12 +291,19 @@ body {
   padding: 15px 40px;
   border-radius: 30px;
 }
+
+/* ⭐ 제목과 카드 정렬 불일치 완벽 해결 (1000px로 통일) */
 .home-section-title {
   font-size: 1.5rem;
-  margin: 0 0 20px 0;
-  padding-left: 15px;
-  border-left: 5px solid #3498db;
+  margin: 40px auto 20px auto; 
+  max-width: 1000px; /* 카드 그리드와 너비를 완벽히 똑같이 맞춤 */
+  width: 100%;
+  padding: 0 20px; 
+  box-sizing: border-box;
+  text-align: left !important; /* 무조건 왼쪽 정렬 */
 }
+
+/* 남겨두신 백업용 그리드 디자인 */
 .tier-card-grid {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -351,34 +355,33 @@ body {
   border: 3px solid #fff;
 }
 
-
 /* =========================================
    홈 화면 전용 세로형 3열 카드 그리드
 ========================================= */
 .home-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr); /* 한 줄에 정확히 3개 */
+  grid-template-columns: repeat(3, 1fr); 
   gap: 20px;
-  max-width: 1000px; /* 너무 넓어지지 않게 중앙 정렬 */
-  margin: 0 auto;
+  max-width: 1000px; /* ⭐ 제목과 완벽하게 일치하는 너비 */
+  margin: 0 auto 40px auto;
+  padding: 0 20px; /* 창이 좁아질 때 화면에 딱 붙지 않도록 여백 추가 */
+  box-sizing: border-box;
 }
 
-/* 모바일 화면에서는 1개씩 보이도록 반응형 처리 */
 @media (max-width: 768px) {
   .home-grid {
     grid-template-columns: 1fr;
   }
 }
 
-/* 카드 전체 디자인 (첨부 이미지 느낌) */
 .home-tier-card {
-  background: #1a1a24; /* 약간 남색 빛이 도는 어두운 배경 */
+  background: #1a1a24; 
   border: 1px solid #2e2e3a;
   border-radius: 12px;
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  height: 380px; /* 세로로 살짝 길게 고정 */
+  height: 380px; 
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
@@ -387,9 +390,8 @@ body {
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.6);
 }
 
-/* 카드 상단: 이미지 영역 */
 .home-tier-card-img {
-  height: 50%; /* 전체 높이의 절반을 차지 */
+  height: 50%; 
   background: #111118;
   width: 100%;
   display: flex;
@@ -404,13 +406,12 @@ body {
   object-fit: cover;
 }
 
-/* 카드 하단: 텍스트 및 버튼 영역 */
 .home-tier-card-info {
   padding: 20px;
   display: flex;
   flex-direction: column;
   flex-grow: 1;
-  justify-content: space-between; /* 텍스트는 위, 버튼은 아래로 밀착 */
+  justify-content: space-between; 
 }
 
 .home-card-title {
@@ -428,7 +429,6 @@ body {
   margin-bottom: 15px;
 }
 
-/* 예시 이미지 하단의 '티어리스트 보기' 버튼 느낌 */
 .home-card-btn {
   background: #2a2a36;
   color: #dddddd;
@@ -440,7 +440,7 @@ body {
   font-size: 0.95rem;
   font-weight: bold;
   transition: 0.2s;
-  margin-top: auto; /* 버튼을 항상 맨 아래로 밀어냄 */
+  margin-top: auto; 
 }
 
 .home-card-btn:hover {
