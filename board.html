@@ -76,9 +76,12 @@
     <div class="modal-content">
       <button class="btn-close" onclick="window.closeCommentModal()">X</button>
       
-      <div class="modal-header" style="display:flex; flex-direction:column; align-items:flex-start;">
-        <h3 id="modal-post-title" style="margin:0; font-size:1.5rem;">티어표 보기</h3>
-        <div id="modal-post-category" style="margin-top:8px; font-weight:bold; color:#3498db;"></div>
+      <div class="modal-header" style="display:flex; flex-direction:column; align-items:flex-start; margin-bottom: 20px;">
+        <h3 id="modal-post-title" style="margin:0 0 15px 0; font-size:1.8rem; word-break: keep-all; line-height: 1.3;">제목 로딩 중...</h3>
+        <div style="display:flex; flex-direction:column; gap:6px;">
+          <div id="modal-post-author" style="font-size: 1rem; color: #aaaaaa; font-weight: bold;">👤 작성자 로딩 중...</div>
+          <div id="modal-post-category" style="font-size: 1rem; color: #3498db; font-weight: bold;">🏷️ 카테고리 로딩 중...</div>
+        </div>
       </div>
       
       <div style="max-height: 40vh; overflow-y: auto; margin-bottom: 15px; border-bottom: 1px solid #333; padding-bottom: 15px;">
@@ -117,7 +120,6 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-    // ⭐ arrayUnion 추가됨
     import { getFirestore, collection, getDocs, doc, getDoc, addDoc, deleteDoc, query, orderBy, serverTimestamp, onSnapshot, updateDoc, increment, arrayUnion } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -140,7 +142,7 @@
     let currentPostId = null; 
     let commentsUnsubscribe = null; 
     let allBoardData = [];
-    window.hasOpenedModalFromUrl = false; // 중복 실행 방지 변수
+    window.hasOpenedModalFromUrl = false;
 
     window.login = () => signInWithPopup(auth, provider).catch(err => alert(err.message));
     window.logout = () => signOut(auth).then(() => alert("로그아웃 되었습니다."));
@@ -179,7 +181,6 @@
         });
         window.executeSearch(); 
 
-        // ⭐ 링크로 접속했을 때, 해당 티어표 바로 열어주기 로직
         const urlParams = new URLSearchParams(window.location.search);
         const urlPostId = urlParams.get('id');
         if(urlPostId && !window.hasOpenedModalFromUrl) {
@@ -224,8 +225,8 @@
             ${deleteBtnHtml}
             <button class="btn btn-save" style="width:100%; margin-bottom:5px;" onclick="window.openCommentModal('${data.id}', '${data.authorName}')">💬 구경 및 댓글 보기</button>
             <div style="display:flex; gap:5px;">
-              <button class="btn btn-small" style="flex:1;" onclick="location.href='maker.html?load=${data.id}&mode=v1'">🔄 V1 (티어 유지)</button>
-              <button class="btn btn-small" style="flex:1;" onclick="location.href='maker.html?load=${data.id}&mode=v2'">📥 V2 (대기열로)</button>
+              <button class="btn btn-small" style="flex:1;" onclick="location.href='maker.html?load=${data.id}&mode=v1'">📥티어 유지</button>
+              <button class="btn btn-small" style="flex:1;" onclick="location.href='maker.html?load=${data.id}&mode=v2'">🔄티어 초기화</button>
             </div>
           </div>
         `;
@@ -277,7 +278,6 @@
       } catch(e) { alert("삭제 실패: " + e.message); }
     };
 
-    // ⭐ 중복 좋아요 방지 로직 적용
     window.likePost = async () => {
       if(!window.currentUser) return alert("로그인이 필요합니다.");
       if(!currentPostId) return;
@@ -288,14 +288,12 @@
         
         if (postSnap.exists()) {
           const data = postSnap.data();
-          const likedUsers = data.likedUsers || []; // 좋아요 누른 유저 배열
+          const likedUsers = data.likedUsers || []; 
           
-          // 이미 누른 유저인지 확인
           if (likedUsers.includes(window.currentUser.uid)) {
             return alert("이미 좋아요를 누르셨습니다! ❤️");
           }
 
-          // 좋아요 수 증가 및 누른 유저 기록
           await updateDoc(postRef, {
             likes: increment(1),
             likedUsers: arrayUnion(window.currentUser.uid)
@@ -312,9 +310,18 @@
       }
     };
 
+    // ⭐ 모달 창 열기 함수 수정 
     window.openCommentModal = async (postId, authorName) => {
       currentPostId = postId;
-      document.getElementById('modal-post-title').innerText = `${authorName}님의 티어표`;
+      
+      // 1. 빠른 제목/작성자 렌더링 (리스트 데이터 재활용)
+      const postData = allBoardData.find(p => p.id === postId);
+      const displayTitle = postData && postData.title ? postData.title : "무제 티어표";
+      
+      document.getElementById('modal-post-title').innerText = displayTitle;
+      document.getElementById('modal-post-author').innerText = `👤 ${authorName || '익명'} 님의 티어표`;
+      document.getElementById('modal-post-category').innerText = `🏷️ 카테고리 로딩 중...`;
+      
       document.getElementById('comment-modal').style.display = 'flex';
       
       const viewer = document.getElementById('board-viewer');
@@ -322,20 +329,20 @@
       const voteSection = document.getElementById('vote-section');
       
       viewer.innerHTML = '<p style="color:#aaa; text-align:center;">티어표를 불러오는 중...</p>';
-      catDiv.innerText = '';
       voteSection.innerHTML = '';
       
       try {
         const postRef = doc(db, "tierLists", postId);
-        
-        // ⭐ 게시글을 열었을 때 자동으로 조회수 1 증가
         await updateDoc(postRef, { views: increment(1) });
-        loadBoard(); // 바깥 목록에 조회수 반영되도록 리로드
+        loadBoard(); 
 
         const docSnap = await getDoc(postRef);
         if(docSnap.exists()) {
           const data = docSnap.data();
           viewer.innerHTML = ''; 
+          
+          // 2. DB에서 가져온 최신 정보로 덮어쓰기
+          document.getElementById('modal-post-title').innerText = data.title || "무제 티어표";
           catDiv.innerText = `🏷️ 카테고리: ${data.category || '지정되지 않음'}`;
           
           voteSection.innerHTML = `<button class="btn btn-save" onclick="window.likePost()" style="font-size: 1.1rem; padding: 10px 20px; background: #e74c3c;">❤️ 좋아요 (<span id="like-count-display">${data.likes || 0}</span>)</button>`;
@@ -397,7 +404,6 @@
     window.closeCommentModal = () => {
       document.getElementById('comment-modal').style.display = 'none';
       currentPostId = null;
-      // 닫을 때 URL 파라미터를 깔끔하게 제거해줍니다
       window.history.replaceState({}, document.title, window.location.pathname);
       if(commentsUnsubscribe) { commentsUnsubscribe(); commentsUnsubscribe = null; }
     };
