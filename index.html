@@ -82,16 +82,75 @@
         margin-top: 20px;
       }
     }
+
+    /* =========================================
+       ⭐ 2번 요청: 좌우 5개 배치 (style.css 덮어쓰기)
+    ========================================= */
+    .home-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr) !important; /* 좌우 5개로 강제 고정 */
+      gap: 15px;
+      max-width: 1200px !important; /* 5개가 들어가도록 넓이 확장 */
+      margin: 0 auto 40px auto;
+      padding: 0 20px;
+      box-sizing: border-box;
+    }
+    .home-section-title {
+      max-width: 1200px !important; /* 제목 라인도 넓이 맞춤 */
+      margin: 40px auto 20px auto;
+      text-align: left !important;
+    }
+
+    /* 화면이 작아지면 자동으로 줄이기 */
+    @media (max-width: 1024px) { .home-grid { grid-template-columns: repeat(3, 1fr) !important; } }
+    @media (max-width: 768px) { .home-grid { grid-template-columns: 1fr !important; } }
+
+    /* ⭐ 1번 요청: 구글 로그인 버튼 디자인 */
+    .user-menu {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      margin-left: auto; /* 오른쪽 끝으로 밀어내기 */
+    }
+    .user-name {
+      color: #fff;
+      font-weight: bold;
+      font-size: 0.95rem;
+    }
+    .login-btn-header {
+      background: #3498db;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .login-btn-header:hover {
+      background: #2980b9;
+    }
+    .logout-btn-header {
+      background: #e74c3c !important;
+    }
+    .logout-btn-header:hover {
+      background: #c0392b !important;
+    }
   </style>
 </head>
 <body>
   <nav class="navbar">
-    <div class="nav-left">
+    <div class="nav-left" style="display: flex; width: 100%; align-items: center;">
       <a href="index.html" class="nav-logo">MyTierList</a>
       <div class="nav-links">
         <a href="maker.html">티어 만들기</a>
         <a href="board.html">티어 게시판</a>
         <a href="mylist.html">내 보관함</a>
+      </div>
+      
+      <div class="user-menu" id="user-menu">
+        <span id="user-info" class="user-name"></span>
+        <button id="login-btn" class="login-btn-header">Google 로그인</button>
       </div>
     </div>
   </nav>
@@ -126,6 +185,8 @@
   <script type="module">
     import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getFirestore, collection, query, orderBy, getDocs, limit, where, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    // ⭐ 1번 요청: 파이어베이스 Auth 기능 추가 임포트
+    import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAwVjpUANfil947xb0bjKALw2uuGvZYQcs",
@@ -138,6 +199,28 @@
 
     const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
     const db = getFirestore(app);
+    const auth = getAuth(app); // 인증 초기화
+
+    // ⭐ 1번 요청: 로그인 상태 감지 및 로그인/로그아웃 처리
+    const loginBtn = document.getElementById("login-btn");
+    const userInfo = document.getElementById("user-info");
+
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        userInfo.textContent = `${user.displayName}님`;
+        loginBtn.textContent = "로그아웃";
+        loginBtn.classList.add("logout-btn-header"); // 빨간색 버튼 적용
+        loginBtn.onclick = () => signOut(auth);
+      } else {
+        userInfo.textContent = "";
+        loginBtn.textContent = "Google 로그인";
+        loginBtn.classList.remove("logout-btn-header"); // 파란색 버튼 복구
+        loginBtn.onclick = () => {
+          const provider = new GoogleAuthProvider();
+          signInWithPopup(auth, provider).catch(error => console.error("로그인 실패:", error));
+        };
+      }
+    });
 
     const ALL_CATEGORIES = ["애니", "게임", "영화", "음악", "만화", "소설", "캐릭터", "기타"];
 
@@ -186,21 +269,21 @@
 
       posts.forEach(post => {
         const thumbnailHtml = post.thumbnailUrl 
-          ? `<img src="${post.thumbnailUrl}" alt="썸네일">` 
+          ? `<img src="${post.thumbnailUrl}" alt="썸네일" style="width:100%; height:100%; object-fit:cover;">` 
           : `<div style="color:#666; font-size: 0.8rem;">(이미지 없음)</div>`;
 
         const cardHtml = `
           <div class="home-tier-card">
-            <div class="home-tier-card-img">${thumbnailHtml}</div>
-            <div class="home-tier-card-info">
+            <div class="home-tier-card-img" style="height: 150px; overflow: hidden;">${thumbnailHtml}</div>
+            <div class="home-tier-card-info" style="padding: 10px;">
               <div>
-                <h3 class="home-card-title">${post.title || '무제 티어표'}</h3>
-                <div class="home-card-desc">
+                <h3 class="home-card-title" style="font-size: 1rem; margin-bottom: 5px;">${post.title || '무제 티어표'}</h3>
+                <div class="home-card-desc" style="font-size: 0.8rem; color: #bbb;">
                   ${post.authorName || '익명'}<br>
                   ❤️ ${post.likes || 0} &nbsp; 👁️ ${post.views || 0} &nbsp;·&nbsp; ${timeAgo(post.createdAt)}
                 </div>
               </div>
-              <div class="home-card-btn" onclick="location.href='board.html?id=${post.id}'">
+              <div class="home-card-btn" style="margin-top: 10px; font-size: 0.85rem; cursor: pointer;" onclick="location.href='board.html?id=${post.id}'">
                 티어리스트 보기
               </div>
             </div>
@@ -214,12 +297,14 @@
       try {
         const postsRef = collection(db, "tierLists"); 
         
-        const popularQuery = query(postsRef, orderBy("likes", "desc"), limit(6)); // 카드가 3열이므로 6개로 짝을 맞추는 것도 좋습니다.
+        // ⭐ 2번 요청: 좌우 5개 배치이므로 limit를 5개로 수정
+        const popularQuery = query(postsRef, orderBy("likes", "desc"), limit(5)); 
         const popularSnapshot = await getDocs(popularQuery);
         const popularPosts = popularSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         renderCards(popularPosts, "popular-grid");
 
-        const recentQuery = query(postsRef, orderBy("createdAt", "desc"), limit(6));
+        // ⭐ 2번 요청: 최근 글도 5개까지만 가져오도록 수정
+        const recentQuery = query(postsRef, orderBy("createdAt", "desc"), limit(5));
         const recentSnapshot = await getDocs(recentQuery);
         const recentPosts = recentSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         renderCards(recentPosts, "recent-grid");
@@ -244,7 +329,8 @@
           let posts = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
           posts.sort((a, b) => (b.likes || 0) - (a.likes || 0));
-          posts = posts.slice(0, 6);
+          // ⭐ 2번 요청: 카테고리별 티어도 5개로 맞춤
+          posts = posts.slice(0, 5);
 
           if (posts.length > 0) {
             const sectionHtml = `
