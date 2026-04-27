@@ -59,17 +59,27 @@ onAuthStateChanged(auth, (user) => {
 
 window.updateAuthUI = function() {
   const nm = document.getElementById('user-name-display');
+  const btnLogin = document.getElementById('btn-login');
+  const btnLogout = document.getElementById('btn-logout');
+  const btnNickname = document.getElementById('btn-nickname');
+
+  // ⭐ [추가됨] HTML 수정 없이도 style.css의 새 버튼 디자인이 자동 적용되도록 설정
+  if(btnLogin) btnLogin.className = 'login-btn-header';
+  if(btnLogout) btnLogout.className = 'login-btn-header logout-btn-header';
+  if(btnNickname) btnNickname.className = 'login-btn-header';
+
   if(!nm) return; 
+  
   if(window.currentUser) {
     nm.innerText = window.customNickname + "님";
-    if(document.getElementById('btn-login')) document.getElementById('btn-login').style.display = 'none';
-    if(document.getElementById('btn-logout')) document.getElementById('btn-logout').style.display = 'inline-block';
-    if(document.getElementById('btn-nickname')) document.getElementById('btn-nickname').style.display = 'inline-block';
+    if(btnLogin) btnLogin.style.display = 'none';
+    if(btnLogout) btnLogout.style.display = 'inline-block';
+    if(btnNickname) btnNickname.style.display = 'inline-block';
   } else {
     nm.innerText = "로그인해주세요";
-    if(document.getElementById('btn-login')) document.getElementById('btn-login').style.display = 'inline-block';
-    if(document.getElementById('btn-logout')) document.getElementById('btn-logout').style.display = 'none';
-    if(document.getElementById('btn-nickname')) document.getElementById('btn-nickname').style.display = 'none';
+    if(btnLogin) btnLogin.style.display = 'inline-block';
+    if(btnLogout) btnLogout.style.display = 'none';
+    if(btnNickname) btnNickname.style.display = 'none';
   }
 };
 
