@@ -24,133 +24,31 @@
         <a href="mylist.html">내 보관함</a>
       </div>
     </div>
-    <div class="user-menu">
-      <span id="user-name-display" class="user-name">로그인해주세요</span>
-      <button class="login-btn-header" id="btn-nickname" style="display:none;" onclick="window.setNickname()">닉네임 설정</button>
-      <button class="login-btn-header" id="btn-login" onclick="window.login()">구글 로그인</button>
-      <button class="login-btn-header logout-btn-header" id="btn-logout" style="display:none;" onclick="window.logout()">로그아웃</button>
-    </div>
+    <div class="user-menu"></div>
   </nav>
 
   <div class="header" style="text-align: center; padding: 30px 20px;">
-    <h1>🗂️ 내 보관함</h1>
+    <h1>내 보관함</h1>
     <p style="color:#aaa;">내가 저장한 티어표 목록입니다. 언제든 다시 수정할 수 있어요!</p>
   </div>
 
-  <div class="grid-container" id="my-list">
+  <div class="grid-container" id="my-list-container">
+    <p style="text-align:center; color:#888; grid-column: 1 / -1;">데이터를 불러오는 중입니다...</p>
   </div>
 
+  <script type="module" src="script.js"></script>
+
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-    import { getFirestore, collection, query, where, getDocs, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyAwVjpUANfil947xb0bjKALw2uuGvZYQcs",
-      authDomain: "mytierlist-70989.firebaseapp.com",
-      projectId: "mytierlist-70989",
-      storageBucket: "mytierlist-70989.firebasestorage.app",
-      messagingSenderId: "13881580770",
-      appId: "1:13881580770:web:6f7f9148c4bf5f95add2bb"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app); 
-    const provider = new GoogleAuthProvider();
-
-    window.currentUser = null; 
-    window.customNickname = "익명";
-
-    window.login = () => signInWithPopup(auth, provider).catch(error => alert("로그인 실패: " + error.message));
-    window.logout = () => signOut(auth).then(() => alert("로그아웃 되었습니다."));
-    
-    window.setNickname = () => {
-      const nick = prompt("닉네임:", window.customNickname);
-      if(nick && nick.trim() !== "") {
-        updateProfile(auth.currentUser, { displayName: nick.trim() }).then(() => {
-          window.customNickname = nick.trim();
-          window.updateAuthUI();
-        });
-      }
-    };
-
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
-        window.currentUser = user;
-        window.customNickname = user.displayName || "익명";
-      } else {
-        window.currentUser = null;
-        window.customNickname = "익명";
-      }
-      window.updateAuthUI();
-      window.renderMyLists(); 
-    });
-
-    window.updateAuthUI = () => {
-      const nm = document.getElementById('user-name-display');
-      if(window.currentUser) {
-        nm.innerText = window.customNickname + "님";
-        document.getElementById('btn-login').style.display='none';
-        document.getElementById('btn-logout').style.display='inline-block';
-        document.getElementById('btn-nickname').style.display='inline-block';
-      } else {
-        nm.innerText = "로그인해주세요";
-        document.getElementById('btn-login').style.display='inline-block';
-        document.getElementById('btn-logout').style.display='none';
-        document.getElementById('btn-nickname').style.display='none';
-      }
-    };
-
-    window.renderMyLists = async () => {
-      const container = document.getElementById('my-list');
-      
-      if (!window.currentUser) {
-        container.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; padding: 50px; color: #888; background:#1a1a1a; border-radius:10px;">로그인 후 내 보관함을 확인할 수 있습니다.</div>';
-        return;
-      }
-
-      container.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; color: #aaa;">데이터를 불러오는 중입니다...</div>';
-
-      try {
-        const q = query(collection(db, "tierLists"), where("authorId", "==", window.currentUser.uid));
-        const snapshot = await getDocs(q);
-
-        container.innerHTML = '';
-        
-        if (snapshot.empty) {
-          container.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; padding: 50px; color: #888; background:#1a1a1a; border-radius:10px;">저장된 티어표가 없습니다. 첫 티어표를 만들어 보세요!</div>';
-          return;
-        }
-
-        snapshot.forEach(docSnap => {
-          const data = docSnap.data();
-          const dateStr = data.createdAt ? data.createdAt.toDate().toLocaleDateString() : "최근";
-
-          const card = document.createElement('div');
-          card.className = 'my-tier-card';
-          
-          card.innerHTML = `
-            <h3 class="card-title">${data.title || data.category + " 티어표"}</h3>
-            <div class="card-meta">저장일: ${dateStr}</div>
-            <button class="delete-btn" onclick="window.deleteMyList('${docSnap.id}')">삭제</button>
-            <div style="display:flex; gap:10px;">
-              <button class="btn" style="flex:1;" onclick="location.href='maker.html?load=${docSnap.id}&mode=v1'">이어서 수정하기</button>
-            </div>
-          `;
-          container.appendChild(card);
-        });
-      } catch(e) {
-        container.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; color: red;">데이터를 불러오는데 실패했습니다: ${e.message}</div>`;
-      }
-    };
+    import { getFirestore, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    const db = getFirestore();
 
     window.deleteMyList = async (docId) => {
       if(confirm("정말 이 티어표를 삭제하시겠습니까? (복구할 수 없습니다)")) {
         try {
           await deleteDoc(doc(db, "tierLists", docId));
           alert("성공적으로 삭제되었습니다.");
-          window.renderMyLists(); 
+          // script.js 에 있는 내 보관함 리로드 함수 호출
+          if(window.loadMyList) window.loadMyList(); 
         } catch(e) {
           alert("삭제 실패: " + e.message);
         }
@@ -165,7 +63,7 @@
       <a href="policy.html?type=youth">청소년 보호정책</a>
     </div>
     <div class="site-footer-info">
-      <div>@2026 MyTierList.net</div>
+      <div>© 2026 MyTierList.net</div>
       <div style="margin-top: 5px;">문의: asy0009@naver.com</div>
     </div>
   </footer>
