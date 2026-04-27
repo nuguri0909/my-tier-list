@@ -17,12 +17,7 @@
         <a href="mylist.html">내 보관함</a>
       </div>
     </div>
-    <div class="user-menu">
-      <span id="user-name-display" class="user-name">로그인해주세요</span>
-      <button class="btn btn-small" id="btn-login" onclick="window.login()">구글 로그인</button>
-      <button class="btn btn-small" id="btn-nickname" style="display:none;" onclick="window.setNickname()">닉네임 변경</button>
-      <button class="btn btn-small" id="btn-logout" style="display:none;" onclick="window.logout()">로그아웃</button>
-    </div>
+    <div class="user-menu"></div>
   </nav>
 
   <div class="container">
@@ -44,7 +39,7 @@
         <option value="기타">기타</option>   
       </select>
       <button class="btn btn-save" onclick="window.saveBoard()">💾 서버에 저장</button>
-      <button class="btn" style="background:#f39c12;" onclick="window.downloadImage()">📸 이미지로 저장</button>
+      <button class="btn" style="background:#f39c12;" onclick="window.saveAsImage()">📸 이미지로 저장</button>
     </div>
 
     <div class="layout-wrapper">
@@ -54,12 +49,12 @@
         </div>
         <div id="capture-area">
           <div id="board" class="tier-board">
-            <div class="tier-row" data-tier="S" ondrop="window.drop(event)" ondragover="window.allowDrop(event)"><div class="tier-label" style="background-color: #ff7f7f;">S</div><div class="tier-items" ondrop="window.drop(event)" ondragover="window.allowDrop(event)"></div></div>
-            <div class="tier-row" data-tier="A" ondrop="window.drop(event)" ondragover="window.allowDrop(event)"><div class="tier-label" style="background-color: #ffbf7f;">A</div><div class="tier-items" ondrop="window.drop(event)" ondragover="window.allowDrop(event)"></div></div>
-            <div class="tier-row" data-tier="B" ondrop="window.drop(event)" ondragover="window.allowDrop(event)"><div class="tier-label" style="background-color: #ffff7f;">B</div><div class="tier-items" ondrop="window.drop(event)" ondragover="window.allowDrop(event)"></div></div>
-            <div class="tier-row" data-tier="C" ondrop="window.drop(event)" ondragover="window.allowDrop(event)"><div class="tier-label" style="background-color: #7fff7f;">C</div><div class="tier-items" ondrop="window.drop(event)" ondragover="window.allowDrop(event)"></div></div>
-            <div class="tier-row" data-tier="D" ondrop="window.drop(event)" ondragover="window.allowDrop(event)"><div class="tier-label" style="background-color: #7fbfff;">D</div><div class="tier-items" ondrop="window.drop(event)" ondragover="window.allowDrop(event)"></div></div>
-            <div class="tier-row" data-tier="E" ondrop="window.drop(event)" ondragover="window.allowDrop(event)"><div class="tier-label" style="background-color: #7f7fff;">E</div><div class="tier-items" ondrop="window.drop(event)" ondragover="window.allowDrop(event)"></div></div>
+            <div class="tier-row" data-tier="S" ondrop="window.drop(event)" ondragover="window.allowDrop(event)"><div class="tier-label" style="background-color: #ff7f7f;" contenteditable="true">S</div><div class="tier-items" ondrop="window.drop(event)" ondragover="window.allowDrop(event)"></div><button class="delete-tier-btn" onclick="window.deleteTier(this)">X</button></div>
+            <div class="tier-row" data-tier="A" ondrop="window.drop(event)" ondragover="window.allowDrop(event)"><div class="tier-label" style="background-color: #ffbf7f;" contenteditable="true">A</div><div class="tier-items" ondrop="window.drop(event)" ondragover="window.allowDrop(event)"></div><button class="delete-tier-btn" onclick="window.deleteTier(this)">X</button></div>
+            <div class="tier-row" data-tier="B" ondrop="window.drop(event)" ondragover="window.allowDrop(event)"><div class="tier-label" style="background-color: #ffff7f;" contenteditable="true">B</div><div class="tier-items" ondrop="window.drop(event)" ondragover="window.allowDrop(event)"></div><button class="delete-tier-btn" onclick="window.deleteTier(this)">X</button></div>
+            <div class="tier-row" data-tier="C" ondrop="window.drop(event)" ondragover="window.allowDrop(event)"><div class="tier-label" style="background-color: #7fff7f;" contenteditable="true">C</div><div class="tier-items" ondrop="window.drop(event)" ondragover="window.allowDrop(event)"></div><button class="delete-tier-btn" onclick="window.deleteTier(this)">X</button></div>
+            <div class="tier-row" data-tier="D" ondrop="window.drop(event)" ondragover="window.allowDrop(event)"><div class="tier-label" style="background-color: #7fbfff;" contenteditable="true">D</div><div class="tier-items" ondrop="window.drop(event)" ondragover="window.allowDrop(event)"></div><button class="delete-tier-btn" onclick="window.deleteTier(this)">X</button></div>
+            <div class="tier-row" data-tier="E" ondrop="window.drop(event)" ondragover="window.allowDrop(event)"><div class="tier-label" style="background-color: #7f7fff;" contenteditable="true">E</div><div class="tier-items" ondrop="window.drop(event)" ondragover="window.allowDrop(event)"></div><button class="delete-tier-btn" onclick="window.deleteTier(this)">X</button></div>
           </div>
         </div>
       </div>
@@ -132,17 +127,17 @@
 </div>
 
   <script type="module" src="script.js"></script>
+  
   <footer class="site-footer">
-  <div class="site-footer-links">
-    <a href="mylist.html">내 보관함</a> | 
-    <a href="policy.html?type=terms">이용약관</a> | 
-    <a href="policy.html?type=privacy">개인정보처리방침</a> | 
-    <a href="policy.html?type=youth">청소년 보호정책</a>
-  </div>
-  <div class="site-footer-info">
-    <div>@2026 MyTierList.net</div>
-    <div style="margin-top: 5px;">문의: asy0009@naver.com</div>
-  </div>
-</footer>
+    <div class="site-footer-links">
+      <a href="policy.html?type=terms">이용약관</a> | 
+      <a href="policy.html?type=privacy">개인정보처리방침</a> | 
+      <a href="policy.html?type=youth">청소년 보호정책</a>
+    </div>
+    <div class="site-footer-info">
+      <div>© 2026 MyTierList.net</div>
+      <div style="margin-top: 5px;">문의: asy0009@naver.com</div>
+    </div>
+  </footer>
 </body>
 </html>
