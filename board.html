@@ -5,12 +5,17 @@
   <title>티어 게시판 - 나만의 티어 메이커</title>
   <link rel="stylesheet" href="style.css">
   <style>
-    .board-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; padding: 20px; max-width: 1200px; margin: 0 auto; }
-    .tier-card { background: #1f1f1f; border: 1px solid #444; border-radius: 10px; padding: 20px; transition: 0.2s; }
-    .tier-card:hover { transform: translateY(-5px); box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
-    .card-title { font-size: 1.2rem; font-weight: bold; margin-bottom: 10px; }
-    .card-meta { color: #888; font-size: 0.9rem; margin-bottom: 15px; }
+    /* 게시판 전용 카드 스타일 (홈 화면 카드와 통일감 유지 및 버튼 영역 확보) */
+    .tier-card { background: #1a1a24; border: 1px solid #2e2e3a; border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; transition: 0.2s; height: 100%; }
+    .tier-card:hover { transform: translateY(-5px); box-shadow: 0 8px 20px rgba(0,0,0,0.6); }
+    .tier-card-img { height: 160px; background: #111118; width: 100%; display: flex; align-items: center; justify-content: center; overflow: hidden; border-bottom: 1px solid #2e2e3a; }
+    .tier-card-img img { width: 100%; height: 100%; object-fit: cover; }
+    .tier-card-info { padding: 15px; display: flex; flex-direction: column; flex-grow: 1; }
+    .card-title { font-size: 1.15rem; font-weight: bold; margin-bottom: 8px; color: #fff; word-break: keep-all; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .card-meta { color: #aaa; font-size: 0.85rem; margin-bottom: 15px; line-height: 1.4; }
+    .card-actions { margin-top: auto; display: flex; flex-direction: column; gap: 6px; }
     
+    /* 댓글 영역 스타일 */
     .comment-list { flex: 1; overflow-y: auto; margin: 10px 0; padding-right: 10px; max-height: 250px;}
     .comment-item { background: #2a2a2a; padding: 12px; border-radius: 8px; margin-bottom: 10px; }
     .reply-item { margin-left: 30px; border-left: 3px solid #3498db; padding-left: 10px; background: transparent; }
@@ -19,7 +24,6 @@
     .comment-text { margin: 8px 0; font-size: 1rem; line-height: 1.4; }
     .btn-reply-open { background: transparent; color: #aaa; border: none; font-size: 0.8rem; cursor: pointer; padding: 0; }
     .btn-reply-open:hover { color: #fff; }
-    
     .comment-input-box { display: flex; gap: 10px; margin-top: 10px; }
     .comment-input-box input { flex: 1; }
     .reply-input-box { display: flex; gap: 10px; margin-top: 10px; margin-left: 30px; }
@@ -35,16 +39,11 @@
         <a href="mylist.html">내 보관함</a>
       </div>
     </div>
-    <div class="user-menu">
-      <span id="user-name-display" class="user-name">로그인해주세요</span>
-      <button class="login-btn-header" id="btn-nickname" style="display:none;" onclick="window.setNickname()">닉네임 설정</button>
-      <button class="login-btn-header" id="btn-login" onclick="window.login()">구글 로그인</button>
-      <button class="login-btn-header logout-btn-header" id="btn-logout" style="display:none;" onclick="window.logout()">로그아웃</button>
-    </div>
+    <div class="user-menu"></div>
   </nav>
 
   <div class="header" style="text-align: center; padding: 30px 20px;">
-    <h1>🌍 티어 게시판</h1>
+    <h1>티어 게시판</h1>
     <p style="color:#aaa;">다른 사람들이 만든 티어표를 구경하고, 항목을 눌러 설명을 확인하세요!</p>
     
     <div style="max-width: 700px; margin: 20px auto 0; display: flex; gap: 10px;">
@@ -70,7 +69,7 @@
     </div>
   </div>
 
-  <div id="board-container" class="board-grid">
+  <div id="board-container" class="home-grid">
     <p style="text-align:center; color:#888; grid-column: 1 / -1;">데이터를 불러오는 중입니다...</p>
   </div>
 
@@ -81,8 +80,8 @@
       <div class="modal-header" style="display:flex; flex-direction:column; align-items:flex-start; margin-bottom: 20px;">
         <h3 id="modal-post-title" style="margin:0 0 15px 0; font-size:1.8rem; word-break: keep-all; line-height: 1.3;">제목 로딩 중...</h3>
         <div style="display:flex; flex-direction:column; gap:6px;">
-          <div id="modal-post-author" style="font-size: 1rem; color: #aaaaaa; font-weight: bold;">👤 작성자 로딩 중...</div>
-          <div id="modal-post-category" style="font-size: 1rem; color: #3498db; font-weight: bold;">🏷️ 카테고리 로딩 중...</div>
+          <div id="modal-post-author" style="font-size: 1rem; color: #aaaaaa; font-weight: bold;">작성자 로딩 중...</div>
+          <div id="modal-post-category" style="font-size: 1rem; color: #3498db; font-weight: bold;">카테고리 로딩 중...</div>
         </div>
       </div>
       
@@ -119,9 +118,10 @@
     </div>
   </div>
 
+  <script type="module" src="script.js"></script>
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
     import { getFirestore, collection, getDocs, doc, getDoc, addDoc, deleteDoc, query, orderBy, serverTimestamp, onSnapshot, updateDoc, increment, arrayUnion } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -133,41 +133,26 @@
       appId: "1:13881580770:web:6f7f9148c4bf5f95add2bb"
     };
 
-    const app = initializeApp(firebaseConfig);
+    const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
     const auth = getAuth(app);
     const db = getFirestore(app);
-    const provider = new GoogleAuthProvider();
 
     const ADMIN_EMAILS = ["fjrzlsiyoung@gmail.com"]; 
 
-    window.currentUser = null;
     let currentPostId = null; 
     let commentsUnsubscribe = null; 
     let allBoardData = [];
     window.hasOpenedModalFromUrl = false;
-
-    window.login = () => signInWithPopup(auth, provider).catch(err => alert(err.message));
-    window.logout = () => signOut(auth).then(() => alert("로그아웃 되었습니다."));
     
     onAuthStateChanged(auth, (user) => {
       const prevUser = window.currentUser;
       window.currentUser = user;
-      const nm = document.getElementById('user-name-display');
       
-      // script.js에서 만든 updateAuthUI 함수가 호출되기 전이라도 자체적으로 처리할 수 있게 기본 로직 유지
+      // 댓글창 표시/숨김 로직
       if(user) {
-        nm.innerText = (user.displayName || "익명") + "님";
-        if(ADMIN_EMAILS.includes(user.email)) nm.innerText += " (👑관리자)";
-        document.getElementById('btn-login').style.display = 'none';
-        document.getElementById('btn-logout').style.display = 'inline-block';
-        document.getElementById('btn-nickname').style.display = 'inline-block'; // 추가
         document.getElementById('comment-auth-guard').style.display = 'none';
         document.getElementById('comment-input-area').style.display = 'flex';
       } else {
-        nm.innerText = "로그인해주세요";
-        document.getElementById('btn-login').style.display = 'inline-block';
-        document.getElementById('btn-logout').style.display = 'none';
-        document.getElementById('btn-nickname').style.display = 'none'; // 추가
         document.getElementById('comment-auth-guard').style.display = 'block';
         document.getElementById('comment-input-area').style.display = 'none';
       }
@@ -197,7 +182,7 @@
         }
 
       } catch (error) {
-        container.innerHTML = `<p style="color:red; text-align:center;">에러 발생: ${error.message}</p>`;
+        container.innerHTML = `<p style="color:red; text-align:center; grid-column: 1 / -1;">에러 발생: ${error.message}</p>`;
       }
     }
 
@@ -214,24 +199,35 @@
         const isAdmin = window.currentUser && ADMIN_EMAILS.includes(window.currentUser.email);
         const isAuthor = window.currentUser && window.currentUser.uid === data.authorId;
         const canDeletePost = isAuthor || isAdmin;
-        const deleteBtnHtml = canDeletePost ? `<button class="btn" style="background:#e74c3c; width:100%; margin-bottom:5px;" onclick="window.deletePost('${data.id}')">🗑️ 이 게시글 삭제하기</button>` : '';
+        
+        // ⭐ 7번 요청: 이모티콘 제거
+        const deleteBtnHtml = canDeletePost ? `<button class="btn" style="background:#e74c3c; width:100%; padding: 8px; font-size: 0.9rem;" onclick="window.deletePost('${data.id}')">이 게시글 삭제하기</button>` : '';
+
+        // 썸네일 이미지 추출
+        const imgUrl = (data.tiers && data.tiers[0] && data.tiers[0].items[0]) ? data.tiers[0].items[0].src : 'https://via.placeholder.com/300x150?text=No+Image';
+        const finalImgUrl = data.thumbnailUrl || imgUrl;
 
         const card = document.createElement('div');
         card.className = 'tier-card';
         card.innerHTML = `
-          <div class="card-title">${data.title || data.category + " 티어표"}</div>
-          <div class="card-meta">
-            <span style="color:#2ecc71; font-weight:bold;">[${data.category || "기타"}]</span> | 
-            작성자: <span style="cursor:pointer; color:#3498db; text-decoration:underline;" onclick="window.searchByAuthor('${data.authorName}')">${data.authorName}</span> 
-            | ${dateStr}
-            <br>❤️ ${data.likes || 0} &nbsp; 👁️ ${data.views || 0}
+          <div class="tier-card-img">
+            <img src="${finalImgUrl}" alt="대표 이미지">
           </div>
-          <div class="card-actions">
-            ${deleteBtnHtml}
-            <button class="btn btn-save" style="width:100%; margin-bottom:5px;" onclick="window.openCommentModal('${data.id}', '${data.authorName}')">💬 구경 및 댓글 보기</button>
-            <div style="display:flex; gap:5px;">
-              <button class="btn btn-small" style="flex:1;" onclick="location.href='maker.html?load=${data.id}&mode=v1'">📥티어 유지</button>
-              <button class="btn btn-small" style="flex:1;" onclick="location.href='maker.html?load=${data.id}&mode=v2'">🔄티어 초기화</button>
+          <div class="tier-card-info">
+            <div class="card-title">${data.title || data.category + " 티어표"}</div>
+            <div class="card-meta">
+              <span style="color:#2ecc71; font-weight:bold;">[${data.category || "기타"}]</span> | 
+              작성자: <span style="cursor:pointer; color:#3498db; text-decoration:underline;" onclick="window.searchByAuthor('${data.authorName}')">${data.authorName}</span><br>
+              ${dateStr} <br>
+              ❤️ ${data.likes || 0} &nbsp; 👁️ ${data.views || 0}
+            </div>
+            <div class="card-actions">
+              ${deleteBtnHtml}
+              <button class="btn btn-save" style="width:100%; padding: 8px; font-size: 0.9rem;" onclick="window.openCommentModal('${data.id}', '${data.authorName}')">구경 및 댓글 보기</button>
+              <div style="display:flex; gap:5px;">
+                <button class="btn btn-small" style="flex:1; padding: 8px; background:#2a2a36; border: 1px solid #444;" onclick="location.href='maker.html?load=${data.id}&mode=v1'">티어 유지</button>
+                <button class="btn btn-small" style="flex:1; padding: 8px; background:#2a2a36; border: 1px solid #444;" onclick="location.href='maker.html?load=${data.id}&mode=v2'">티어 재배치</button>
+              </div>
             </div>
           </div>
         `;
@@ -296,7 +292,7 @@
           const likedUsers = data.likedUsers || []; 
           
           if (likedUsers.includes(window.currentUser.uid)) {
-            return alert("이미 좋아요를 누르셨습니다! ❤️");
+            return alert("이미 좋아요를 누르셨습니다!");
           }
 
           await updateDoc(postRef, {
@@ -307,7 +303,7 @@
           const countSpan = document.getElementById('like-count-display');
           if(countSpan) countSpan.innerText = parseInt(countSpan.innerText) + 1;
           
-          alert("좋아요를 눌렀습니다! ❤️");
+          alert("좋아요를 눌렀습니다!");
           loadBoard(); 
         }
       } catch(e) {
@@ -322,8 +318,8 @@
       const displayTitle = postData && postData.title ? postData.title : "무제 티어표";
       
       document.getElementById('modal-post-title').innerText = displayTitle;
-      document.getElementById('modal-post-author').innerText = `👤 ${authorName || '익명'} 님의 티어표`;
-      document.getElementById('modal-post-category').innerText = `🏷️ 카테고리 로딩 중...`;
+      document.getElementById('modal-post-author').innerText = `작성자: ${authorName || '익명'}`;
+      document.getElementById('modal-post-category').innerText = `카테고리 로딩 중...`;
       
       document.getElementById('comment-modal').style.display = 'flex';
       
@@ -345,7 +341,7 @@
           viewer.innerHTML = ''; 
           
           document.getElementById('modal-post-title').innerText = data.title || "무제 티어표";
-          catDiv.innerText = `🏷️ 카테고리: ${data.category || '지정되지 않음'}`;
+          catDiv.innerText = `카테고리: ${data.category || '지정되지 않음'}`;
           
           voteSection.innerHTML = `<button class="btn btn-save" onclick="window.likePost()" style="font-size: 1.1rem; padding: 10px 20px; background: #e74c3c;">❤️ 좋아요 (<span id="like-count-display">${data.likes || 0}</span>)</button>`;
           
@@ -480,6 +476,7 @@
 
     window.onload = () => loadBoard();
   </script>
+
   <footer class="site-footer">
     <div class="site-footer-links">
       <a href="policy.html?type=terms">이용약관</a> | 
@@ -487,7 +484,7 @@
       <a href="policy.html?type=youth">청소년 보호정책</a>
     </div>
     <div class="site-footer-info">
-      <div>@2026 MyTierList.net</div>
+      <div>© 2026 MyTierList.net</div>
       <div style="margin-top: 5px;">문의: asy0009@naver.com</div>
     </div>
   </footer>
