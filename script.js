@@ -57,29 +57,31 @@ onAuthStateChanged(auth, (user) => {
   }
 });
 
+// ⭐ 2번 요청 반영: HTML 구조와 무관하게 "닉네임 / 로그아웃" 형태로 자동 통일 렌더링
 window.updateAuthUI = function() {
-  const nm = document.getElementById('user-name-display');
-  const btnLogin = document.getElementById('btn-login');
-  const btnLogout = document.getElementById('btn-logout');
-  const btnNickname = document.getElementById('btn-nickname');
-
-  // ⭐ [추가됨] HTML 수정 없이도 style.css의 새 버튼 디자인이 자동 적용되도록 설정
-  if(btnLogin) btnLogin.className = 'login-btn-header';
-  if(btnLogout) btnLogout.className = 'login-btn-header logout-btn-header';
-  if(btnNickname) btnNickname.className = 'login-btn-header';
-
-  if(!nm) return; 
+  const userMenu = document.querySelector('.user-menu');
+  if (!userMenu) return; 
   
-  if(window.currentUser) {
-    nm.innerText = window.customNickname + "님";
-    if(btnLogin) btnLogin.style.display = 'none';
-    if(btnLogout) btnLogout.style.display = 'inline-block';
-    if(btnNickname) btnNickname.style.display = 'inline-block';
+  if (window.currentUser) {
+    // 관리자 확인 로직
+    const isAdmin = window.currentUser.email === 'fjrzlsiyoung@gmail.com';
+    const adminTag = isAdmin ? " <span style='font-size:0.8rem;'>(👑관리자)</span>" : "";
+    
+    userMenu.innerHTML = `
+      <button onclick="window.setNickname()" style="background:none; border:none; color:#fff; font-size:1rem; font-weight:bold; cursor:pointer; font-family:inherit; padding:5px; transition:0.2s;" onmouseover="this.style.color='#3498db'" onmouseout="this.style.color='#fff'">
+        ${window.customNickname}${adminTag}
+      </button>
+      <span style="color:#555; font-weight:bold; margin:0 5px;">/</span>
+      <button onclick="window.logout()" style="background:#3498db; color:white; border:none; padding:8px 16px; border-radius:6px; font-weight:bold; cursor:pointer; font-family:inherit; transition:0.2s;" onmouseover="this.style.background='#2980b9'" onmouseout="this.style.background='#3498db'">
+        로그아웃
+      </button>
+    `;
   } else {
-    nm.innerText = "로그인해주세요";
-    if(btnLogin) btnLogin.style.display = 'inline-block';
-    if(btnLogout) btnLogout.style.display = 'none';
-    if(btnNickname) btnNickname.style.display = 'none';
+    userMenu.innerHTML = `
+      <button onclick="window.login()" style="background:#3498db; color:white; border:none; padding:8px 16px; border-radius:6px; font-weight:bold; cursor:pointer; font-family:inherit; transition:0.2s;" onmouseover="this.style.background='#2980b9'" onmouseout="this.style.background='#3498db'">
+        구글 로그인
+      </button>
+    `;
   }
 };
 
@@ -99,7 +101,7 @@ window.updateRowColors = function() {
 };
 
 window.addTier = function() {
-  const board = document.getElementById('board');
+  const board = document.getElementById('board') || document.querySelector('.tier-board');
   const div = document.createElement('div');
   div.className = 'tier-row';
   div.innerHTML = `<div class="tier-label" contenteditable="true">NEW</div><div class="tier-items" ondrop="window.drop(event)" ondragover="window.allowDrop(event)"></div><button class="delete-tier-btn" onclick="window.deleteTier(this)">X</button>`;
@@ -107,6 +109,7 @@ window.addTier = function() {
   window.updateRowColors();
 };
 
+// ⭐ 5번 요청 반영: 무조건 삭제 가능하게 하여 E 미만으로 줄일 수 있음
 window.deleteTier = function(btn) {
   const row = btn.parentElement;
   while (row.querySelector('.tier-items').firstChild) {
@@ -241,20 +244,22 @@ window.deleteItem = function() {
 };
 
 // ==========================================
-// 5. DB 저장 및 메인 티어표 불러오기 (⭐ 썸네일 추가)
+// 5. DB 저장 및 메인 티어표 불러오기
 // ==========================================
 window.saveBoard = async function() {
   if (!window.currentUser) return alert("로그인해야 저장할 수 있습니다!");
 
   const tierRows = document.querySelectorAll('.tier-row');
   const boardData = [];
-  let thumbnailImg = ""; // ⭐ 홈 화면을 위한 대표 썸네일 이미지
+  let thumbnailImg = ""; 
+  let totalPlacedItems = 0; // ⭐ 3번 요청: 배치된 항목 카운트용
 
   tierRows.forEach(row => {
     const label = row.querySelector('.tier-label').innerText;
     const items = Array.from(row.querySelector('.tier-items').children).map(item => {
+      totalPlacedItems++; // 아이템이 존재할 때마다 증가
       const imgSrc = item.querySelector('img').src;
-      if(!thumbnailImg) thumbnailImg = imgSrc; // 첫 번째 이미지를 썸네일로 찜!
+      if(!thumbnailImg) thumbnailImg = imgSrc; 
       return {
         src: imgSrc,
         title: item.querySelector('.item-title') ? item.querySelector('.item-title').innerText : "",
@@ -263,6 +268,11 @@ window.saveBoard = async function() {
     });
     boardData.push({ label, items, color: row.querySelector('.tier-label').style.backgroundColor });
   });
+
+  // ⭐ 3번 요청: 티어표에 아이템이 하나도 없으면 저장 차단
+  if (totalPlacedItems === 0) {
+    return alert("티어표에 아무 항목도 올라가 있지 않습니다. 아이템을 배치한 후 저장해주세요.");
+  }
 
   const bankItems = Array.from(document.getElementById('item-bank').children).map(item => ({
     src: item.querySelector('img').src,
@@ -282,14 +292,14 @@ window.saveBoard = async function() {
     bank: bankItems,
     likes: 0,
     dislikes: 0,
-    views: 0, // ⭐ 홈 화면 정렬을 위한 초기 조회수
-    thumbnailUrl: thumbnailImg, // ⭐ 홈 화면에 띄울 썸네일
+    views: 0, 
+    thumbnailUrl: thumbnailImg, 
     createdAt: serverTimestamp()
   };
 
   try {
     document.querySelector('.btn-save').innerText = "저장 중...";
-    await addDoc(collection(db, "tierLists"), payload); // 컬렉션 이름은 "tierLists"
+    await addDoc(collection(db, "tierLists"), payload); 
     alert("성공적으로 저장되었습니다! 내 보관함으로 이동합니다.");
     window.location.href = "mylist.html"; 
   } catch (e) {
@@ -306,7 +316,7 @@ window.loadBoardData = async function() {
       const data = docSnap.data();
       originalAuthorId = data.authorId;
       
-      const board = document.getElementById('board');
+      const board = document.getElementById('board') || document.querySelector('.tier-board');
       const itemBank = document.getElementById('item-bank');
       if(board) board.innerHTML = ''; 
       if(itemBank) itemBank.innerHTML = '';
@@ -333,7 +343,6 @@ window.onload = function() {
   if (loadId) {
     window.loadBoardData(); 
   } else {
-    // HTML에 하드코딩된 S~E 칸들의 색상만 입혀줍니다.
     window.updateRowColors();
   }
 };
@@ -348,7 +357,6 @@ window.openPostDetail = async function(postId) {
   if (docSnap.exists()) {
     const data = docSnap.data();
     
-    // 게시판 상세모달에 티어표 시각화
     const viewer = document.getElementById('board-viewer'); 
     if(viewer) {
       viewer.innerHTML = `<h3>${data.title || "무제 티어표"}</h3>`; 
@@ -420,7 +428,7 @@ window.deleteComment = async function(postId, commentId) {
 };
 
 // ==========================================
-// 7. 내 보관함 로드 함수 (⭐ index.html -> maker.html 경로 수정 완료)
+// 7. 내 보관함 로드 함수
 // ==========================================
 window.loadMyList = async function() {
   const listContainer = document.getElementById('my-list-container');
@@ -456,4 +464,36 @@ window.loadMyList = async function() {
     console.error("보관함 불러오기 에러:", e);
     listContainer.innerHTML = '<p>데이터를 불러오는데 실패했습니다.</p>';
   }
+};
+
+// ==========================================
+// 8. 이미지 저장 기능 추가 (⭐ 6번 요청 반영)
+// ==========================================
+window.saveAsImage = function() {
+  // 저장할 티어표 보드 영역 찾기
+  const target = document.querySelector('.tier-board') || document.getElementById('board');
+  if (!target) return alert("저장할 티어표 영역을 찾을 수 없습니다.");
+
+  // 이미지에 보기 싫은 X 버튼이 찍히지 않도록 임시로 숨김
+  const deleteBtns = target.querySelectorAll('.delete-tier-btn');
+  deleteBtns.forEach(btn => btn.style.display = 'none');
+
+  html2canvas(target, {
+    useCORS: true, 
+    backgroundColor: "#111", // 배경색 유지
+    scale: 2 // 고화질 저장
+  }).then(canvas => {
+    // 숨겼던 버튼 다시 보이기
+    deleteBtns.forEach(btn => btn.style.display = 'block');
+    
+    const link = document.createElement('a');
+    link.download = 'my-tier-list.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  }).catch(err => {
+    // 에러 시에도 버튼은 다시 보여야 함
+    deleteBtns.forEach(btn => btn.style.display = 'block');
+    console.error("이미지 저장 실패:", err);
+    alert("이미지 저장 중 오류가 발생했습니다.");
+  });
 };
