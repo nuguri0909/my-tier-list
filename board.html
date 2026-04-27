@@ -5,15 +5,20 @@
   <title>티어 게시판 - 나만의 티어 메이커</title>
   <link rel="stylesheet" href="style.css">
   <style>
-    /* 게시판 전용 카드 스타일 (홈 화면 카드와 통일감 유지 및 버튼 영역 확보) */
-    .tier-card { background: #1a1a24; border: 1px solid #2e2e3a; border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; transition: 0.2s; height: 100%; }
+    /* ⭐ 3번 요청 반영: 게시판 카드를 가로로 더 넓고 시원하게 키움 (300px -> 360px) */
+    .board-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 25px; padding: 20px; max-width: 1200px; margin: 0 auto; }
+    
+    .tier-card { background: #1a1a24; border: 1px solid #2e2e3a; border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; transition: 0.2s; height: 100%; min-height: 420px; }
     .tier-card:hover { transform: translateY(-5px); box-shadow: 0 8px 20px rgba(0,0,0,0.6); }
-    .tier-card-img { height: 160px; background: #111118; width: 100%; display: flex; align-items: center; justify-content: center; overflow: hidden; border-bottom: 1px solid #2e2e3a; }
+    
+    /* ⭐ 이미지 영역 높이도 비례해서 키워줌 (160px -> 200px) */
+    .tier-card-img { height: 200px; background: #111118; width: 100%; display: flex; align-items: center; justify-content: center; overflow: hidden; border-bottom: 1px solid #2e2e3a; }
     .tier-card-img img { width: 100%; height: 100%; object-fit: cover; }
-    .tier-card-info { padding: 15px; display: flex; flex-direction: column; flex-grow: 1; }
-    .card-title { font-size: 1.15rem; font-weight: bold; margin-bottom: 8px; color: #fff; word-break: keep-all; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .card-meta { color: #aaa; font-size: 0.85rem; margin-bottom: 15px; line-height: 1.4; }
-    .card-actions { margin-top: auto; display: flex; flex-direction: column; gap: 6px; }
+    
+    .tier-card-info { padding: 18px; display: flex; flex-direction: column; flex-grow: 1; }
+    .card-title { font-size: 1.2rem; font-weight: bold; margin-bottom: 8px; color: #fff; word-break: keep-all; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .card-meta { color: #aaa; font-size: 0.9rem; margin-bottom: 15px; line-height: 1.4; }
+    .card-actions { margin-top: auto; display: flex; flex-direction: column; gap: 8px; }
     
     /* 댓글 영역 스타일 */
     .comment-list { flex: 1; overflow-y: auto; margin: 10px 0; padding-right: 10px; max-height: 250px;}
@@ -69,7 +74,7 @@
     </div>
   </div>
 
-  <div id="board-container" class="home-grid">
+  <div id="board-container" class="board-grid">
     <p style="text-align:center; color:#888; grid-column: 1 / -1;">데이터를 불러오는 중입니다...</p>
   </div>
 
@@ -147,15 +152,35 @@
     onAuthStateChanged(auth, (user) => {
       const prevUser = window.currentUser;
       window.currentUser = user;
+      const userMenu = document.querySelector('.user-menu');
       
-      // 댓글창 표시/숨김 로직
+      // ⭐ 2번 요청 반영: "닉네임 / 로그아웃" UI 직접 주입 (script.js의 updateAuthUI 역할 수행)
       if(user) {
+        const isAdmin = ADMIN_EMAILS.includes(user.email);
+        const adminTag = isAdmin ? " <span style='font-size:0.8rem;'>(👑관리자)</span>" : "";
+        const displayName = user.displayName || "익명";
+        
+        userMenu.innerHTML = `
+          <button onclick="window.setNickname()" style="background:none; border:none; color:#fff; font-size:1rem; font-weight:bold; cursor:pointer; font-family:inherit; padding:5px; transition:0.2s;" onmouseover="this.style.color='#3498db'" onmouseout="this.style.color='#fff'">
+            ${displayName}${adminTag}
+          </button>
+          <span style="color:#555; font-weight:bold; margin:0 5px;">/</span>
+          <button onclick="window.logout()" style="background:#3498db; color:white; border:none; padding:8px 16px; border-radius:6px; font-weight:bold; cursor:pointer; font-family:inherit; transition:0.2s;" onmouseover="this.style.background='#2980b9'" onmouseout="this.style.background='#3498db'">
+            로그아웃
+          </button>
+        `;
         document.getElementById('comment-auth-guard').style.display = 'none';
         document.getElementById('comment-input-area').style.display = 'flex';
       } else {
+        userMenu.innerHTML = `
+          <button onclick="window.login()" style="background:#3498db; color:white; border:none; padding:8px 16px; border-radius:6px; font-weight:bold; cursor:pointer; font-family:inherit; transition:0.2s;" onmouseover="this.style.background='#2980b9'" onmouseout="this.style.background='#3498db'">
+            구글 로그인
+          </button>
+        `;
         document.getElementById('comment-auth-guard').style.display = 'block';
         document.getElementById('comment-input-area').style.display = 'none';
       }
+      
       if(prevUser !== user && allBoardData.length > 0) window.executeSearch();
     });
 
@@ -200,7 +225,7 @@
         const isAuthor = window.currentUser && window.currentUser.uid === data.authorId;
         const canDeletePost = isAuthor || isAdmin;
         
-        // ⭐ 7번 요청: 이모티콘 제거
+        // ⭐ 7번 요청: 삭제, 구경하기 버튼에서 이모티콘 제거 및 스타일 다듬기
         const deleteBtnHtml = canDeletePost ? `<button class="btn" style="background:#e74c3c; width:100%; padding: 8px; font-size: 0.9rem;" onclick="window.deletePost('${data.id}')">이 게시글 삭제하기</button>` : '';
 
         // 썸네일 이미지 추출
@@ -223,7 +248,7 @@
             </div>
             <div class="card-actions">
               ${deleteBtnHtml}
-              <button class="btn btn-save" style="width:100%; padding: 8px; font-size: 0.9rem;" onclick="window.openCommentModal('${data.id}', '${data.authorName}')">구경 및 댓글 보기</button>
+              <button class="btn btn-save" style="width:100%; padding: 8px; font-size: 0.9rem; margin-bottom: 5px;" onclick="window.openCommentModal('${data.id}', '${data.authorName}')">구경 및 댓글 보기</button>
               <div style="display:flex; gap:5px;">
                 <button class="btn btn-small" style="flex:1; padding: 8px; background:#2a2a36; border: 1px solid #444;" onclick="location.href='maker.html?load=${data.id}&mode=v1'">티어 유지</button>
                 <button class="btn btn-small" style="flex:1; padding: 8px; background:#2a2a36; border: 1px solid #444;" onclick="location.href='maker.html?load=${data.id}&mode=v2'">티어 재배치</button>
@@ -292,7 +317,7 @@
           const likedUsers = data.likedUsers || []; 
           
           if (likedUsers.includes(window.currentUser.uid)) {
-            return alert("이미 좋아요를 누르셨습니다!");
+            return alert("이미 좋아요를 누르셨습니다! ❤️");
           }
 
           await updateDoc(postRef, {
@@ -303,7 +328,7 @@
           const countSpan = document.getElementById('like-count-display');
           if(countSpan) countSpan.innerText = parseInt(countSpan.innerText) + 1;
           
-          alert("좋아요를 눌렀습니다!");
+          alert("좋아요를 눌렀습니다! ❤️");
           loadBoard(); 
         }
       } catch(e) {
