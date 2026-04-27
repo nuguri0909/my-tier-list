@@ -121,17 +121,26 @@
       renderCards(recent.docs.map(d => ({id:d.id, ...d.data()})), "recent-grid");
     }
 
-    // ⭐ 7번 요청 반영: 카테고리 섹션 제목에서도 이모티콘 제거
+    // ⭐ 데이터가 있는 카테고리를 찾아서 무조건 2개를 띄우는 코드로 수정
     async function loadRandomCategories() {
-      const categories = ["애니", "게임", "영화", "음식", "만화", "캐릭터"].sort(() => 0.5 - Math.random()).slice(0, 2);
+      const categories = ["애니", "게임", "영화", "음식", "만화", "캐릭터"].sort(() => 0.5 - Math.random());
       const container = document.getElementById("random-category-container");
+      container.innerHTML = ""; // 초기화
+      
+      let renderedCount = 0; // 화면에 띄운 카테고리 개수
+
       for (const cat of categories) {
+        if (renderedCount >= 2) break; // 2개를 채웠으면 즉시 반복문 종료
+
         const q = query(collection(db, "tierLists"), where("category", "==", cat), limit(5));
         const snap = await getDocs(q);
+        
         if (!snap.empty) {
           const html = `<h2 class="home-section-title"><span style="border-left: 5px solid #3498db; padding-left: 15px;">지금 뜨는 [${cat}] 티어리스트</span></h2><div id="grid-${cat}"></div>`;
           container.insertAdjacentHTML('beforeend', html);
           renderCards(snap.docs.map(d => ({id:d.id, ...d.data()})), `grid-${cat}`);
+          
+          renderedCount++; // 화면에 하나 그렸으니 카운트 1 증가
         }
       }
     }
