@@ -37,8 +37,9 @@
     </div>
     <div class="user-menu">
       <span id="user-name-display" class="user-name">로그인해주세요</span>
-      <button class="btn btn-small" id="btn-login" onclick="window.login()">구글 로그인</button>
-      <button class="btn btn-small" id="btn-logout" style="display:none;" onclick="window.logout()">로그아웃</button>
+      <button class="login-btn-header" id="btn-nickname" style="display:none;" onclick="window.setNickname()">닉네임 설정</button>
+      <button class="login-btn-header" id="btn-login" onclick="window.login()">구글 로그인</button>
+      <button class="login-btn-header logout-btn-header" id="btn-logout" style="display:none;" onclick="window.logout()">로그아웃</button>
     </div>
   </nav>
 
@@ -153,17 +154,20 @@
       window.currentUser = user;
       const nm = document.getElementById('user-name-display');
       
+      // script.js에서 만든 updateAuthUI 함수가 호출되기 전이라도 자체적으로 처리할 수 있게 기본 로직 유지
       if(user) {
         nm.innerText = (user.displayName || "익명") + "님";
         if(ADMIN_EMAILS.includes(user.email)) nm.innerText += " (👑관리자)";
         document.getElementById('btn-login').style.display = 'none';
         document.getElementById('btn-logout').style.display = 'inline-block';
+        document.getElementById('btn-nickname').style.display = 'inline-block'; // 추가
         document.getElementById('comment-auth-guard').style.display = 'none';
         document.getElementById('comment-input-area').style.display = 'flex';
       } else {
         nm.innerText = "로그인해주세요";
         document.getElementById('btn-login').style.display = 'inline-block';
         document.getElementById('btn-logout').style.display = 'none';
+        document.getElementById('btn-nickname').style.display = 'none'; // 추가
         document.getElementById('comment-auth-guard').style.display = 'block';
         document.getElementById('comment-input-area').style.display = 'none';
       }
@@ -311,11 +315,9 @@
       }
     };
 
-    // ⭐ 모달 창 열기 함수 수정 
     window.openCommentModal = async (postId, authorName) => {
       currentPostId = postId;
       
-      // 1. 빠른 제목/작성자 렌더링 (리스트 데이터 재활용)
       const postData = allBoardData.find(p => p.id === postId);
       const displayTitle = postData && postData.title ? postData.title : "무제 티어표";
       
@@ -342,7 +344,6 @@
           const data = docSnap.data();
           viewer.innerHTML = ''; 
           
-          // 2. DB에서 가져온 최신 정보로 덮어쓰기
           document.getElementById('modal-post-title').innerText = data.title || "무제 티어표";
           catDiv.innerText = `🏷️ 카테고리: ${data.category || '지정되지 않음'}`;
           
