@@ -26,9 +26,9 @@
     </div>
     <div class="user-menu">
       <span id="user-name-display" class="user-name">로그인해주세요</span>
-      <button class="btn btn-small" id="btn-nickname" style="display:none;" onclick="window.setNickname()">닉네임 설정</button>
-      <button class="btn btn-small btn-save" id="btn-login" onclick="window.login()">구글 로그인</button>
-      <button class="btn btn-small" id="btn-logout" style="display:none;" onclick="window.logout()">로그아웃</button>
+      <button class="login-btn-header" id="btn-nickname" style="display:none;" onclick="window.setNickname()">닉네임 설정</button>
+      <button class="login-btn-header" id="btn-login" onclick="window.login()">구글 로그인</button>
+      <button class="login-btn-header logout-btn-header" id="btn-logout" style="display:none;" onclick="window.logout()">로그아웃</button>
     </div>
   </nav>
 
@@ -130,7 +130,6 @@
           const card = document.createElement('div');
           card.className = 'my-tier-card';
           
-          // ⭐ 수정된 부분: index.html -> maker.html?load=...&mode=v1 로 연결되도록 변경!
           card.innerHTML = `
             <h3 class="card-title">${data.title || data.category + " 티어표"}</h3>
             <div class="card-meta">저장일: ${dateStr}</div>
