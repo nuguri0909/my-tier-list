@@ -89,7 +89,7 @@
     }
 
     /* =========================================
-       3. 섹션 제목 (모든 제목 크기 및 여백 완벽 통일)
+       3. 섹션 제목 
     ========================================= */
     .section-title {
       max-width: 1350px;
@@ -102,20 +102,22 @@
     }
 
     /* =========================================
-       4. 5열 세로형 카드 그리드 (⭐ 팽창 버그 수정 완료)
+       4. 5열 세로형 카드 그리드 (🔥 팽창 버그 완전 차단)
     ========================================= */
     .home-grid {
       display: grid;
-      /* ⭐ 1fr 대신 minmax(0, 1fr)을 써서 아이템이 1개라도 강제로 1/5 크기 유지 */
+      /* 빈 공간이 있어도 무조건 5등분 사이즈 유지 */
       grid-template-columns: repeat(5, minmax(0, 1fr)); 
       gap: 15px;
+      width: 100%; /* 그리드 컨테이너 넓이 꽉 채우기 */
       max-width: 1350px; 
       margin: 0 auto 20px auto; 
       padding: 0 20px;
+      box-sizing: border-box;
     }
     @media (max-width: 1250px) { .home-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
     @media (max-width: 850px) { .home-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-    @media (max-width: 500px) { .home-grid { grid-template-columns: 1fr; } }
+    @media (max-width: 500px) { .home-grid { grid-template-columns: minmax(0, 1fr); } }
 
     .home-tier-card {
       background: #1a1a24;
@@ -126,6 +128,10 @@
       overflow: hidden;
       height: 370px;
       transition: transform 0.2s ease, box-shadow 0.2s ease;
+      
+      /* 🔥 핵심 해결책: 내용물(이미지, 텍스트) 크기에 상관없이 카드 팽창 방지 */
+      min-width: 0; 
+      width: 100%;
     }
     .home-tier-card:hover {
       transform: translateY(-5px);
@@ -144,6 +150,7 @@
       width: 100%;
       height: 100%;
       object-fit: cover;
+      display: block; /* 하단 미세 여백 제거 */
     }
     .home-tier-card-info {
       padding: 18px;
@@ -151,6 +158,7 @@
       flex-direction: column;
       flex-grow: 1;
       justify-content: space-between;
+      min-width: 0; /* 내부 텍스트 팽창 방지 */
     }
     .home-card-title {
       font-size: 1.2rem;
