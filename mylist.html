@@ -19,7 +19,7 @@
     <div class="nav-left">
       <a href="index.html" class="nav-logo">MyTierList</a>
       <div class="nav-links">
-        <a href="index.html">티어 만들기</a>
+        <a href="maker.html">티어 만들기</a>
         <a href="board.html">티어 게시판</a>
         <a href="mylist.html">내 보관함</a>
       </div>
@@ -38,12 +38,11 @@
   </div>
 
   <div class="grid-container" id="my-list">
-    </div>
+  </div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-    // ⭐ 1번 해결: Firestore 관련 함수 완벽 추가
     import { getFirestore, collection, query, where, getDocs, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -57,7 +56,7 @@
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
-    const db = getFirestore(app); // DB 연결 완료!
+    const db = getFirestore(app); 
     const provider = new GoogleAuthProvider();
 
     window.currentUser = null; 
@@ -85,7 +84,7 @@
         window.customNickname = "익명";
       }
       window.updateAuthUI();
-      window.renderMyLists(); // 로그인 상태가 바뀌면 보관함 다시 그리기
+      window.renderMyLists(); 
     });
 
     window.updateAuthUI = () => {
@@ -103,7 +102,6 @@
       }
     };
 
-    // ⭐ 1번 해결 핵심: 내 티어표 데이터를 DB에서 불러오기
     window.renderMyLists = async () => {
       const container = document.getElementById('my-list');
       
@@ -115,7 +113,6 @@
       container.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; color: #aaa;">데이터를 불러오는 중입니다...</div>';
 
       try {
-        // authorId가 내 uid와 같은 문서만 쿼리!
         const q = query(collection(db, "tierLists"), where("authorId", "==", window.currentUser.uid));
         const snapshot = await getDocs(q);
 
@@ -133,12 +130,13 @@
           const card = document.createElement('div');
           card.className = 'my-tier-card';
           
+          // ⭐ 수정된 부분: index.html -> maker.html?load=...&mode=v1 로 연결되도록 변경!
           card.innerHTML = `
             <h3 class="card-title">${data.title || data.category + " 티어표"}</h3>
             <div class="card-meta">저장일: ${dateStr}</div>
             <button class="delete-btn" onclick="window.deleteMyList('${docSnap.id}')">삭제</button>
             <div style="display:flex; gap:10px;">
-              <button class="btn" style="flex:1;" onclick="location.href='index.html?load=${docSnap.id}'">이어서 수정하기</button>
+              <button class="btn" style="flex:1;" onclick="location.href='maker.html?load=${docSnap.id}&mode=v1'">이어서 수정하기</button>
             </div>
           `;
           container.appendChild(card);
@@ -148,30 +146,29 @@
       }
     };
 
-    // 내가 만든 티어표 삭제 로직
     window.deleteMyList = async (docId) => {
       if(confirm("정말 이 티어표를 삭제하시겠습니까? (복구할 수 없습니다)")) {
         try {
           await deleteDoc(doc(db, "tierLists", docId));
           alert("성공적으로 삭제되었습니다.");
-          window.renderMyLists(); // 삭제 후 목록 새로고침
+          window.renderMyLists(); 
         } catch(e) {
           alert("삭제 실패: " + e.message);
         }
       }
     };
-
   </script>
+
   <footer class="site-footer">
-  <div class="site-footer-links">
-    <a href="policy.html?type=terms">이용약관</a> | 
-    <a href="policy.html?type=privacy">개인정보처리방침</a> | 
-    <a href="policy.html?type=youth">청소년 보호정책</a>
-  </div>
-  <div class="site-footer-info">
-    <div>@2026 MyTierList.net</div>
-    <div style="margin-top: 5px;">문의: asy0009@naver.com</div>
-  </div>
-</footer>
+    <div class="site-footer-links">
+      <a href="policy.html?type=terms">이용약관</a> | 
+      <a href="policy.html?type=privacy">개인정보처리방침</a> | 
+      <a href="policy.html?type=youth">청소년 보호정책</a>
+    </div>
+    <div class="site-footer-info">
+      <div>@2026 MyTierList.net</div>
+      <div style="margin-top: 5px;">문의: asy0009@naver.com</div>
+    </div>
+  </footer>
 </body>
 </html>
