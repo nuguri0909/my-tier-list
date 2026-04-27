@@ -27,7 +27,7 @@ body {
 }
 
 /* ==========================================
-   네비게이션 바
+   네비게이션 바 및 유저 메뉴 (⭐ 1번 요청 반영)
    ========================================== */
 .navbar { 
   display: flex; 
@@ -45,8 +45,24 @@ body {
 .nav-links a { color: #ccc; text-decoration: none; font-weight: 500; transition: color 0.2s; }
 .nav-links a:hover { color: #fff; }
 
-.user-menu { display: flex; align-items: center; gap: 10px; }
-.user-name { font-size: 0.9rem; color: #aaa; }
+/* 유저 로그인 메뉴 및 버튼 스타일 */
+.user-menu { display: flex; align-items: center; gap: 15px; margin-left: auto; }
+.user-name { font-size: 0.95rem; color: #fff; font-weight: bold; }
+
+.login-btn-header {
+  background: #3498db;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+.login-btn-header:hover { background: #2980b9; }
+
+.logout-btn-header { background: #e74c3c !important; }
+.logout-btn-header:hover { background: #c0392b !important; }
 
 .top-controls {
   display: flex;
@@ -292,86 +308,39 @@ body {
   border-radius: 30px;
 }
 
-/* ⭐ 제목과 카드 정렬 불일치 완벽 해결 (1000px로 통일) */
+/* ⭐ 제목과 카드 정렬 불일치 완벽 해결 (1200px로 통일 - 5열 배치 위함) */
 .home-section-title {
   font-size: 1.5rem;
   margin: 40px auto 20px auto; 
-  max-width: 1000px; /* 카드 그리드와 너비를 완벽히 똑같이 맞춤 */
+  max-width: 1200px; /* 5열 그리드 너비에 완벽히 똑같이 맞춤 */
   width: 100%;
   padding: 0 20px; 
   box-sizing: border-box;
-  text-align: left !important; /* 무조건 왼쪽 정렬 */
-}
-
-/* 남겨두신 백업용 그리드 디자인 */
-.tier-card-grid {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 25px;
-  margin-bottom: 50px;
-}
-.tier-card {
-  background: #1a1a1a;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 6px 15px rgba(0,0,0,0.3);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-  cursor: pointer;
-  border: 1px solid #333;
-}
-.tier-card:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 12px 25px rgba(0,0,0,0.6);
-  border-color: #3498db;
-}
-.tier-card-img {
-  width: 100%;
-  height: 150px;
-  background: #111;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-bottom: 1px solid #333;
-}
-.tier-card-img img { width: 100%; height: 100%; object-fit: cover; opacity: 0.7; }
-.tier-card-info { padding: 20px; }
-.tier-card-title { font-size: 1.1rem; font-weight: bold; margin: 0 0 10px 0; color: #fff; }
-.tier-card-meta { font-size: 0.85rem; color: #888; display: flex; justify-content: space-between; }
-
-/* 임시 로고 스타일 */
-.temp-logo {
-  width: 80px;
-  height: 80px;
-  background: #3498db;
-  color: white;
-  border-radius: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 900;
-  font-size: 1.5rem;
-  margin: 0 auto 20px auto;
-  box-shadow: 0 4px 15px rgba(52, 152, 219, 0.4);
-  border: 3px solid #fff;
+  text-align: left !important; 
 }
 
 /* =========================================
-   홈 화면 전용 세로형 3열 카드 그리드
+   홈 화면 전용 세로형 ⭐ 5열 ⭐ 카드 그리드
 ========================================= */
 .home-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr); 
-  gap: 20px;
-  max-width: 1000px; /* ⭐ 제목과 완벽하게 일치하는 너비 */
+  grid-template-columns: repeat(5, 1fr); /* 3에서 5로 변경! */
+  gap: 15px; /* 카드가 작아지므로 간격을 살짝 좁힘 */
+  max-width: 1200px; /* 5개가 넉넉하게 들어가는 너비 (1000px -> 1200px) */
   margin: 0 auto 40px auto;
-  padding: 0 20px; /* 창이 좁아질 때 화면에 딱 붙지 않도록 여백 추가 */
+  padding: 0 20px;
   box-sizing: border-box;
 }
 
+/* 화면 크기에 맞춰 자동으로 열 개수가 줄어드는 반응형 설정 */
+@media (max-width: 1024px) {
+  .home-grid { grid-template-columns: repeat(3, 1fr); }
+}
 @media (max-width: 768px) {
-  .home-grid {
-    grid-template-columns: 1fr;
-  }
+  .home-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 480px) {
+  .home-grid { grid-template-columns: 1fr; }
 }
 
 .home-tier-card {
@@ -381,7 +350,7 @@ body {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  height: 380px; 
+  height: 320px; /* 5열 배치 시 카드가 얇아지므로 높이도 약간 줄임 (380px -> 320px) */
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
@@ -391,7 +360,7 @@ body {
 }
 
 .home-tier-card-img {
-  height: 50%; 
+  height: 45%; /* 높이 비율 조정 */
   background: #111118;
   width: 100%;
   display: flex;
@@ -407,7 +376,7 @@ body {
 }
 
 .home-tier-card-info {
-  padding: 20px;
+  padding: 15px; /* 공간 확보를 위해 패딩 살짝 줄임 */
   display: flex;
   flex-direction: column;
   flex-grow: 1;
@@ -415,29 +384,32 @@ body {
 }
 
 .home-card-title {
-  font-size: 1.3rem;
+  font-size: 1.15rem; /* 글자 크기 최적화 */
   font-weight: bold;
   color: #ffffff;
-  margin: 0 0 10px 0;
+  margin: 0 0 8px 0;
   word-break: keep-all;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis; /* 너무 길면 ... 처리 */
 }
 
 .home-card-desc {
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   color: #aaaaaa;
-  line-height: 1.5;
-  margin-bottom: 15px;
+  line-height: 1.4;
+  margin-bottom: 10px;
 }
 
 .home-card-btn {
   background: #2a2a36;
   color: #dddddd;
   border: 1px solid #3a3a4a;
-  padding: 12px;
+  padding: 10px;
   border-radius: 8px;
   text-align: center;
   cursor: pointer;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   font-weight: bold;
   transition: 0.2s;
   margin-top: auto; 
@@ -448,3 +420,28 @@ body {
   color: #ffffff;
   border-color: #555566;
 }
+
+/* 남겨두신 백업용 그리드 디자인 (기존 내용 유지) */
+.tier-card-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 25px;
+  margin-bottom: 50px;
+}
+.tier-card {
+  background: #1a1a1a;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 6px 15px rgba(0,0,0,0.3);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  cursor: pointer;
+  border: 1px solid #333;
+}
+.tier-card:hover { transform: translateY(-8px); box-shadow: 0 12px 25px rgba(0,0,0,0.6); border-color: #3498db; }
+.tier-card-img { width: 100%; height: 150px; background: #111; display: flex; align-items: center; justify-content: center; border-bottom: 1px solid #333; }
+.tier-card-img img { width: 100%; height: 100%; object-fit: cover; opacity: 0.7; }
+.tier-card-info { padding: 20px; }
+.tier-card-title { font-size: 1.1rem; font-weight: bold; margin: 0 0 10px 0; color: #fff; }
+.tier-card-meta { font-size: 0.85rem; color: #888; display: flex; justify-content: space-between; }
+
+.temp-logo { width: 80px; height: 80px; background: #3498db; color: white; border-radius: 20px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 1.5rem; margin: 0 auto 20px auto; box-shadow: 0 4px 15px rgba(52, 152, 219, 0.4); border: 3px solid #fff; }
