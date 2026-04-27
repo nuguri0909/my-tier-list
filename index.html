@@ -5,137 +5,41 @@
   <title>MyTierList - 나만의 티어 메이커</title>
   <link rel="stylesheet" href="style.css">
   <style>
-    /* =========================================
-       가로로 긴 배너 카드 (오직 index.html 전용)
-    ========================================= */
+    /* 배너 및 홈 그리드 최적화 스타일 */
     .wide-banner-card {
-      display: flex;
-      background: rgba(255, 255, 255, 0.05); 
-      border: 1px solid #3a3a4a;
-      border-radius: 16px;
-      max-width: 1000px;
-      margin: 0 auto 20px auto; 
-      padding: 40px;
-      align-items: center;
-      justify-content: space-between;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      display: flex; background: rgba(255, 255, 255, 0.05); border: 1px solid #3a3a4a;
+      border-radius: 16px; max-width: 1200px; margin: 0 auto 20px auto; padding: 40px;
+      align-items: center; justify-content: space-between; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
       backdrop-filter: blur(10px);
     }
-    .wide-banner-content {
-      text-align: left;
-      max-width: 60%;
-    }
-    .wide-banner-title {
-      font-size: 1.8rem;
-      font-weight: bold;
-      color: #ffffff;
-      margin-bottom: 15px;
-    }
-    .wide-banner-desc {
-      font-size: 1.05rem;
-      color: #cccccc;
-      line-height: 1.6;
-      margin-bottom: 25px;
-      word-break: keep-all;
-    }
-    .wide-banner-btn {
-      background: #3498db;
-      color: #fff;
-      font-size: 1.1rem;
-      font-weight: bold;
-      padding: 12px 24px;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: 0.2s;
-    }
-    .wide-banner-btn:hover {
-      background: #2980b9;
-      transform: translateY(-2px);
-    }
-    .wide-banner-img {
-      width: 35%;
-      height: 180px;
-      background: #1a1a24;
-      border: 1px dashed #555;
-      border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #666;
-      font-size: 0.9rem;
-      text-align: center;
-      overflow: hidden;
-    }
+    .wide-banner-content { text-align: left; max-width: 60%; }
+    .wide-banner-title { font-size: 1.8rem; font-weight: bold; color: #ffffff; margin-bottom: 15px; }
+    .wide-banner-desc { font-size: 1.05rem; color: #cccccc; line-height: 1.6; margin-bottom: 25px; word-break: keep-all; }
+    .wide-banner-btn { background: #3498db; color: #fff; font-size: 1.1rem; font-weight: bold; padding: 12px 24px; border: none; border-radius: 8px; cursor: pointer; transition: 0.2s; }
+    .wide-banner-btn:hover { background: #2980b9; transform: translateY(-2px); }
+    .wide-banner-img { width: 35%; height: 180px; background: #1a1a24; border: 1px dashed #555; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #666; overflow: hidden; }
 
-    @media (max-width: 768px) {
-      .wide-banner-card {
-        flex-direction: column;
-        padding: 20px;
-      }
-      .wide-banner-content, .wide-banner-img {
-        max-width: 100%;
-        width: 100%;
-        text-align: center;
-      }
-      .wide-banner-img {
-        margin-top: 20px;
-      }
-    }
-
-    /* =========================================
-       ⭐ 2번 요청: 좌우 5개 배치 (style.css 덮어쓰기)
-    ========================================= */
+    /* ⭐ 2번 요청: 좌우 5개 배치 고정 */
     .home-grid {
       display: grid;
-      grid-template-columns: repeat(5, 1fr) !important; /* 좌우 5개로 강제 고정 */
+      grid-template-columns: repeat(5, 1fr) !important;
       gap: 15px;
-      max-width: 1200px !important; /* 5개가 들어가도록 넓이 확장 */
+      max-width: 1200px !important;
       margin: 0 auto 40px auto;
       padding: 0 20px;
       box-sizing: border-box;
     }
-    .home-section-title {
-      max-width: 1200px !important; /* 제목 라인도 넓이 맞춤 */
-      margin: 40px auto 20px auto;
-      text-align: left !important;
-    }
+    .home-section-title { max-width: 1200px !important; margin: 40px auto 20px auto; text-align: left !important; }
 
-    /* 화면이 작아지면 자동으로 줄이기 */
     @media (max-width: 1024px) { .home-grid { grid-template-columns: repeat(3, 1fr) !important; } }
-    @media (max-width: 768px) { .home-grid { grid-template-columns: 1fr !important; } }
+    @media (max-width: 768px) { .home-grid { grid-template-columns: 1fr !important; } .wide-banner-card { flex-direction: column; padding: 20px; } }
 
-    /* ⭐ 1번 요청: 구글 로그인 버튼 디자인 */
-    .user-menu {
-      display: flex;
-      align-items: center;
-      gap: 15px;
-      margin-left: auto; /* 오른쪽 끝으로 밀어내기 */
-    }
-    .user-name {
-      color: #fff;
-      font-weight: bold;
-      font-size: 0.95rem;
-    }
-    .login-btn-header {
-      background: #3498db;
-      color: white;
-      border: none;
-      padding: 8px 16px;
-      border-radius: 6px;
-      font-weight: bold;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-    .login-btn-header:hover {
-      background: #2980b9;
-    }
-    .logout-btn-header {
-      background: #e74c3c !important;
-    }
-    .logout-btn-header:hover {
-      background: #c0392b !important;
-    }
+    /* ⭐ 1번 요청: 로그인 버튼 디자인 */
+    .user-menu { display: flex; align-items: center; gap: 15px; margin-left: auto; }
+    .user-name { color: #fff; font-weight: bold; font-size: 0.95rem; }
+    .login-btn-header { background: #3498db; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+    .login-btn-header:hover { background: #2980b9; }
+    .logout-btn-header { background: #e74c3c !important; }
   </style>
 </head>
 <body>
@@ -147,7 +51,6 @@
         <a href="board.html">티어 게시판</a>
         <a href="mylist.html">내 보관함</a>
       </div>
-      
       <div class="user-menu" id="user-menu">
         <span id="user-info" class="user-name"></span>
         <button id="login-btn" class="login-btn-header">Google 로그인</button>
@@ -155,39 +58,36 @@
     </div>
   </nav>
 
-  <div class="hero-section">
-    <h1 class="hero-title">MyTierList</h1>
-    <p class="hero-subtitle">나만의 기준으로 세상을 분류하고, 사람들과 즐겁게 공유하세요.</p>
-    
-    <div class="wide-banner-card">
-      <div class="wide-banner-content">
-        <h2 class="wide-banner-title">세상의 모든 것을 줄 세우다</h2>
-        <p class="wide-banner-desc">
-          친구들과 뭐가 더 명작인지 토론 중이신가요?<br>
-          게임, 애니메이션, 음식 등 어떤 주제든 쉽고 빠르게 티어표를 제작해 보세요.
-        </p>
-        <button class="wide-banner-btn" onclick="location.href='maker.html'">✨ 새 티어 만들기</button>
-      </div>
-      <div class="wide-banner-img" id="dynamic-banner">
-        <span>이미지 로딩중...</span>
+  <div class="container">
+    <div class="hero-section" style="text-align: center; margin-bottom: 50px;">
+      <h1 style="font-size: 2.5rem; margin-bottom: 10px;">MyTierList</h1>
+      <p style="color: #aaa; margin-bottom: 30px;">나만의 기준으로 세상을 분류하고, 사람들과 즐겁게 공유하세요.</p>
+      
+      <div class="wide-banner-card">
+        <div class="wide-banner-content">
+          <h2 class="wide-banner-title">세상의 모든 것을 줄 세우다</h2>
+          <p class="wide-banner-desc">게임, 애니메이션, 음식 등 어떤 주제든 쉽고 빠르게 티어표를 제작해 보세요.</p>
+          <button class="wide-banner-btn" onclick="location.href='maker.html'">✨ 새 티어 만들기</button>
+        </div>
+        <div class="wide-banner-img" id="dynamic-banner"><span>이미지 로딩중...</span></div>
       </div>
     </div>
+
+    <h2 class="home-section-title"><span style="border-left: 5px solid #e74c3c; padding-left: 15px;">🔥 주간 인기 티어리스트</span></h2>
+    <div id="popular-grid"></div>
+
+    <h2 class="home-section-title"><span style="border-left: 5px solid #2ecc71; padding-left: 15px;">🕒 방금 올라온 티어리스트</span></h2>
+    <div id="recent-grid"></div>
+
+    <div id="random-category-container"></div>
   </div>
-
-  <h2 class="home-section-title"><span style="border-left: 5px solid #3498db; padding-left: 15px;">🔥 주간 인기 티어리스트</span></h2>
-  <div id="popular-grid"></div>
-
-  <h2 class="home-section-title"><span style="border-left: 5px solid #3498db; padding-left: 15px;">🕒 방금 올라온 티어리스트</span></h2>
-  <div id="recent-grid"></div>
-
-  <div id="random-category-container"></div>
 
   <script type="module">
     import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getFirestore, collection, query, orderBy, getDocs, limit, where, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-    // ⭐ 1번 요청: 파이어베이스 Auth 기능 추가 임포트
     import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
+    // ⚠️ 본인의 Firebase 설정값을 사용하세요
     const firebaseConfig = {
       apiKey: "AIzaSyAwVjpUANfil947xb0bjKALw2uuGvZYQcs",
       authDomain: "mytierlist-70989.firebaseapp.com",
@@ -199,9 +99,9 @@
 
     const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
     const db = getFirestore(app);
-    const auth = getAuth(app); // 인증 초기화
+    const auth = getAuth(app);
 
-    // ⭐ 1번 요청: 로그인 상태 감지 및 로그인/로그아웃 처리
+    // 로그인 상태 처리
     const loginBtn = document.getElementById("login-btn");
     const userInfo = document.getElementById("user-info");
 
@@ -209,160 +109,87 @@
       if (user) {
         userInfo.textContent = `${user.displayName}님`;
         loginBtn.textContent = "로그아웃";
-        loginBtn.classList.add("logout-btn-header"); // 빨간색 버튼 적용
+        loginBtn.classList.add("logout-btn-header");
         loginBtn.onclick = () => signOut(auth);
       } else {
         userInfo.textContent = "";
         loginBtn.textContent = "Google 로그인";
-        loginBtn.classList.remove("logout-btn-header"); // 파란색 버튼 복구
+        loginBtn.classList.remove("logout-btn-header");
         loginBtn.onclick = () => {
           const provider = new GoogleAuthProvider();
-          signInWithPopup(auth, provider).catch(error => console.error("로그인 실패:", error));
+          signInWithPopup(auth, provider);
         };
       }
     });
 
-    const ALL_CATEGORIES = ["애니", "게임", "영화", "음악", "만화", "소설", "캐릭터", "기타"];
-
+    // 배너 로드
     async function loadBannerImage() {
       const bannerContainer = document.getElementById("dynamic-banner");
-      if (!bannerContainer) return;
-
       try {
-        const bannerDocRef = doc(db, "siteSettings", "banner");
-        const bannerSnap = await getDoc(bannerDocRef);
-
-        if (bannerSnap.exists() && bannerSnap.data().imageUrl) {
-          const imageUrl = bannerSnap.data().imageUrl;
-          bannerContainer.innerHTML = `<img src="${imageUrl}" alt="배너 이미지" style="width:100%; height:100%; object-fit:cover; display:block;">`;
-          bannerContainer.style.border = "none";
+        const bannerDoc = await getDoc(doc(db, "siteSettings", "banner"));
+        if (bannerDoc.exists() && bannerDoc.data().imageUrl) {
+          bannerContainer.innerHTML = `<img src="${bannerDoc.data().imageUrl}" style="width:100%; height:100%; object-fit:cover;">`;
         } else {
-          bannerContainer.innerHTML = `<span>(관리자용) 파이어베이스에서<br>이미지를 등록해주세요</span>`;
+          bannerContainer.innerHTML = `<span>MyTierList</span>`;
         }
-      } catch (error) {
-        console.error("배너 이미지 불러오기 실패:", error);
-        bannerContainer.innerHTML = `<span>배너 이미지</span>`;
-      }
+      } catch (e) { bannerContainer.innerHTML = `<span>MyTierList</span>`; }
     }
 
-    function timeAgo(timestamp) {
-      if (!timestamp) return '알 수 없음';
-      const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
-      const now = new Date();
-      const diffInSeconds = Math.floor((now - date) / 1000);
-      if (diffInSeconds < 60) return '방금 전';
-      if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}분 전`;
-      if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}시간 전`;
-      return `${Math.floor(diffInSeconds / 86400)}일 전`;
-    }
-
+    // 카드 렌더링 (⭐ 2번 요청: 좌우 5개)
     function renderCards(posts, containerId) {
       const container = document.getElementById(containerId);
       if (!container) return;
-      container.innerHTML = ''; 
+      container.innerHTML = posts.length ? "" : '<p style="grid-column: 1/-1; text-align:center; color:#888;">데이터가 없습니다.</p>';
       container.className = 'home-grid';
-
-      if (posts.length === 0) {
-        container.innerHTML = '<p style="color: #aaa; padding: 20px; grid-column: 1 / -1; text-align: center;">아직 작성된 티어리스트가 없습니다.</p>';
-        return;
-      }
-
+      
       posts.forEach(post => {
-        const thumbnailHtml = post.thumbnailUrl 
-          ? `<img src="${post.thumbnailUrl}" alt="썸네일" style="width:100%; height:100%; object-fit:cover;">` 
-          : `<div style="color:#666; font-size: 0.8rem;">(이미지 없음)</div>`;
-
-        const cardHtml = `
-          <div class="home-tier-card">
-            <div class="home-tier-card-img" style="height: 150px; overflow: hidden;">${thumbnailHtml}</div>
-            <div class="home-tier-card-info" style="padding: 10px;">
-              <div>
-                <h3 class="home-card-title" style="font-size: 1rem; margin-bottom: 5px;">${post.title || '무제 티어표'}</h3>
-                <div class="home-card-desc" style="font-size: 0.8rem; color: #bbb;">
-                  ${post.authorName || '익명'}<br>
-                  ❤️ ${post.likes || 0} &nbsp; 👁️ ${post.views || 0} &nbsp;·&nbsp; ${timeAgo(post.createdAt)}
-                </div>
-              </div>
-              <div class="home-card-btn" style="margin-top: 10px; font-size: 0.85rem; cursor: pointer;" onclick="location.href='board.html?id=${post.id}'">
-                티어리스트 보기
-              </div>
+        const card = `
+          <div class="home-tier-card" style="background:#1f1f1f; border-radius:10px; overflow:hidden; cursor:pointer;" onclick="location.href='board.html?id=${post.id}'">
+            <div style="height:140px; background:#111;">
+              <img src="${post.thumbnailUrl || 'https://via.placeholder.com/300x150'}" style="width:100%; height:100%; object-fit:cover;">
             </div>
-          </div>
-        `;
-        container.insertAdjacentHTML('beforeend', cardHtml);
+            <div style="padding:12px;">
+              <h3 style="font-size:0.95rem; margin-bottom:8px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${post.title || '무제'}</h3>
+              <div style="font-size:0.8rem; color:#888;">${post.authorName || '익명'}</div>
+              <div style="font-size:0.75rem; color:#666; margin-top:4px;">❤️ ${post.likes || 0}  👁️ ${post.views || 0}</div>
+            </div>
+          </div>`;
+        container.insertAdjacentHTML('beforeend', card);
       });
     }
 
     async function loadHomePosts() {
-      try {
-        const postsRef = collection(db, "tierLists"); 
-        
-        // ⭐ 2번 요청: 좌우 5개 배치이므로 limit를 5개로 수정
-        const popularQuery = query(postsRef, orderBy("likes", "desc"), limit(5)); 
-        const popularSnapshot = await getDocs(popularQuery);
-        const popularPosts = popularSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        renderCards(popularPosts, "popular-grid");
-
-        // ⭐ 2번 요청: 최근 글도 5개까지만 가져오도록 수정
-        const recentQuery = query(postsRef, orderBy("createdAt", "desc"), limit(5));
-        const recentSnapshot = await getDocs(recentQuery);
-        const recentPosts = recentSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        renderCards(recentPosts, "recent-grid");
-
-      } catch (error) {
-        console.error("데이터를 불러오는 중 에러 발생:", error);
-      }
+      const postsRef = collection(db, "tierLists");
+      // ⭐ 2번 요청: limit(5) 적용
+      const popular = await getDocs(query(postsRef, orderBy("likes", "desc"), limit(5)));
+      renderCards(popular.docs.map(d => ({id:d.id, ...d.data()})), "popular-grid");
+      const recent = await getDocs(query(postsRef, orderBy("createdAt", "desc"), limit(5)));
+      renderCards(recent.docs.map(d => ({id:d.id, ...d.data()})), "recent-grid");
     }
 
-    async function loadRandomCategorySections() {
-      const shuffled = ALL_CATEGORIES.sort(() => 0.5 - Math.random());
-      const selectedCategories = shuffled.slice(0, 2);
-
+    // 카테고리 섹션 (⭐ 2번 요청: limit(5) 적용)
+    async function loadRandomCategories() {
+      const categories = ["애니", "게임", "영화", "음식"].sort(() => 0.5 - Math.random()).slice(0, 2);
       const container = document.getElementById("random-category-container");
-      if(!container) return;
-      container.innerHTML = ""; 
-
-      for (const cat of selectedCategories) {
-        try {
-          const q = query(collection(db, "tierLists"), where("category", "==", cat));
-          const snap = await getDocs(q);
-          let posts = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-
-          posts.sort((a, b) => (b.likes || 0) - (a.likes || 0));
-          // ⭐ 2번 요청: 카테고리별 티어도 5개로 맞춤
-          posts = posts.slice(0, 5);
-
-          if (posts.length > 0) {
-            const sectionHtml = `
-              <h2 class="home-section-title"><span style="border-left: 5px solid #3498db; padding-left: 15px;">✨ 지금 뜨는 [${cat}] 티어리스트</span></h2>
-              <div id="grid-${cat}" class="home-grid"></div>
-            `;
-            container.insertAdjacentHTML('beforeend', sectionHtml);
-            renderCards(posts, `grid-${cat}`);
-          }
-        } catch (error) {
-          console.error(`카테고리(${cat}) 로드 중 에러:`, error);
+      for (const cat of categories) {
+        const q = query(collection(db, "tierLists"), where("category", "==", cat), limit(5));
+        const snap = await getDocs(q);
+        if (!snap.empty) {
+          const html = `<h2 class="home-section-title"><span style="border-left: 5px solid #3498db; padding-left: 15px;">✨ 지금 뜨는 [${cat}]</span></h2><div id="grid-${cat}"></div>`;
+          container.insertAdjacentHTML('beforeend', html);
+          renderCards(snap.docs.map(d => ({id:d.id, ...d.data()})), `grid-${cat}`);
         }
       }
     }
 
-    window.addEventListener('DOMContentLoaded', () => {
-      loadBannerImage(); 
-      loadHomePosts();
-      loadRandomCategorySections();
-    });
+    window.onload = () => { loadBannerImage(); loadHomePosts(); loadRandomCategories(); };
   </script>
 
-  <footer class="site-footer">
-    <div class="site-footer-links">
-      <a href="policy.html?type=terms">이용약관</a> | 
-      <a href="policy.html?type=privacy">개인정보처리방침</a> | 
-      <a href="policy.html?type=youth">청소년 보호정책</a>
+  <footer class="site-footer" style="background:#1a1a1a; padding:40px; margin-top:50px; text-align:center; border-top:1px solid #333;">
+    <div class="site-footer-links" style="margin-bottom:15px;">
+      <a href="policy.html?type=terms">이용약관</a> | <a href="policy.html?type=privacy">개인정보처리방침</a>
     </div>
-    <div class="site-footer-info">
-      <div>@2026 MyTierList.net</div>
-      <div style="margin-top: 5px;">문의: asy0009@naver.com</div>
-    </div>
+    <p style="color:#666; font-size:0.9rem;">@2026 MyTierList.net | 문의: asy0009@naver.com</p>
   </footer>
 </body>
 </html>
