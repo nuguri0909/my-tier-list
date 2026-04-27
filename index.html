@@ -5,17 +5,107 @@
   <title>MyTierList - 나만의 티어 메이커</title>
   <link rel="stylesheet" href="style.css">
   <style>
-    /* 홈 화면 전용 세로형 3열 카드 그리드 */
+    /* =========================================
+       1. 상단 히어로 섹션 (로고 및 설명)
+    ========================================= */
+    .hero-section {
+      text-align: center;
+      padding: 60px 20px 40px;
+      /* 배경에 은은한 그라데이션을 주어 예시 이미지 느낌을 살림 */
+      background: radial-gradient(circle at center, #2a2a36 0%, #111118 70%);
+    }
+    .hero-title {
+      font-size: 3rem;
+      font-weight: 900;
+      color: #ffffff;
+      margin-bottom: 10px;
+      letter-spacing: 2px;
+    }
+    .hero-subtitle {
+      font-size: 1.2rem;
+      color: #aaaaaa;
+      margin-bottom: 40px;
+      word-break: keep-all;
+    }
+
+    /* =========================================
+       2. 가로로 긴 배너 카드 (새 티어 만들기)
+    ========================================= */
+    .wide-banner-card {
+      display: flex;
+      background: rgba(255, 255, 255, 0.05); /* 반투명한 유리 느낌 */
+      border: 1px solid #3a3a4a;
+      border-radius: 16px;
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 40px;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      backdrop-filter: blur(10px);
+    }
+    .wide-banner-content {
+      text-align: left;
+      max-width: 60%;
+    }
+    .wide-banner-title {
+      font-size: 1.8rem;
+      font-weight: bold;
+      color: #ffffff;
+      margin-bottom: 15px;
+    }
+    .wide-banner-desc {
+      font-size: 1.05rem;
+      color: #cccccc;
+      line-height: 1.6;
+      margin-bottom: 25px;
+      word-break: keep-all;
+    }
+    .wide-banner-btn {
+      background: #3498db;
+      color: #fff;
+      font-size: 1.1rem;
+      font-weight: bold;
+      padding: 12px 24px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .wide-banner-btn:hover {
+      background: #2980b9;
+      transform: translateY(-2px);
+    }
+    /* 우측 이미지 영역 (예시 이미지의 우측 그림 역할) */
+    .wide-banner-img {
+      width: 35%;
+      height: 180px;
+      background: #1a1a24;
+      border: 1px dashed #555;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #666;
+      font-size: 0.9rem;
+    }
+
+    /* =========================================
+       3. 5열 세로형 카드 그리드 (홈 화면 전용)
+    ========================================= */
     .home-grid {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 20px;
-      max-width: 1000px;
-      margin: 0 auto 40px auto;
+      grid-template-columns: repeat(5, 1fr); /* 3에서 5로 변경 */
+      gap: 15px;
+      max-width: 1300px; /* 5개가 들어가므로 가로 폭을 좀 더 넓힘 */
+      margin: 0 auto 50px auto;
+      padding: 0 20px;
     }
-    @media (max-width: 768px) {
-      .home-grid { grid-template-columns: 1fr; }
-    }
+    /* 모바일/태블릿 반응형 처리 */
+    @media (max-width: 1200px) { .home-grid { grid-template-columns: repeat(3, 1fr); } }
+    @media (max-width: 768px) { .home-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 480px) { .home-grid { grid-template-columns: 1fr; } }
+
     .home-tier-card {
       background: #1a1a24;
       border: 1px solid #2e2e3a;
@@ -23,7 +113,7 @@
       display: flex;
       flex-direction: column;
       overflow: hidden;
-      height: 380px;
+      height: 350px; /* 5개면 카드가 좁아지므로 높이를 살짝 줄임 */
       transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
     .home-tier-card:hover {
@@ -31,7 +121,7 @@
       box-shadow: 0 8px 20px rgba(0, 0, 0, 0.6);
     }
     .home-tier-card-img {
-      height: 50%;
+      height: 45%;
       background: #111118;
       width: 100%;
       display: flex;
@@ -45,34 +135,36 @@
       object-fit: cover;
     }
     .home-tier-card-info {
-      padding: 20px;
+      padding: 15px;
       display: flex;
       flex-direction: column;
       flex-grow: 1;
       justify-content: space-between;
     }
     .home-card-title {
-      font-size: 1.3rem;
+      font-size: 1.1rem;
       font-weight: bold;
       color: #ffffff;
-      margin: 0 0 10px 0;
-      word-break: keep-all;
+      margin: 0 0 8px 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis; /* 제목이 길면 ... 처리 */
     }
     .home-card-desc {
-      font-size: 0.9rem;
+      font-size: 0.85rem;
       color: #aaaaaa;
-      line-height: 1.5;
-      margin-bottom: 15px;
+      line-height: 1.4;
+      margin-bottom: 10px;
     }
     .home-card-btn {
       background: #2a2a36;
       color: #dddddd;
       border: 1px solid #3a3a4a;
-      padding: 12px;
+      padding: 10px;
       border-radius: 8px;
       text-align: center;
       cursor: pointer;
-      font-size: 0.95rem;
+      font-size: 0.9rem;
       font-weight: bold;
       transition: 0.2s;
       margin-top: auto;
@@ -83,10 +175,10 @@
       border-color: #555566;
     }
     .section-title {
-      max-width: 1000px;
-      margin: 40px auto 20px auto;
+      max-width: 1300px;
+      margin: 0 auto 20px auto;
       text-align: left;
-      padding-left: 10px;
+      padding-left: 20px;
       color: #fff;
     }
   </style>
@@ -103,11 +195,23 @@
     </div>
   </nav>
 
-  <div class="header" style="text-align: center; padding: 50px 20px;">
-    <h1>나만의 티어표를 만들어보세요!</h1>
-    <p style="color:#aaa; font-size: 1.1rem;">쉽고 간편하게 아이템을 분류하고 사람들과 공유하세요.</p>
-    <br>
-    <button class="btn btn-save" style="font-size: 1.2rem; padding: 15px 30px;" onclick="location.href='maker.html'">새 티어 만들기</button>
+  <div class="hero-section">
+    <h1 class="hero-title">MyTierList</h1>
+    <p class="hero-subtitle">나만의 기준으로 세상을 분류하고, 사람들과 즐겁게 공유하세요.</p>
+    
+    <div class="wide-banner-card">
+      <div class="wide-banner-content">
+        <h2 class="wide-banner-title">세상의 모든 것을 줄 세우다</h2>
+        <p class="wide-banner-desc">
+          친구들과의 논쟁을 끝낼 시간입니다.<br>
+          게임, 애니메이션, 음식 등 어떤 주제든 쉽고 빠르게 티어표를 제작해 보세요.
+        </p>
+        <button class="wide-banner-btn" onclick="location.href='maker.html'">✨ 새 티어 만들기</button>
+      </div>
+      <div class="wide-banner-img">
+        <span>이미지 영역</span>
+      </div>
+    </div>
   </div>
 
   <h2 class="section-title">🔥 주간 인기 티어리스트</h2>
@@ -134,7 +238,6 @@
     const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
     const db = getFirestore(app);
 
-    // 보유하신 카테고리 목록을 모두 적어주세요.
     const ALL_CATEGORIES = ["애니", "게임", "영화", "음악", "만화", "소설", "기타"];
 
     function timeAgo(timestamp) {
@@ -162,7 +265,7 @@
       posts.forEach(post => {
         const thumbnailHtml = post.thumbnailUrl 
           ? `<img src="${post.thumbnailUrl}" alt="썸네일">` 
-          : `<div style="color:#666; font-size: 0.9rem;">(이미지 없음)</div>`;
+          : `<div style="color:#666; font-size: 0.8rem;">(이미지 없음)</div>`;
 
         const cardHtml = `
           <div class="home-tier-card">
@@ -171,7 +274,7 @@
               <div>
                 <h3 class="home-card-title">${post.title || '무제 티어표'}</h3>
                 <div class="home-card-desc">
-                  ${post.authorName || '익명'} 님의 티어리스트<br>
+                  ${post.authorName || '익명'}<br>
                   ❤️ ${post.likes || 0} &nbsp; 👁️ ${post.views || 0} &nbsp;·&nbsp; ${timeAgo(post.createdAt)}
                 </div>
               </div>
@@ -189,14 +292,13 @@
       try {
         const postsRef = collection(db, "tierLists"); 
         
-        // 인기글 불러오기
-        const popularQuery = query(postsRef, orderBy("likes", "desc"), limit(3));
+        // ⭐ 5개씩 가져오도록 한도 증가
+        const popularQuery = query(postsRef, orderBy("likes", "desc"), limit(5));
         const popularSnapshot = await getDocs(popularQuery);
         const popularPosts = popularSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         renderCards(popularPosts, "popular-grid");
 
-        // 최신글 불러오기
-        const recentQuery = query(postsRef, orderBy("createdAt", "desc"), limit(3));
+        const recentQuery = query(postsRef, orderBy("createdAt", "desc"), limit(5));
         const recentSnapshot = await getDocs(recentQuery);
         const recentPosts = recentSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         renderCards(recentPosts, "recent-grid");
@@ -206,9 +308,8 @@
       }
     }
 
-    // ⭐ 랜덤 카테고리 2개 추천 로직
+    // ⭐ 복합 색인 에러를 우회하는 랜덤 카테고리 로직
     async function loadRandomCategorySections() {
-      // 카테고리 배열 무작위 섞기 후 2개 추출
       const shuffled = ALL_CATEGORIES.sort(() => 0.5 - Math.random());
       const selectedCategories = shuffled.slice(0, 2);
 
@@ -217,24 +318,26 @@
       container.innerHTML = ""; 
 
       for (const cat of selectedCategories) {
-        const q = query(
-          collection(db, "tierLists"),
-          where("category", "==", cat),
-          orderBy("likes", "desc"),
-          limit(3)
-        );
-        
-        const snap = await getDocs(q);
-        const posts = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        try {
+          // orderBy를 빼고 where만 써서 복합 색인(Index) 에러 방지
+          const q = query(collection(db, "tierLists"), where("category", "==", cat));
+          const snap = await getDocs(q);
+          let posts = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-        // 해당 카테고리에 글이 1개라도 있을 때만 표시
-        if (posts.length > 0) {
-          const sectionHtml = `
-            <h2 class="section-title">✨ 지금 뜨는 [${cat}] 티어리스트</h2>
-            <div id="grid-${cat}" class="home-grid"></div>
-          `;
-          container.insertAdjacentHTML('beforeend', sectionHtml);
-          renderCards(posts, `grid-${cat}`);
+          // 자바스크립트로 직접 인기순 정렬 후 5개 자르기
+          posts.sort((a, b) => (b.likes || 0) - (a.likes || 0));
+          posts = posts.slice(0, 5);
+
+          if (posts.length > 0) {
+            const sectionHtml = `
+              <h2 class="section-title" style="margin-top: 20px;">✨ 지금 뜨는 [${cat}] 티어리스트</h2>
+              <div id="grid-${cat}" class="home-grid"></div>
+            `;
+            container.insertAdjacentHTML('beforeend', sectionHtml);
+            renderCards(posts, `grid-${cat}`);
+          }
+        } catch (error) {
+          console.error(`카테고리(${cat}) 로드 중 에러:`, error);
         }
       }
     }
