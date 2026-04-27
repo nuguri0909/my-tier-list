@@ -91,13 +91,24 @@
     }
 
     /* =========================================
-       3. 5열 세로형 카드 그리드 (홈 화면 전용)
+       3. 섹션 제목 및 카드 그리드 (홈 화면 전용)
     ========================================= */
+    /* ⭐ 섹션 제목 크기 및 여백 완벽 통일 */
+    .section-title {
+      max-width: 1300px;
+      margin: 50px auto 20px auto; 
+      text-align: left;
+      padding-left: 20px;
+      color: #ffffff;
+      font-size: 1.6rem; /* 기존보다 살짝 키우고 모든 제목에 강제 적용 */
+      font-weight: bold;
+    }
+
     .home-grid {
       display: grid;
-      grid-template-columns: repeat(5, 1fr); /* 3에서 5로 변경 */
+      grid-template-columns: repeat(5, 1fr); 
       gap: 15px;
-      max-width: 1300px; /* 5개가 들어가므로 가로 폭을 좀 더 넓힘 */
+      max-width: 1300px; 
       margin: 0 auto 50px auto;
       padding: 0 20px;
     }
@@ -113,7 +124,7 @@
       display: flex;
       flex-direction: column;
       overflow: hidden;
-      height: 350px; /* 5개면 카드가 좁아지므로 높이를 살짝 줄임 */
+      height: 350px; 
       transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
     .home-tier-card:hover {
@@ -148,7 +159,7 @@
       margin: 0 0 8px 0;
       white-space: nowrap;
       overflow: hidden;
-      text-overflow: ellipsis; /* 제목이 길면 ... 처리 */
+      text-overflow: ellipsis; 
     }
     .home-card-desc {
       font-size: 0.85rem;
@@ -173,13 +184,6 @@
       background: #3f3f50;
       color: #ffffff;
       border-color: #555566;
-    }
-    .section-title {
-      max-width: 1300px;
-      margin: 0 auto 20px auto;
-      text-align: left;
-      padding-left: 20px;
-      color: #fff;
     }
   </style>
 </head>
@@ -292,7 +296,6 @@
       try {
         const postsRef = collection(db, "tierLists"); 
         
-        // ⭐ 5개씩 가져오도록 한도 증가
         const popularQuery = query(postsRef, orderBy("likes", "desc"), limit(5));
         const popularSnapshot = await getDocs(popularQuery);
         const popularPosts = popularSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -308,7 +311,6 @@
       }
     }
 
-    // ⭐ 복합 색인 에러를 우회하는 랜덤 카테고리 로직
     async function loadRandomCategorySections() {
       const shuffled = ALL_CATEGORIES.sort(() => 0.5 - Math.random());
       const selectedCategories = shuffled.slice(0, 2);
@@ -319,18 +321,17 @@
 
       for (const cat of selectedCategories) {
         try {
-          // orderBy를 빼고 where만 써서 복합 색인(Index) 에러 방지
           const q = query(collection(db, "tierLists"), where("category", "==", cat));
           const snap = await getDocs(q);
           let posts = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-          // 자바스크립트로 직접 인기순 정렬 후 5개 자르기
           posts.sort((a, b) => (b.likes || 0) - (a.likes || 0));
           posts = posts.slice(0, 5);
 
           if (posts.length > 0) {
+            // ⭐ 인라인 스타일(style="margin-top:20px;") 제거하여 크기와 여백 완벽 통일
             const sectionHtml = `
-              <h2 class="section-title" style="margin-top: 20px;">✨ 지금 뜨는 [${cat}] 티어리스트</h2>
+              <h2 class="section-title">✨ 지금 뜨는 [${cat}] 티어리스트</h2>
               <div id="grid-${cat}" class="home-grid"></div>
             `;
             container.insertAdjacentHTML('beforeend', sectionHtml);
