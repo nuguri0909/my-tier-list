@@ -30,7 +30,7 @@ function timeAgo(timestamp) {
   return `${Math.floor(diffInSeconds / 86400)}일 전`;
 }
 
-// ⭐ 세로형 3열 카드 디자인에 맞춰 HTML 구조 변경
+// ⭐ 2번 요청: 좌우 5열 카드 디자인에 맞춰 HTML 구조 변경
 function renderCards(posts, containerId) {
   const container = document.getElementById(containerId);
   if (!container) return;
@@ -76,13 +76,13 @@ async function loadHomePosts() {
   try {
     const postsRef = collection(db, "tierLists"); 
 
-    // ⭐ 3열 그리드에 딱 맞게 limit(3)으로 변경
-    const popularQuery = query(postsRef, orderBy("likes", "desc"), limit(3));
+    // ⭐ 2번 요청: 좌우 최대 5개까지 불러오도록 limit(5)으로 수정
+    const popularQuery = query(postsRef, orderBy("likes", "desc"), limit(5));
     const popularSnapshot = await getDocs(popularQuery);
     const popularPosts = popularSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     renderCards(popularPosts, "popular-grid");
 
-    const recentQuery = query(postsRef, orderBy("createdAt", "desc"), limit(3));
+    const recentQuery = query(postsRef, orderBy("createdAt", "desc"), limit(5));
     const recentSnapshot = await getDocs(recentQuery);
     const recentPosts = recentSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     renderCards(recentPosts, "recent-grid");
