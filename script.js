@@ -244,7 +244,7 @@ window.deleteItem = function() {
 };
 
 // ==========================================
-// 5. DB 저장 및 메인 티어표 불러오기
+// 5. DB 저장 및 메인 티어표 불러오기 (수정됨)
 // ==========================================
 window.saveBoard = async function() {
   if (!window.currentUser) return alert("로그인해야 저장할 수 있습니다!");
@@ -252,50 +252,85 @@ window.saveBoard = async function() {
   const tierRows = document.querySelectorAll('.tier-row');
   const boardData = [];
   let thumbnailImg = ""; 
-  let totalPlacedItems = 0; // ⭐ 3번 요청: 배치된 항목 카운트용
+  let totalPlacedItems = 0; // 배치된 항목 카운트용
 
   tierRows.forEach(row => {
-    const label = row.querySelector('.tier-label').innerText;
-    const items = Array.from(row.querySelector('.tier-items').children).map(item => {
-      totalPlacedItems++; // 아이템이 존재할 때마다 증가
-      const imgSrc = item.querySelector('img').src;
-      if(!thumbnailImg) thumbnailImg = imgSrc; 
-      return {
-        src: imgSrc,
-        title: item.querySelector('.item-title') ? item.querySelector('.item-title').innerText : "",
-        desc: item.dataset.desc || ""
-      };
+    const labelEl = row.querySelector('.tier-label');
+    const labelText = labelEl ? labelEl.innerText.trim() : "NEW";
+    const labelColor = labelEl ? labelEl.style.backgroundColor : "#ccc";
+
+    const itemsContainer = row.querySelector('.tier-items');
+    const items = [];
+    
+    if (itemsContainer) {
+      Array.from(itemsContainer.children).forEach(item => {
+        const img = item.querySelector('img');
+        // 혹시라도 이미지가 없는 찌꺼기 요소가 들어왔다면 무시 (에러 방지)
+        if (!img) return; 
+        
+        totalPlacedItems++;
+        const imgSrc = img.src;
+        if (!thumbnailImg) thumbnailImg = imgSrc;
+        
+        const titleEl = item.querySelector('.item-title');
+        
+        // 무조건 순수한 문자열(String)로 변환해서 저장
+        items.push({
+          src: String(imgSrc || ""),
+          title: titleEl ? String(titleEl.innerText.trim()) : "",
+          desc: item.dataset.desc ? String(item.dataset.desc) : ""
+        });
+      });
+    }
+    
+    boardData.push({ 
+      label: String(labelText), 
+      items: items, 
+      color: String(labelColor) 
     });
-    boardData.push({ label, items, color: row.querySelector('.tier-label').style.backgroundColor });
   });
 
-  // ⭐ 3번 요청: 티어표에 아이템이 하나도 없으면 저장 차단
   if (totalPlacedItems === 0) {
     return alert("티어표에 아무 항목도 올라가 있지 않습니다. 아이템을 배치한 후 저장해주세요.");
   }
 
-  const bankItems = Array.from(document.getElementById('item-bank').children).map(item => ({
-    src: item.querySelector('img').src,
-    title: item.querySelector('.item-title') ? item.querySelector('.item-title').innerText : "",
-    desc: item.dataset.desc || ""
-  }));
+  const bankContainer = document.getElementById('item-bank');
+  const bankItems = [];
+  if (bankContainer) {
+    Array.from(bankContainer.children).forEach(item => {
+      const img = item.querySelector('img');
+      if (!img) return;
+      
+      const titleEl = item.querySelector('.item-title');
+      
+      bankItems.push({
+        src: String(img.src || ""),
+        title: titleEl ? String(titleEl.innerText.trim()) : "",
+        desc: item.dataset.desc ? String(item.dataset.desc) : ""
+      });
+    });
+  }
 
   const titleInput = document.getElementById('tier-list-title');
   const boardTitle = titleInput && titleInput.value.trim() !== "" ? titleInput.value.trim() : "나만의 무제 티어표";
-
-  const payload = {
+  const categorySelect = document.getElementById('category-select');
+  
+  // ⭐ 핵심 해결책: JSON 변환을 통해 객체 내부에 숨어있는 undefined나 DOM 참조를 완벽하게 제거합니다.
+  const payload = JSON.parse(JSON.stringify({
     title: boardTitle,
     authorId: window.currentUser.uid,
-    authorName: window.customNickname,
-    category: document.getElementById('category-select') ? document.getElementById('category-select').value : "기타",
+    authorName: window.customNickname || "익명",
+    category: categorySelect ? categorySelect.value : "기타",
     tiers: boardData,
     bank: bankItems,
     likes: 0,
     dislikes: 0,
     views: 0, 
-    thumbnailUrl: thumbnailImg, 
-    createdAt: serverTimestamp()
-  };
+    thumbnailUrl: thumbnailImg || ""
+  }));
+  
+  // 서버 시간(serverTimestamp)은 JSON 파싱이 안 되므로 세탁 후에 따로 추가해 줍니다.
+  payload.createdAt = serverTimestamp();
 
   try {
     document.querySelector('.btn-save').innerText = "저장 중...";
@@ -304,6 +339,7 @@ window.saveBoard = async function() {
     window.location.href = "mylist.html"; 
   } catch (e) {
     alert("저장 실패: " + e.message);
+    console.error("Firebase 저장 에러 상세:", e);
     document.querySelector('.btn-save').innerText = "💾 서버에 저장";
   }
 };
