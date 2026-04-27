@@ -6,6 +6,13 @@
   <title>나만의 티어 메이커</title>
   <link rel="stylesheet" href="style.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <style>
+    /* ⭐ 2번 요청 반영: 티어 표시칸과 작품 대기열의 높이 및 여백을 완벽하게 동일하게 맞춤 */
+    .tier-row { min-height: 120px !important; }
+    .tier-label { min-height: 120px !important; }
+    .tier-items { min-height: 120px !important; padding: 10px !important; align-content: flex-start; }
+    .item-bank { min-height: 120px !important; padding: 10px !important; align-content: flex-start; }
+  </style>
 </head>
 <body>
   <nav class="navbar">
